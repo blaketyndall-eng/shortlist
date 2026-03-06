@@ -35,10 +35,13 @@
 </div>
 
 <style>
+	@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap');
+
 	:global(body) {
 		margin: 0;
-		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-		color: #1a1a2e;
+		font-family: 'Figtree', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+		color: #e0e6ed;
+		background: #0b1017;
 		-webkit-font-smoothing: antialiased;
 	}
 
@@ -54,6 +57,7 @@
 		max-width: 1200px;
 		width: 100%;
 		margin: 0 auto;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 	}
 
 	.nav-logo {
@@ -61,7 +65,7 @@
 		align-items: center;
 		gap: 8px;
 		text-decoration: none;
-		color: #1a1a2e;
+		color: #ffffff;
 		font-weight: 700;
 		font-size: 1.125rem;
 	}
@@ -72,7 +76,7 @@
 		justify-content: center;
 		width: 28px;
 		height: 28px;
-		background: #4f46e5;
+		background: linear-gradient(135deg, #00cc96, #4a96f8);
 		color: white;
 		border-radius: 6px;
 		font-size: 0.875rem;
@@ -87,28 +91,30 @@
 
 	.nav-links a {
 		font-size: 0.9375rem;
-		color: #6b7280;
+		color: #8b95a5;
 		text-decoration: none;
 		font-weight: 500;
+		transition: color 0.15s;
 	}
 
-	.nav-links a:hover { color: #1a1a2e; }
+	.nav-links a:hover { color: #ffffff; }
 
-	.nav-login { color: #374151 !important; }
+	.nav-login { color: #c0c8d4 !important; }
 
 	.nav-cta {
 		padding: 8px 20px !important;
-		background: #4f46e5;
+		background: linear-gradient(135deg, #00cc96, #00b386) !important;
 		color: white !important;
 		border-radius: 6px;
 		font-weight: 600 !important;
+		transition: opacity 0.15s !important;
 	}
 
-	.nav-cta:hover { background: #4338ca; }
+	.nav-cta:hover { opacity: 0.9; }
 
 	.site-footer {
 		margin-top: auto;
-		border-top: 1px solid #e5e7eb;
+		border-top: 1px solid rgba(255, 255, 255, 0.06);
 		padding: 48px 32px;
 	}
 
@@ -127,6 +133,7 @@
 		align-items: center;
 		gap: 8px;
 		font-weight: 700;
+		color: #ffffff;
 	}
 
 	.footer-links {
@@ -136,15 +143,16 @@
 
 	.footer-links a {
 		font-size: 0.875rem;
-		color: #6b7280;
+		color: #8b95a5;
 		text-decoration: none;
+		transition: color 0.15s;
 	}
 
-	.footer-links a:hover { color: #1a1a2e; }
+	.footer-links a:hover { color: #ffffff; }
 
 	.footer-copy {
 		font-size: 0.8125rem;
-		color: #9ca3af;
+		color: #5a6472;
 		width: 100%;
 		text-align: center;
 		margin-top: 16px;
