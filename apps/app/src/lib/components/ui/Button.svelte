@@ -3,7 +3,7 @@
 	import type { HTMLButtonAttributes } from 'svelte/elements';
 
 	interface Props extends HTMLButtonAttributes {
-		variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
+		variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'blue';
 		size?: 'sm' | 'md' | 'lg';
 		loading?: boolean;
 		children: Snippet;
@@ -35,50 +35,77 @@
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		gap: var(--space-2);
-		font-weight: 500;
-		border-radius: var(--radius-md);
+		gap: 6px;
+		font-weight: 600;
+		border-radius: 8px;
 		cursor: pointer;
-		transition: all var(--transition-fast);
+		transition: all 170ms ease;
 		white-space: nowrap;
-		border: 1px solid transparent;
+		border: none;
+		font-family: var(--font-sans);
 	}
 
 	.btn:disabled {
-		opacity: 0.6;
-		cursor: not-allowed;
+		opacity: 0.3;
+		cursor: not-allowed !important;
+		transform: none !important;
+		box-shadow: none !important;
 	}
 
 	/* Sizes */
-	.btn-sm { padding: var(--space-1) var(--space-3); font-size: 0.8125rem; }
-	.btn-md { padding: var(--space-2) var(--space-4); font-size: 0.9375rem; }
-	.btn-lg { padding: var(--space-3) var(--space-6); font-size: 1rem; }
+	.btn-sm { padding: 7px 14px; font-size: 12px; }
+	.btn-md { padding: 10px 20px; font-size: 14px; }
+	.btn-lg { padding: 11px 28px; font-size: 14px; }
 
 	/* Variants */
 	.btn-primary {
-		background: var(--primary-600);
-		color: white;
+		background: var(--t);
+		color: #061510;
 	}
-	.btn-primary:hover:not(:disabled) { background: var(--primary-700); }
+	.btn-primary:hover:not(:disabled) {
+		background: var(--t2);
+		transform: translateY(-1px);
+		box-shadow: 0 8px 22px rgba(0, 204, 150, 0.22);
+	}
+
+	.btn-blue {
+		background: var(--bl);
+		color: #060e1a;
+	}
+	.btn-blue:hover:not(:disabled) {
+		background: var(--bl2);
+		transform: translateY(-1px);
+		box-shadow: 0 8px 22px rgba(74, 150, 248, 0.22);
+	}
 
 	.btn-secondary {
-		background: white;
-		color: var(--neutral-700);
-		border-color: var(--neutral-300);
+		background: transparent;
+		color: var(--tx);
+		border: 1px solid var(--b2);
 	}
-	.btn-secondary:hover:not(:disabled) { background: var(--neutral-50); }
+	.btn-secondary:hover:not(:disabled) {
+		border-color: rgba(255, 255, 255, 0.28);
+	}
 
 	.btn-ghost {
 		background: transparent;
-		color: var(--neutral-600);
+		color: var(--mu);
+		border: 1px solid var(--b);
 	}
-	.btn-ghost:hover:not(:disabled) { background: var(--neutral-100); }
+	.btn-ghost:hover:not(:disabled) {
+		border-color: var(--b2);
+		color: var(--tx);
+	}
 
 	.btn-danger {
-		background: #dc2626;
+		background: var(--rd);
 		color: white;
 	}
-	.btn-danger:hover:not(:disabled) { background: #b91c1c; }
+	.btn-danger:hover:not(:disabled) {
+		background: #d04040;
+		transform: translateY(-1px);
+		box-shadow: 0 8px 22px rgba(240, 80, 80, 0.22);
+	}
 
 	/* Spinner */
 	.spinner {

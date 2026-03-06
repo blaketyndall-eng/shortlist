@@ -55,7 +55,7 @@
 	.error-code {
 		font-size: 4rem;
 		font-weight: 800;
-		color: var(--neutral-200);
+		color: var(--mu2);
 		line-height: 1;
 		margin-bottom: var(--space-3);
 		display: block;
@@ -63,12 +63,12 @@
 
 	h1 {
 		font-size: 1.5rem;
-		color: var(--neutral-800);
+		color: var(--tx);
 		margin-bottom: var(--space-3);
 	}
 
 	.error-message {
-		color: var(--neutral-500);
+		color: var(--mu);
 		font-size: 0.9375rem;
 		margin-bottom: var(--space-6);
 		line-height: 1.6;
@@ -97,14 +97,14 @@
 
 	.btn-secondary {
 		padding: var(--space-2) var(--space-5);
-		background: white;
-		color: var(--neutral-700);
-		border: 1px solid var(--neutral-300);
+		background: var(--s2);
+		color: var(--tx);
+		border: 1px solid var(--b);
 		border-radius: var(--radius-md);
 		font-size: 0.875rem;
 		font-weight: 500;
 		cursor: pointer;
 	}
 
-	.btn-secondary:hover { background: var(--neutral-50); }
+	.btn-secondary:hover { background: var(--s3); }
 </style>

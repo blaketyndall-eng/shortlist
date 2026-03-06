@@ -1,6 +1,9 @@
 /* ── Import brand tokens ──────────────────────────────────── */
 @import '@shortlist/brand/tokens.css';
 
+/* ── Google Fonts ─────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
+
 /* ── Reset & Base ─────────────────────────────────────────── */
 *,
 *::before,
@@ -14,21 +17,33 @@ html {
 	font-family: var(--font-sans);
 	font-size: 16px;
 	line-height: 1.6;
-	color: var(--neutral-900);
-	background: var(--neutral-50);
+	color: var(--tx);
+	background: var(--bg);
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
 }
 
 body {
 	min-height: 100vh;
+	background: var(--bg);
+	color: var(--tx);
+}
+
+body::before {
+	content: '';
+	position: fixed;
+	inset: 0;
+	pointer-events: none;
+	z-index: 0;
+	background: radial-gradient(ellipse 65% 45% at 10% 0%, rgba(0,204,150,.07), transparent 58%),
+	            radial-gradient(ellipse 45% 35% at 90% 96%, rgba(74,150,248,.055), transparent 58%);
 }
 
 /* ── Typography ───────────────────────────────────────────── */
 h1, h2, h3, h4, h5, h6 {
 	line-height: 1.3;
 	font-weight: 600;
-	color: var(--neutral-900);
+	color: var(--tx);
 }
 
 h1 { font-size: 1.875rem; }
@@ -41,18 +56,44 @@ p {
 }
 
 a {
-	color: var(--primary-600);
+	color: var(--t);
 	text-decoration: none;
 }
 
 a:hover {
-	color: var(--primary-700);
+	color: var(--t2);
 	text-decoration: underline;
 }
 
 code, pre {
 	font-family: var(--font-mono);
 	font-size: 0.875em;
+}
+
+/* ── Form defaults ───────────────────────────────────────── */
+input, textarea, select, button {
+	font-family: inherit;
+	color: inherit;
+}
+
+input, textarea, select {
+	background: var(--s2);
+	border: 1px solid var(--b2);
+	border-radius: 8px;
+	color: var(--tx);
+	font-size: 13px;
+	padding: 9px 13px;
+	outline: none;
+	transition: border-color 150ms ease;
+	width: 100%;
+}
+
+input:focus, textarea:focus, select:focus {
+	border-color: var(--t);
+}
+
+input::placeholder, textarea::placeholder {
+	color: var(--mu2);
 }
 
 /* ── Focus styles ─────────────────────────────────────────── */

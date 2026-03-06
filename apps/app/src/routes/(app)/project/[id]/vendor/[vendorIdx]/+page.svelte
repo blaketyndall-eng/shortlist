@@ -256,8 +256,8 @@
 	.vendor-score {
 		text-align: center;
 		padding: var(--space-3) var(--space-5);
-		background: white;
-		border: 1px solid var(--neutral-200);
+		background: var(--c2);
+		border: 1px solid var(--b);
 		border-radius: var(--radius-lg);
 	}
 
@@ -265,7 +265,7 @@
 		display: block;
 		font-size: 2rem;
 		font-weight: 700;
-		color: var(--neutral-900);
+		color: var(--tx);
 	}
 
 	.score-label {
@@ -317,7 +317,7 @@
 	.criterion-name {
 		font-size: 0.875rem;
 		font-weight: 500;
-		color: var(--neutral-700);
+		color: var(--tx);
 		display: block;
 	}
 
@@ -328,7 +328,7 @@
 
 	.score-bar-container {
 		height: 8px;
-		background: var(--neutral-100);
+		background: var(--s2);
 		border-radius: 4px;
 		overflow: hidden;
 	}
@@ -358,7 +358,7 @@
 	.ai-section h4 {
 		font-size: 0.8125rem;
 		font-weight: 600;
-		color: var(--neutral-600);
+		color: var(--mu);
 		margin-bottom: var(--space-2);
 		text-transform: uppercase;
 		letter-spacing: 0.03em;
@@ -372,13 +372,13 @@
 
 	.ai-section li {
 		font-size: 0.875rem;
-		color: var(--neutral-700);
+		color: var(--tx);
 		padding: 2px 0;
 	}
 
 	.ai-section p {
 		font-size: 0.875rem;
-		color: var(--neutral-700);
+		color: var(--tx);
 		line-height: 1.5;
 	}
 
@@ -394,17 +394,19 @@
 		font-size: 0.8125rem;
 	}
 
-	.info-label { color: var(--neutral-500); }
-	.info-value { font-weight: 500; color: var(--neutral-800); }
+	.info-label { color: var(--mu); }
+	.info-value { font-weight: 500; color: var(--tx); }
 
 	.notes-input {
 		width: 100%;
-		border: 1px solid var(--neutral-200);
+		border: 1px solid var(--b);
 		border-radius: var(--radius-md);
 		padding: var(--space-2) var(--space-3);
 		font-size: 0.875rem;
 		font-family: inherit;
 		resize: vertical;
+		background: var(--s1);
+		color: var(--tx);
 	}
 
 	.notes-input:focus {
@@ -420,7 +422,7 @@
 	}
 
 	.empty-text {
-		color: var(--neutral-400);
+		color: var(--mu);
 		font-size: 0.875rem;
 		text-align: center;
 		padding: var(--space-3) 0;

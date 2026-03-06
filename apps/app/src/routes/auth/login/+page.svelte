@@ -52,6 +52,7 @@
 <div class="auth-page">
 	<div class="auth-card">
 		<div class="auth-header">
+			<span class="auth-logo">Short<em>list</em></span>
 			<h1>Welcome back</h1>
 			<p>Log in to your Shortlist account</p>
 		</div>
@@ -107,14 +108,14 @@
 		justify-content: center;
 		min-height: 100vh;
 		padding: var(--space-4);
-		background: var(--neutral-50);
+		background: var(--color-bg);
 	}
 
 	.auth-card {
 		width: 100%;
-		max-width: 400px;
-		background: white;
-		border-radius: var(--radius-lg);
+		max-width: 420px;
+		background: var(--neutral-100);
+		border-radius: var(--radius-xl);
 		border: 1px solid var(--neutral-200);
 		padding: var(--space-8);
 	}
@@ -124,9 +125,24 @@
 		margin-bottom: var(--space-6);
 	}
 
+	.auth-logo {
+		display: inline-block;
+		font-size: 1.5rem;
+		font-weight: 800;
+		color: var(--neutral-900);
+		margin-bottom: var(--space-4);
+	}
+
+	.auth-logo em {
+		color: var(--primary-500);
+		font-family: var(--font-display);
+		font-style: normal;
+	}
+
 	.auth-header h1 {
 		font-size: 1.5rem;
 		margin-bottom: var(--space-1);
+		color: var(--neutral-900);
 	}
 
 	.auth-header p {
@@ -135,8 +151,8 @@
 	}
 
 	.error-banner {
-		background: #fef2f2;
-		color: #dc2626;
+		background: var(--color-danger-light);
+		color: var(--color-danger);
 		padding: var(--space-3);
 		border-radius: var(--radius-md);
 		margin-bottom: var(--space-4);
@@ -159,27 +175,33 @@
 	.field input {
 		width: 100%;
 		padding: var(--space-2) var(--space-3);
+		background: var(--color-bg);
 		border: 1px solid var(--neutral-300);
 		border-radius: var(--radius-md);
 		font-size: 0.9375rem;
+		color: var(--neutral-900);
 		transition: border-color var(--transition-fast);
 	}
 
+	.field input::placeholder {
+		color: var(--neutral-500);
+	}
+
 	.field input:focus {
-		outline: var(--focus-ring);
-		outline-offset: var(--focus-ring-offset);
+		outline: none;
 		border-color: var(--primary-500);
+		box-shadow: 0 0 0 2px rgba(0, 204, 150, 0.2);
 	}
 
 	.btn-primary {
 		width: 100%;
-		padding: var(--space-2) var(--space-4);
+		padding: var(--space-3) var(--space-4);
 		background: var(--primary-600);
-		color: white;
+		color: var(--color-text-inverse);
 		border: none;
 		border-radius: var(--radius-md);
 		font-size: 0.9375rem;
-		font-weight: 500;
+		font-weight: 600;
 		cursor: pointer;
 		transition: background var(--transition-fast);
 	}
@@ -198,7 +220,7 @@
 		align-items: center;
 		gap: var(--space-3);
 		margin: var(--space-5) 0;
-		color: var(--neutral-400);
+		color: var(--neutral-500);
 		font-size: 0.8125rem;
 	}
 
@@ -212,18 +234,19 @@
 	.btn-oauth {
 		width: 100%;
 		padding: var(--space-2) var(--space-4);
-		background: white;
+		background: transparent;
 		color: var(--neutral-700);
 		border: 1px solid var(--neutral-300);
 		border-radius: var(--radius-md);
 		font-size: 0.9375rem;
 		font-weight: 500;
 		cursor: pointer;
-		transition: background var(--transition-fast);
+		transition: all var(--transition-fast);
 	}
 
 	.btn-oauth:hover:not(:disabled) {
-		background: var(--neutral-50);
+		background: rgba(255, 255, 255, 0.05);
+		border-color: var(--neutral-400);
 	}
 
 	.auth-footer {
@@ -231,5 +254,13 @@
 		margin-top: var(--space-5);
 		font-size: 0.875rem;
 		color: var(--neutral-500);
+	}
+
+	.auth-footer a {
+		color: var(--primary-500);
+	}
+
+	.auth-footer a:hover {
+		color: var(--primary-400);
 	}
 </style>

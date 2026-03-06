@@ -150,8 +150,8 @@
 	}
 
 	.stat-card {
-		background: white;
-		border: 1px solid var(--neutral-200);
+		background: var(--c2);
+		border: 1px solid var(--b);
 		border-radius: var(--radius-lg);
 		padding: var(--space-5);
 		display: flex;
@@ -161,19 +161,19 @@
 
 	.stat-label {
 		font-size: 0.8125rem;
-		color: var(--neutral-500);
+		color: var(--mu);
 		font-weight: 500;
 	}
 
 	.stat-value {
 		font-size: 1.75rem;
 		font-weight: 700;
-		color: var(--neutral-900);
+		color: var(--tx);
 	}
 
 	.recent-projects {
-		background: white;
-		border: 1px solid var(--neutral-200);
+		background: var(--c2);
+		border: 1px solid var(--b);
 		border-radius: var(--radius-lg);
 		padding: var(--space-6);
 	}
@@ -192,7 +192,7 @@
 		justify-content: space-between;
 		align-items: center;
 		padding: var(--space-3) var(--space-2);
-		border-bottom: 1px solid var(--neutral-100);
+		border-bottom: 1px solid var(--b);
 		text-decoration: none;
 		color: inherit;
 		transition: background var(--transition-fast);
@@ -200,7 +200,7 @@
 	}
 
 	.project-row:hover {
-		background: var(--neutral-50);
+		background: var(--s2);
 		text-decoration: none;
 	}
 
@@ -210,7 +210,7 @@
 
 	.project-name {
 		font-weight: 600;
-		color: var(--neutral-800);
+		color: var(--tx);
 		display: block;
 	}
 
@@ -218,7 +218,7 @@
 		display: flex;
 		gap: var(--space-2);
 		font-size: 0.8125rem;
-		color: var(--neutral-400);
+		color: var(--mu);
 		margin-top: 2px;
 	}
 
@@ -245,7 +245,7 @@
 
 	.project-updated {
 		font-size: 0.75rem;
-		color: var(--neutral-400);
+		color: var(--mu);
 		min-width: 50px;
 		text-align: right;
 	}
@@ -253,7 +253,7 @@
 	.empty-state {
 		text-align: center;
 		padding: var(--space-8) var(--space-4);
-		color: var(--neutral-500);
+		color: var(--mu);
 	}
 
 	.empty-state p {
