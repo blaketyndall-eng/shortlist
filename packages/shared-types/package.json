@@ -1,0 +1,18 @@
+{
+  "name": "@shortlist/shared-types",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./auth": "./src/auth.ts",
+    "./project": "./src/project.ts",
+    "./vendor": "./src/vendor.ts",
+    "./ai": "./src/ai.ts",
+    "./collaboration": "./src/collaboration.ts",
+    "./billing": "./src/billing.ts"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  }
+}

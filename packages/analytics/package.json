@@ -1,0 +1,15 @@
+{
+  "name": "@shortlist/analytics",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "posthog-js": "^1.200.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  }
+}

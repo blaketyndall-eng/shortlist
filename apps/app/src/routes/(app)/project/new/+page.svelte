@@ -1,0 +1,258 @@
+<script lang="ts">
+	import { goto } from '$app/navigation';
+	import { createSupabaseBrowserClient } from '$lib/supabase';
+	import Button from '$components/ui/Button.svelte';
+	import Card from '$components/ui/Card.svelte';
+
+	let name = $state('');
+	let description = $state('');
+	let category = $state('');
+	let loading = $state(false);
+	let error = $state('');
+
+	const supabase = createSupabaseBrowserClient();
+
+	const categories = [
+		{ value: 'software', label: 'Software / SaaS' },
+		{ value: 'services', label: 'Professional Services' },
+		{ value: 'hardware', label: 'Hardware / Equipment' },
+		{ value: 'infrastructure', label: 'Infrastructure / Cloud' },
+		{ value: 'marketing', label: 'Marketing / Agency' },
+		{ value: 'other', label: 'Other' }
+	];
+
+	async function handleCreate() {
+		if (!name.trim()) {
+			error = 'Project name is required';
+			return;
+		}
+
+		loading = true;
+		error = '';
+
+		const { data: user } = await supabase.auth.getUser();
+		if (!user.user) {
+			error = 'Not authenticated';
+			loading = false;
+			return;
+		}
+
+		const { data: project, error: dbError } = await supabase
+			.from('projects')
+			.insert({
+				name: name.trim(),
+				description: description.trim() || null,
+				category: category || null,
+				type: 'evaluate',
+				status: 'active',
+				current_step: 'setup',
+				owner_id: user.user.id,
+				created_by: user.user.id,
+				state: {
+					vendors: [],
+					criteria: [],
+					weights: {},
+					scores: {},
+					aiContext: {}
+				}
+			})
+			.select()
+			.single();
+
+		if (dbError) {
+			error = dbError.message;
+			loading = false;
+			return;
+		}
+
+		// Also add the creator as a project member (admin role)
+		await supabase.from('project_members').insert({
+			project_id: project.id,
+			user_id: user.user.id,
+			role: 'admin'
+		});
+
+		// Log activity
+		await supabase.from('activity_log').insert({
+			project_id: project.id,
+			user_id: user.user.id,
+			verb: 'created',
+			detail: `Created project "${name.trim()}"`
+		});
+
+		goto(`/project/${project.id}/setup`);
+	}
+</script>
+
+<svelte:head>
+	<title>New Project — Shortlist</title>
+</svelte:head>
+
+<div class="new-project">
+	<header class="page-header">
+		<h1>Create a new project</h1>
+		<p>Start evaluating vendors for your procurement decision.</p>
+	</header>
+
+	<Card>
+		{#if error}
+			<div class="error-banner" role="alert">{error}</div>
+		{/if}
+
+		<form onsubmit={handleCreate}>
+			<label class="field">
+				<span>Project name <em>*</em></span>
+				<input
+					type="text"
+					bind:value={name}
+					placeholder="e.g., CRM Platform Evaluation"
+					required
+					maxlength="120"
+				/>
+			</label>
+
+			<label class="field">
+				<span>Description</span>
+				<textarea
+					bind:value={description}
+					placeholder="What are you evaluating and why?"
+					rows="3"
+				></textarea>
+			</label>
+
+			<fieldset class="field">
+				<legend>Category</legend>
+				<div class="category-grid">
+					{#each categories as cat}
+						<label class="category-option" class:selected={category === cat.value}>
+							<input
+								type="radio"
+								name="category"
+								value={cat.value}
+								bind:group={category}
+							/>
+							<span>{cat.label}</span>
+						</label>
+					{/each}
+				</div>
+			</fieldset>
+
+			<div class="actions">
+				<Button variant="ghost" type="button" onclick={() => goto('/dashboard')}>
+					Cancel
+				</Button>
+				<Button variant="primary" type="submit" {loading}>
+					Create Project
+				</Button>
+			</div>
+		</form>
+	</Card>
+</div>
+
+<style>
+	.new-project {
+		max-width: 640px;
+		margin: 0 auto;
+		padding: var(--space-6);
+	}
+
+	.page-header {
+		margin-bottom: var(--space-6);
+	}
+
+	.page-header h1 {
+		margin-bottom: var(--space-1);
+	}
+
+	.page-header p {
+		color: var(--neutral-500);
+		margin-bottom: 0;
+	}
+
+	.error-banner {
+		background: #fef2f2;
+		color: #dc2626;
+		padding: var(--space-3);
+		border-radius: var(--radius-md);
+		margin-bottom: var(--space-4);
+		font-size: 0.875rem;
+	}
+
+	.field {
+		display: block;
+		margin-bottom: var(--space-5);
+		border: none;
+		padding: 0;
+	}
+
+	.field span, .field legend {
+		display: block;
+		font-size: 0.875rem;
+		font-weight: 500;
+		margin-bottom: var(--space-2);
+		color: var(--neutral-700);
+	}
+
+	.field em {
+		color: #dc2626;
+		font-style: normal;
+	}
+
+	.field input[type="text"],
+	.field textarea {
+		width: 100%;
+		padding: var(--space-2) var(--space-3);
+		border: 1px solid var(--neutral-300);
+		border-radius: var(--radius-md);
+		font-size: 0.9375rem;
+		font-family: inherit;
+		transition: border-color var(--transition-fast);
+		resize: vertical;
+	}
+
+	.field input:focus,
+	.field textarea:focus {
+		outline: var(--focus-ring);
+		outline-offset: var(--focus-ring-offset);
+		border-color: var(--primary-500);
+	}
+
+	.category-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+		gap: var(--space-2);
+	}
+
+	.category-option {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+		padding: var(--space-2) var(--space-3);
+		border: 1px solid var(--neutral-200);
+		border-radius: var(--radius-md);
+		cursor: pointer;
+		font-size: 0.875rem;
+		transition: all var(--transition-fast);
+	}
+
+	.category-option:hover {
+		border-color: var(--primary-300);
+	}
+
+	.category-option.selected {
+		border-color: var(--primary-500);
+		background: var(--primary-50);
+	}
+
+	.category-option input {
+		margin: 0;
+	}
+
+	.actions {
+		display: flex;
+		justify-content: flex-end;
+		gap: var(--space-3);
+		padding-top: var(--space-4);
+		border-top: 1px solid var(--neutral-100);
+	}
+</style>

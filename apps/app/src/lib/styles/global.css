@@ -1,0 +1,87 @@
+/* ── Import brand tokens ──────────────────────────────────── */
+@import '@shortlist/brand/tokens.css';
+
+/* ── Reset & Base ─────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+}
+
+html {
+	font-family: var(--font-sans);
+	font-size: 16px;
+	line-height: 1.6;
+	color: var(--neutral-900);
+	background: var(--neutral-50);
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+body {
+	min-height: 100vh;
+}
+
+/* ── Typography ───────────────────────────────────────────── */
+h1, h2, h3, h4, h5, h6 {
+	line-height: 1.3;
+	font-weight: 600;
+	color: var(--neutral-900);
+}
+
+h1 { font-size: 1.875rem; }
+h2 { font-size: 1.5rem; }
+h3 { font-size: 1.25rem; }
+h4 { font-size: 1.125rem; }
+
+p {
+	margin-bottom: var(--space-3);
+}
+
+a {
+	color: var(--primary-600);
+	text-decoration: none;
+}
+
+a:hover {
+	color: var(--primary-700);
+	text-decoration: underline;
+}
+
+code, pre {
+	font-family: var(--font-mono);
+	font-size: 0.875em;
+}
+
+/* ── Focus styles ─────────────────────────────────────────── */
+:focus-visible {
+	outline: var(--focus-ring);
+	outline-offset: var(--focus-ring-offset);
+}
+
+/* ── Utility classes ──────────────────────────────────────── */
+.sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border-width: 0;
+}
+
+/* ── Reduced motion ───────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+		scroll-behavior: auto !important;
+	}
+}
