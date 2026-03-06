@@ -232,7 +232,7 @@
 	}
 
 	.step-description {
-		color: var(--mu);
+		color: var(--neutral-500);
 		margin-bottom: 0;
 	}
 
@@ -245,21 +245,18 @@
 	.add-form input {
 		flex: 2;
 		padding: var(--space-2) var(--space-3);
-		border: 1px solid var(--b);
+		border: 1px solid var(--neutral-300);
 		border-radius: var(--radius-md);
 		font-size: 0.9375rem;
-		background: var(--s1);
-		color: var(--tx);
 	}
 
 	.add-form select {
 		flex: 1;
 		padding: var(--space-2) var(--space-3);
-		border: 1px solid var(--b);
+		border: 1px solid var(--neutral-300);
 		border-radius: var(--radius-md);
 		font-size: 0.875rem;
-		background: var(--s1);
-		color: var(--tx);
+		background: white;
 	}
 
 	.add-form input:focus,
@@ -278,8 +275,8 @@
 	.criteria-table th {
 		text-align: left;
 		padding: var(--space-2) var(--space-3);
-		border-bottom: 2px solid var(--b);
-		color: var(--mu);
+		border-bottom: 2px solid var(--neutral-200);
+		color: var(--neutral-500);
 		font-weight: 500;
 		font-size: 0.75rem;
 		text-transform: uppercase;
@@ -288,17 +285,17 @@
 
 	.criteria-table td {
 		padding: var(--space-2) var(--space-3);
-		border-bottom: 1px solid var(--b);
+		border-bottom: 1px solid var(--neutral-100);
 		vertical-align: middle;
 	}
 
 	.name-cell {
 		font-weight: 500;
-		color: var(--tx);
+		color: var(--neutral-800);
 	}
 
 	.desc-hint {
-		color: var(--mu);
+		color: var(--neutral-400);
 		cursor: help;
 		margin-left: var(--space-1);
 	}
@@ -306,10 +303,10 @@
 	.category-badge {
 		display: inline-block;
 		padding: 2px var(--space-2);
-		background: var(--s2);
+		background: var(--neutral-100);
 		border-radius: 9999px;
 		font-size: 0.75rem;
-		color: var(--mu);
+		color: var(--neutral-600);
 		text-transform: capitalize;
 	}
 
@@ -323,37 +320,37 @@
 		width: 20px;
 		text-align: center;
 		font-weight: 600;
-		color: var(--tx);
+		color: var(--neutral-700);
 		margin-left: var(--space-1);
 	}
 
 	.source-ai {
-		color: var(--t);
+		color: var(--secondary-600);
 		font-size: 0.75rem;
 	}
 
 	.source-user {
-		color: var(--mu);
+		color: var(--neutral-400);
 		font-size: 0.75rem;
 	}
 
 	.remove-btn {
 		background: none;
 		border: none;
-		color: var(--mu);
+		color: var(--neutral-400);
 		cursor: pointer;
 		padding: var(--space-1);
 		border-radius: var(--radius-sm);
 	}
 
 	.remove-btn:hover {
-		color: var(--rd);
-		background: rgba(240, 80, 80, 0.1);
+		color: #dc2626;
+		background: #fef2f2;
 	}
 
 	.empty-hint {
 		text-align: center;
-		color: var(--mu);
+		color: var(--neutral-400);
 		padding: var(--space-6) 0;
 	}
 

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { createSupabaseBrowserClient } from '$lib/supabase';
+	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 
 	let email = $state('');
@@ -10,6 +11,7 @@
 	let success = $state(false);
 
 	const supabase = createSupabaseBrowserClient();
+	const redirectTo = $derived($page.url.searchParams.get('redirectTo') ?? '/dashboard');
 
 	async function handleSignup() {
 		loading = true;
@@ -41,7 +43,7 @@
 		const { error: authError } = await supabase.auth.signInWithOAuth({
 			provider: 'google',
 			options: {
-				redirectTo: `${$page.url.origin}/auth/callback`
+				redirectTo: `${$page.url.origin}/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}`
 			}
 		});
 
@@ -58,8 +60,11 @@
 
 <div class="auth-page">
 	<div class="auth-card">
+		<a href="https://tryshortlist.app" class="auth-logo">
+			<span class="logo-mark">S</span>
+			<span>Shortlist</span>
+		</a>
 		<div class="auth-header">
-			<span class="auth-logo">Short<em>list</em></span>
 			<h1>Create your account</h1>
 			<p>Start your 14-day free trial</p>
 		</div>
@@ -121,7 +126,7 @@
 		{/if}
 
 		<p class="auth-footer">
-			Already have an account? <a href="/auth/login">Log in</a>
+			Already have an account? <a href="/auth/login{redirectTo !== '/dashboard' ? `?redirectTo=${encodeURIComponent(redirectTo)}` : ''}">Log in</a>
 		</p>
 	</div>
 </div>
@@ -133,15 +138,40 @@
 		justify-content: center;
 		min-height: 100vh;
 		padding: var(--space-4);
-		background: var(--bg);
+		background: var(--neutral-50);
+	}
+
+	.auth-logo {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		text-decoration: none;
+		color: var(--neutral-800);
+		font-weight: 700;
+		font-size: 1.125rem;
+		margin-bottom: var(--space-5);
+		justify-content: center;
+	}
+
+	.logo-mark {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 28px;
+		height: 28px;
+		background: var(--primary-600, #4f46e5);
+		color: white;
+		border-radius: 6px;
+		font-size: 0.875rem;
+		font-weight: 700;
 	}
 
 	.auth-card {
 		width: 100%;
-		max-width: 420px;
-		background: var(--s1);
-		border-radius: 14px;
-		border: 1px solid var(--b);
+		max-width: 400px;
+		background: white;
+		border-radius: var(--radius-lg);
+		border: 1px solid var(--neutral-200);
 		padding: var(--space-8);
 	}
 
@@ -150,113 +180,83 @@
 		margin-bottom: var(--space-6);
 	}
 
-	.auth-logo {
-		display: inline-block;
-		font-family: var(--font-display);
-		font-size: 19px;
-		font-weight: 700;
-		color: var(--tx);
-		margin-bottom: var(--space-4);
-	}
-
-	.auth-logo em {
-		color: var(--t);
-		font-style: normal;
-	}
-
 	.auth-header h1 {
 		font-size: 1.5rem;
 		margin-bottom: var(--space-1);
-		color: var(--tx);
 	}
 
 	.auth-header p {
-		color: var(--mu);
+		color: var(--neutral-500);
 		margin-bottom: 0;
-		font-size: 14px;
 	}
 
 	.error-banner {
-		background: rgba(240, 80, 80, 0.12);
-		color: var(--rd);
+		background: #fef2f2;
+		color: #dc2626;
 		padding: var(--space-3);
-		border-radius: 8px;
-		border: 1px solid rgba(240, 80, 80, 0.2);
+		border-radius: var(--radius-md);
 		margin-bottom: var(--space-4);
-		font-size: 13px;
+		font-size: 0.875rem;
 	}
 
 	.success-banner {
-		background: rgba(0, 204, 150, 0.12);
-		color: var(--t);
+		background: #f0fdf4;
+		color: #16a34a;
 		padding: var(--space-4);
-		border-radius: 8px;
-		border: 1px solid rgba(0, 204, 150, 0.2);
+		border-radius: var(--radius-md);
 		margin-bottom: var(--space-4);
-		font-size: 14px;
+		font-size: 0.9375rem;
 		text-align: center;
 	}
 
 	.field {
 		display: block;
-		margin-bottom: 14px;
+		margin-bottom: var(--space-4);
 	}
 
 	.field span {
 		display: block;
-		font-size: 11px;
-		font-weight: 700;
-		color: var(--mu);
-		letter-spacing: 0.5px;
-		margin-bottom: 5px;
+		font-size: 0.875rem;
+		font-weight: 500;
+		margin-bottom: var(--space-1);
+		color: var(--neutral-700);
 	}
 
 	.field input {
 		width: 100%;
-		padding: 9px 13px;
-		background: var(--s2);
-		border: 1px solid var(--b2);
-		border-radius: 8px;
-		font-size: 13px;
-		color: var(--tx);
-		font-family: var(--font-sans);
-		transition: border-color 150ms ease;
-		outline: none;
-	}
-
-	.field input::placeholder {
-		color: var(--mu2);
+		padding: var(--space-2) var(--space-3);
+		border: 1px solid var(--neutral-300);
+		border-radius: var(--radius-md);
+		font-size: 0.9375rem;
+		transition: border-color var(--transition-fast);
 	}
 
 	.field input:focus {
-		border-color: var(--t);
+		outline: var(--focus-ring);
+		outline-offset: var(--focus-ring-offset);
+		border-color: var(--primary-500);
 	}
 
 	.btn-primary {
 		width: 100%;
-		padding: 11px 20px;
-		background: var(--t);
-		color: #061510;
+		padding: var(--space-2) var(--space-4);
+		background: var(--primary-600);
+		color: white;
 		border: none;
-		border-radius: 8px;
-		font-size: 14px;
-		font-weight: 600;
-		font-family: var(--font-sans);
+		border-radius: var(--radius-md);
+		font-size: 0.9375rem;
+		font-weight: 500;
 		cursor: pointer;
-		transition: all 170ms ease;
+		transition: background var(--transition-fast);
 	}
 
 	.btn-primary:hover:not(:disabled) {
-		background: var(--t2);
-		transform: translateY(-1px);
-		box-shadow: 0 8px 22px rgba(0, 204, 150, 0.22);
+		background: var(--primary-700);
 	}
 
 	.btn-primary:disabled {
-		opacity: 0.3;
+		opacity: 0.6;
 		cursor: not-allowed;
-		transform: none;
-		box-shadow: none;
 	}
 
 	.divider {
@@ -264,48 +264,38 @@
 		align-items: center;
 		gap: var(--space-3);
 		margin: var(--space-5) 0;
-		color: var(--mu2);
-		font-size: 12px;
+		color: var(--neutral-400);
+		font-size: 0.8125rem;
 	}
 
 	.divider::before,
 	.divider::after {
 		content: '';
 		flex: 1;
-		border-top: 1px solid var(--b);
+		border-top: 1px solid var(--neutral-200);
 	}
 
 	.btn-oauth {
 		width: 100%;
-		padding: 10px 20px;
-		background: transparent;
-		color: var(--tx);
-		border: 1px solid var(--b2);
-		border-radius: 8px;
-		font-size: 14px;
-		font-weight: 600;
-		font-family: var(--font-sans);
+		padding: var(--space-2) var(--space-4);
+		background: white;
+		color: var(--neutral-700);
+		border: 1px solid var(--neutral-300);
+		border-radius: var(--radius-md);
+		font-size: 0.9375rem;
+		font-weight: 500;
 		cursor: pointer;
-		transition: all 170ms ease;
+		transition: background var(--transition-fast);
 	}
 
 	.btn-oauth:hover:not(:disabled) {
-		border-color: rgba(255, 255, 255, 0.28);
+		background: var(--neutral-50);
 	}
 
 	.auth-footer {
 		text-align: center;
 		margin-top: var(--space-5);
-		font-size: 13px;
-		color: var(--mu);
-	}
-
-	.auth-footer a {
-		color: var(--t);
-		text-decoration: none;
-	}
-
-	.auth-footer a:hover {
-		color: var(--t2);
+		font-size: 0.875rem;
+		color: var(--neutral-500);
 	}
 </style>

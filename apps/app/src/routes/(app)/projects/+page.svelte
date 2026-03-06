@@ -166,11 +166,9 @@
 	.filters select {
 		width: 100%;
 		padding: var(--space-2) var(--space-3);
-		border: 1px solid var(--b);
+		border: 1px solid var(--neutral-200);
 		border-radius: var(--radius-md);
 		font-size: 0.875rem;
-		background: var(--s1);
-		color: var(--tx);
 	}
 
 	.filters select { width: auto; min-width: 140px; }
@@ -185,14 +183,14 @@
 	.clear-btn {
 		padding: var(--space-2) var(--space-3);
 		background: none;
-		border: 1px solid var(--b);
+		border: 1px solid var(--neutral-200);
 		border-radius: var(--radius-md);
 		font-size: 0.8125rem;
-		color: var(--mu);
+		color: var(--neutral-500);
 		cursor: pointer;
 	}
 
-	.clear-btn:hover { background: var(--s2); }
+	.clear-btn:hover { background: var(--neutral-50); }
 
 	.project-grid {
 		display: grid;
@@ -201,8 +199,8 @@
 	}
 
 	.project-card {
-		background: var(--c2);
-		border: 1px solid var(--b);
+		background: white;
+		border: 1px solid var(--neutral-200);
 		border-radius: var(--radius-lg);
 		padding: var(--space-5);
 		text-decoration: none;

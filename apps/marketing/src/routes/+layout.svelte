@@ -2,16 +2,11 @@
 	let { children } = $props();
 </script>
 
-<svelte:head>
-	<link rel="preconnect" href="https://fonts.googleapis.com" />
-	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
-	<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
-</svelte:head>
-
 <div class="marketing-layout">
 	<nav class="top-nav">
 		<a href="/" class="nav-logo">
-			<span class="logo-text">Short<em class="logo-accent">list</em></span>
+			<span class="logo-mark">S</span>
+			<span>Shortlist</span>
 		</a>
 		<div class="nav-links">
 			<a href="/features">Features</a>
@@ -26,14 +21,15 @@
 	<footer class="site-footer">
 		<div class="footer-inner">
 			<div class="footer-brand">
-				<span class="logo-text">Short<em class="logo-accent">list</em></span>
+				<span class="logo-mark">S</span>
+				<span>Shortlist</span>
 			</div>
-			<div class="footer-mid">© {new Date().getFullYear()} Shortlist. All rights reserved.</div>
 			<div class="footer-links">
 				<a href="/features">Features</a>
 				<a href="/pricing">Pricing</a>
 				<a href="mailto:hello@tryshortlist.app">Contact</a>
 			</div>
+			<p class="footer-copy">© {new Date().getFullYear()} Shortlist. All rights reserved.</p>
 		</div>
 	</footer>
 </div>
@@ -41,58 +37,46 @@
 <style>
 	:global(body) {
 		margin: 0;
-		font-family: 'Figtree', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-		color: #dde4ef;
-		background: #0b1017;
+		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+		color: #1a1a2e;
 		-webkit-font-smoothing: antialiased;
-		-moz-osx-font-smoothing: grayscale;
-		overflow-x: hidden;
 	}
 
-	:global(body::before) {
-		content: '';
-		position: fixed;
-		inset: 0;
-		pointer-events: none;
-		z-index: 0;
-		background: radial-gradient(ellipse 65% 45% at 10% 0%, rgba(0,204,150,.07), transparent 58%),
-		            radial-gradient(ellipse 45% 35% at 90% 96%, rgba(74,150,248,.055), transparent 58%);
-	}
+	:global(*, *::before, *::after) { box-sizing: border-box; }
 
-	:global(*, *::before, *::after) { box-sizing: border-box; margin: 0; padding: 0; }
-
-	.marketing-layout { min-height: 100vh; display: flex; flex-direction: column; position: relative; z-index: 1; }
+	.marketing-layout { min-height: 100vh; display: flex; flex-direction: column; }
 
 	.top-nav {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		padding: 15px 28px;
-		max-width: 1140px;
+		padding: 16px 32px;
+		max-width: 1200px;
 		width: 100%;
 		margin: 0 auto;
-		border-bottom: 1px solid rgba(255,255,255,.08);
-		background: rgba(11,16,23,.9);
-		backdrop-filter: blur(14px);
-		position: sticky;
-		top: 0;
-		z-index: 200;
 	}
 
 	.nav-logo {
+		display: flex;
+		align-items: center;
+		gap: 8px;
 		text-decoration: none;
-	}
-
-	.logo-text {
-		font-family: 'Playfair Display', serif;
-		font-size: 19px;
+		color: #1a1a2e;
 		font-weight: 700;
-		color: #dde4ef;
+		font-size: 1.125rem;
 	}
 
-	:global(.logo-accent) {
-		color: #00cc96;
-		font-style: normal;
+	.logo-mark {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 28px;
+		height: 28px;
+		background: #4f46e5;
+		color: white;
+		border-radius: 6px;
+		font-size: 0.875rem;
+		font-weight: 700;
 	}
 
 	.nav-links {
@@ -102,40 +86,34 @@
 	}
 
 	.nav-links a {
-		font-size: 14px;
-		color: #6b7e96;
+		font-size: 0.9375rem;
+		color: #6b7280;
 		text-decoration: none;
-		font-weight: 600;
-		transition: color 0.15s;
+		font-weight: 500;
 	}
 
-	.nav-links a:hover { color: #dde4ef; }
+	.nav-links a:hover { color: #1a1a2e; }
 
-	.nav-login { color: #6b7e96 !important; }
+	.nav-login { color: #374151 !important; }
 
 	.nav-cta {
-		padding: 10px 20px !important;
-		background: #00cc96;
-		color: #061510 !important;
-		border-radius: 8px;
+		padding: 8px 20px !important;
+		background: #4f46e5;
+		color: white !important;
+		border-radius: 6px;
 		font-weight: 600 !important;
-		transition: all 0.17s;
 	}
 
-	.nav-cta:hover {
-		background: #009e74;
-		transform: translateY(-1px);
-		box-shadow: 0 8px 22px rgba(0,204,150,.22);
-	}
+	.nav-cta:hover { background: #4338ca; }
 
 	.site-footer {
 		margin-top: auto;
-		border-top: 1px solid rgba(255, 255, 255, 0.08);
-		padding: 48px 28px;
+		border-top: 1px solid #e5e7eb;
+		padding: 48px 32px;
 	}
 
 	.footer-inner {
-		max-width: 1140px;
+		max-width: 1200px;
 		margin: 0 auto;
 		display: flex;
 		align-items: center;
@@ -148,6 +126,7 @@
 		display: flex;
 		align-items: center;
 		gap: 8px;
+		font-weight: 700;
 	}
 
 	.footer-links {
@@ -157,21 +136,23 @@
 
 	.footer-links a {
 		font-size: 0.875rem;
-		color: #3a4a5c;
+		color: #6b7280;
 		text-decoration: none;
-		transition: color 0.15s;
 	}
 
-	.footer-links a:hover { color: #6b7e96; }
+	.footer-links a:hover { color: #1a1a2e; }
 
-	.footer-mid {
-		font-size: 11px;
-		color: #3a4a5c;
+	.footer-copy {
+		font-size: 0.8125rem;
+		color: #9ca3af;
+		width: 100%;
+		text-align: center;
+		margin-top: 16px;
 	}
 
 	@media (max-width: 640px) {
 		.top-nav { padding: 12px 16px; }
 		.nav-links { gap: 12px; }
-		.nav-links a { font-size: 12px; }
+		.nav-links a { font-size: 0.8125rem; }
 	}
 </style>

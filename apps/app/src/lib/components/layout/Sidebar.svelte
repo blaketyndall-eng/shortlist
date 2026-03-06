@@ -22,7 +22,8 @@
 <aside class="sidebar" class:open aria-label="Main navigation">
 	<div class="sidebar-header">
 		<a href="/dashboard" class="logo">
-			<span class="logo-text">Short<em class="logo-accent">list</em></span>
+			<span class="logo-mark">S</span>
+			<span class="logo-text">Shortlist</span>
 		</a>
 	</div>
 
@@ -57,7 +58,7 @@
 
 <style>
 	.sidebar {
-		background: var(--neutral-100);
+		background: white;
 		border-right: 1px solid var(--neutral-200);
 		display: flex;
 		flex-direction: column;
@@ -74,7 +75,7 @@
 
 	.sidebar-header {
 		padding: var(--space-4) var(--space-5);
-		border-bottom: 1px solid var(--neutral-200);
+		border-bottom: 1px solid var(--neutral-100);
 	}
 
 	.logo {
@@ -82,18 +83,22 @@
 		align-items: center;
 		gap: var(--space-2);
 		text-decoration: none;
-		font-family: var(--font-display);
-		color: var(--tx);
+		color: var(--neutral-900);
 		font-weight: 700;
-		font-size: 19px;
+		font-size: 1.125rem;
 	}
 
-	.logo:hover { text-decoration: none; }
-
-	:global(.logo-accent) {
-		color: var(--t);
-		font-family: var(--font-display);
-		font-style: normal;
+	.logo-mark {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 28px;
+		height: 28px;
+		background: var(--primary-600);
+		color: white;
+		border-radius: var(--radius-md);
+		font-size: 0.875rem;
+		font-weight: 700;
 	}
 
 	.sidebar-nav {
@@ -118,14 +123,14 @@
 	}
 
 	.nav-item:hover {
-		background: rgba(255, 255, 255, 0.05);
+		background: var(--neutral-100);
 		color: var(--neutral-900);
 		text-decoration: none;
 	}
 
 	.nav-item.active {
 		background: var(--primary-50);
-		color: var(--primary-500);
+		color: var(--primary-700);
 	}
 
 	.nav-icon {
@@ -136,7 +141,7 @@
 
 	.sidebar-footer {
 		padding: var(--space-3) var(--space-4);
-		border-top: 1px solid var(--neutral-200);
+		border-top: 1px solid var(--neutral-100);
 	}
 
 	.user-info {
@@ -150,7 +155,7 @@
 		height: 32px;
 		border-radius: 50%;
 		background: var(--primary-100);
-		color: var(--primary-500);
+		color: var(--primary-700);
 		display: flex;
 		align-items: center;
 		justify-content: center;

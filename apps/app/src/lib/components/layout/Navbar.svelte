@@ -43,9 +43,8 @@
 		justify-content: space-between;
 		padding: 0 var(--space-4);
 		height: var(--nav-height);
-		background: rgba(11, 16, 23, 0.9);
-		backdrop-filter: blur(14px);
-		border-bottom: 1px solid var(--b);
+		background: white;
+		border-bottom: 1px solid var(--neutral-200);
 		flex-shrink: 0;
 	}
 
@@ -60,14 +59,14 @@
 		border: none;
 		cursor: pointer;
 		font-size: 1.25rem;
-		color: var(--mu);
+		color: var(--neutral-500);
 		padding: var(--space-1);
-		border-radius: 6px;
-		transition: color 150ms ease;
+		border-radius: var(--radius-sm);
+		transition: color var(--transition-fast);
 	}
 
 	.sidebar-toggle:hover {
-		color: var(--tx);
+		color: var(--neutral-900);
 	}
 
 	.navbar-right {
@@ -78,19 +77,17 @@
 
 	.logout-btn {
 		background: none;
-		border: 1px solid var(--b2);
+		border: 1px solid var(--neutral-300);
 		padding: var(--space-1) var(--space-3);
-		border-radius: 8px;
-		font-size: 12px;
-		font-weight: 600;
-		color: var(--mu);
+		border-radius: var(--radius-md);
+		font-size: 0.8125rem;
+		color: var(--neutral-600);
 		cursor: pointer;
-		transition: all 150ms ease;
-		font-family: var(--font-sans);
+		transition: all var(--transition-fast);
 	}
 
 	.logout-btn:hover {
-		border-color: var(--t);
-		color: var(--t);
+		background: var(--neutral-50);
+		color: var(--neutral-900);
 	}
 </style>

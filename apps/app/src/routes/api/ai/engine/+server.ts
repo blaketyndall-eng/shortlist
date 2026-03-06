@@ -4,23 +4,66 @@ import { ANTHROPIC_API_KEY } from '$env/static/private';
 import { createServerSupabase } from '$services/supabase.server';
 import type { AIModel, EngineName, EngineDepth, PipelineStage } from '@shortlist/shared-types/ai';
 
+// Model selection by depth
 const MODEL_MAP: Record<EngineDepth, string> = {
 	quick: 'claude-haiku-4-5-20251001',
 	standard: 'claude-sonnet-4-6',
-	deep: 'claude-sonnet-4-6'
+	deep: 'claude-opus-4-6',
 };
 
+// Credit cost per model
 const CREDIT_MAP: Record<string, number> = {
 	'claude-haiku-4-5-20251001': 1,
 	'claude-sonnet-4-6': 5,
-	'claude-opus-4-6': 20
+	'claude-opus-4-6': 20,
+};
+
+// Max tokens per engine type (matching prototype allocations)
+const TOKEN_LIMITS: Partial<Record<string, number>> = {
+	category_detect: 300,
+	vendor_suggest: 900,
+	challenges: 600,
+	vendor_research: 500,
+	score_prefill: 400,
+	demo_questions: 600,
+	demo_debrief: 600,
+	score_anomaly: 600,
+	negotiation_coach: 700,
+	hidden_cost_spotter: 600,
+	risk_register: 700,
+	contract_risk: 700,
+	score_explanation: 2000,
+	executive_brief: 800,
+	decision_readiness: 700,
+	company_autofill: 1200,
+	compliance_suggest: 400,
+	priorities_suggest: 300,
+	stack_suggest: 300,
+	context_notes: 500,
+	reference_questions: 500,
+};
+
+// Model overrides for specific engines (prototype uses specific model per engine)
+const ENGINE_MODEL_OVERRIDE: Partial<Record<string, string>> = {
+	category_detect: 'claude-haiku-4-5-20251001',
+	challenges: 'claude-haiku-4-5-20251001',
+	vendor_research: 'claude-haiku-4-5-20251001',
+	score_prefill: 'claude-haiku-4-5-20251001',
+	compliance_suggest: 'claude-haiku-4-5-20251001',
+	priorities_suggest: 'claude-haiku-4-5-20251001',
+	stack_suggest: 'claude-haiku-4-5-20251001',
+	demo_questions: 'claude-haiku-4-5-20251001',
+	reference_questions: 'claude-haiku-4-5-20251001',
+	score_explanation: 'claude-opus-4-6',
+	executive_brief: 'claude-opus-4-6',
 };
 
 interface EngineRequest {
-	engine: EngineName;
+	engine: string;
 	depth: EngineDepth;
 	context: Record<string, unknown>;
 	projectId: string;
+	task?: string;
 }
 
 export const POST: RequestHandler = async ({ request, locals, cookies }) => {
@@ -34,32 +77,32 @@ export const POST: RequestHandler = async ({ request, locals, cookies }) => {
 
 	const body: EngineRequest = await request.json();
 
-	if (!body.engine || !body.depth || !body.projectId) {
-		error(400, 'Missing required fields: engine, depth, projectId');
+	if (!body.engine || !body.projectId) {
+		error(400, 'Missing required fields: engine, projectId');
 	}
 
-	const model = MODEL_MAP[body.depth] ?? MODEL_MAP.standard;
+	const depth = body.depth ?? 'standard';
+	const model = ENGINE_MODEL_OVERRIDE[body.engine] ?? MODEL_MAP[depth] ?? MODEL_MAP.standard;
+	const maxTokens = TOKEN_LIMITS[body.engine] ?? (depth === 'quick' ? 1024 : 4096);
 	const startTime = Date.now();
 
 	try {
-		// Build the system prompt based on engine type
 		const systemPrompt = buildSystemPrompt(body.engine, body.context);
 		const userPrompt = buildUserPrompt(body.engine, body.context);
 
-		// Call Anthropic API
 		const response = await fetch('https://api.anthropic.com/v1/messages', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
 				'x-api-key': ANTHROPIC_API_KEY,
-				'anthropic-version': '2023-06-01'
+				'anthropic-version': '2023-06-01',
 			},
 			body: JSON.stringify({
 				model,
-				max_tokens: body.depth === 'quick' ? 1024 : 4096,
+				max_tokens: maxTokens,
 				system: systemPrompt,
-				messages: [{ role: 'user', content: userPrompt }]
-			})
+				messages: [{ role: 'user', content: userPrompt }],
+			}),
 		});
 
 		if (!response.ok) {
@@ -69,7 +112,6 @@ export const POST: RequestHandler = async ({ request, locals, cookies }) => {
 
 		const aiResult = await response.json();
 		const latency = Date.now() - startTime;
-
 		const inputTokens = aiResult.usage?.input_tokens ?? 0;
 		const outputTokens = aiResult.usage?.output_tokens ?? 0;
 		const credits = CREDIT_MAP[model] ?? 5;
@@ -84,16 +126,15 @@ export const POST: RequestHandler = async ({ request, locals, cookies }) => {
 			input_tokens: inputTokens,
 			output_tokens: outputTokens,
 			credits_used: credits,
-			latency_ms: latency
+			latency_ms: latency,
 		});
 
 		// Parse the AI response
 		let parsedResult: unknown;
 		try {
 			const text = aiResult.content?.[0]?.text ?? '';
-			// Try to extract JSON from the response
-			const jsonMatch = text.match(/```json\n?([\s\S]*?)```/) ?? text.match(/\{[\s\S]*\}/);
-			parsedResult = jsonMatch ? JSON.parse(jsonMatch[1] ?? jsonMatch[0]) : { text };
+			const cleaned = text.replace(/```json\n?|```/g, '').trim();
+			parsedResult = JSON.parse(cleaned);
 		} catch {
 			parsedResult = { text: aiResult.content?.[0]?.text ?? '' };
 		}
@@ -101,10 +142,11 @@ export const POST: RequestHandler = async ({ request, locals, cookies }) => {
 		return json({
 			engine: body.engine,
 			stage: 'recommend' as PipelineStage,
+			data: parsedResult,
 			result: parsedResult,
 			model: model as AIModel,
-			confidence: estimateConfidence(body.depth, aiResult),
-			tokensUsed: { input: inputTokens, output: outputTokens }
+			confidence: estimateConfidence(depth, aiResult),
+			tokensUsed: { input: inputTokens, output: outputTokens },
 		});
 	} catch (err: any) {
 		if (err.status) throw err;
@@ -112,63 +154,354 @@ export const POST: RequestHandler = async ({ request, locals, cookies }) => {
 	}
 };
 
-function buildSystemPrompt(engine: EngineName, context: Record<string, unknown>): string {
-	const base = `You are Shortlist AI, a procurement intelligence assistant. You help teams evaluate vendors and make better purchasing decisions. Always respond with structured, actionable insights.`;
+// ============================================================
+// SYSTEM PROMPTS - Matching prototype exactly
+// ============================================================
 
-	const enginePrompts: Record<string, string> = {
-		evaluate: `${base}\n\nYou specialize in vendor evaluation: scoring, comparison, and analysis. When suggesting criteria, provide a JSON array of objects with name, category (functional/technical/commercial/strategic/risk), weight (1-10), and description.`,
-		discovery: `${base}\n\nYou specialize in vendor discovery: identifying, researching, and recommending vendors for specific use cases. Provide structured vendor recommendations with rationale.`,
-		rfp: `${base}\n\nYou specialize in RFP generation: creating evaluation questionnaires, requirement documents, and scoring rubrics.`,
-		negotiate: `${base}\n\nYou specialize in procurement negotiation: pricing analysis, competitive leverage, and deal strategy.`,
-		risk: `${base}\n\nYou specialize in vendor risk assessment: compliance, financial stability, and operational risk analysis.`,
-		executive: `${base}\n\nYou specialize in executive communication: creating summaries, dashboards, and decision briefs for leadership.`,
-		implement: `${base}\n\nYou specialize in implementation planning: timelines, change management, and vendor onboarding.`,
-		vendor: `${base}\n\nYou specialize in vendor intelligence: maintaining and enriching vendor profiles with current market data.`
+function buildSystemPrompt(engine: string, context: Record<string, unknown>): string {
+	// Inject company context if available
+	const companyContext = buildCompanyContext(context.companyProfile as Record<string, unknown> | undefined);
+
+	const prompts: Record<string, string> = {
+		// --- SOLVE Phase ---
+		category_detect: 'You are a software procurement expert. Respond ONLY with valid JSON, no markdown.',
+		vendor_suggest: 'You are a B2B software procurement advisor. Return ONLY valid JSON, no markdown.',
+		challenges: 'You are a procurement consultant. Respond ONLY with a JSON array, no markdown.',
+		vendor_research: 'You are a B2B software analyst. Return ONLY valid JSON, no markdown.',
+
+		// --- Evaluate Phase ---
+		evaluate: 'You are Shortlist AI, a procurement intelligence assistant specializing in vendor evaluation: scoring, comparison, and analysis. Always respond with structured, actionable insights.',
+		score_prefill: 'You are a B2B software analyst. Return ONLY valid JSON, no markdown.',
+		score_anomaly: 'You are a procurement analyst. Return ONLY valid JSON.',
+		score_explanation: 'You are a procurement analyst writing score justifications. Return ONLY valid JSON.',
+		negotiation_coach: 'You are a seasoned B2B software negotiation expert. Return ONLY valid JSON.',
+		hidden_cost_spotter: 'You are a software procurement cost expert. Return ONLY valid JSON.',
+		risk_register: 'You are a procurement risk analyst. Return ONLY valid JSON.',
+		contract_risk: 'You are a software contract expert. Return ONLY valid JSON.',
+		executive_brief: 'You are a senior management consultant writing an executive decision memo. Write in clear, confident prose. No bullet points.',
+		decision_readiness: 'You are a decision quality facilitator using structured decision-making. Return ONLY valid JSON.',
+
+		// --- Demo Phase ---
+		demo_briefing: 'You are a B2B procurement expert helping prepare for a vendor demo. Return ONLY valid JSON.',
+		demo_debrief: 'You are a procurement facilitator synthesizing demo feedback. Return ONLY valid JSON.',
+		demo_questions: 'You are a B2B procurement expert. Generate targeted vendor-specific demo questions. Return ONLY valid JSON.',
+		reference_questions: 'You are an experienced procurement reference checker. Return ONLY valid JSON.',
+
+		// --- Company Profile ---
+		company_autofill: 'You are a procurement intelligence assistant. Analyse a company description and return a structured JSON profile. Only choose values from the provided option lists. Return ONLY valid JSON, no markdown.',
+		compliance_suggest: 'You are a compliance expert. Return ONLY a JSON array of strings, no markdown.',
+		priorities_suggest: 'You are a procurement strategist. Return ONLY a JSON array of strings, no markdown.',
+		stack_suggest: 'You are a solutions architect. Return ONLY a comma-separated list of tool names, no markdown or explanation.',
+		context_notes: 'You are a procurement intelligence assistant writing buyer context notes. Write in second person, clear and direct. 3–5 sentences max.',
+
+		// --- Discovery & RFP ---
+		discovery: 'You are Shortlist AI, specializing in vendor discovery: identifying, researching, and recommending vendors for specific use cases.',
+		rfp: 'You are Shortlist AI, specializing in RFP generation: creating evaluation questionnaires, requirement documents, and scoring rubrics.',
+
+		// --- Implementation ---
+		implement: 'You are Shortlist AI, specializing in implementation planning: timelines, change management, and vendor onboarding.',
 	};
 
-	return enginePrompts[engine] ?? base;
+	const basePrompt = prompts[engine] ?? prompts.evaluate;
+	return companyContext ? `${basePrompt}\n\n${companyContext}` : basePrompt;
 }
 
-function buildUserPrompt(engine: EngineName, context: Record<string, unknown>): string {
-	const task = context.task as string;
+// ============================================================
+// USER PROMPTS - Full templates from prototype
+// ============================================================
 
-	if (task === 'suggest_criteria') {
-		const projectName = context.projectName ?? 'this project';
-		const category = context.category ?? 'general';
-		const existing = (context.existingCriteria as string[]) ?? [];
-		const vendors = (context.vendors as string[]) ?? [];
+function buildUserPrompt(engine: string, ctx: Record<string, unknown>): string {
+	switch (engine) {
+		case 'category_detect':
+			return `Identify the software category for this problem. Return JSON:
+{"category":"crm|hris|project|finance|marketing|support|data|devtools|collab|security|ecommerce|ops|other","label":"Full Category Name","icon":"emoji","confidence":0-100,"why":"one sentence","alternatives":[{"category":"id","label":"name","icon":"emoji"}]}
 
-		return `I'm evaluating vendors for: ${projectName} (category: ${category}).
+Problem: ${str(ctx.text).slice(0, 400)}`;
 
-Vendors being considered: ${vendors.join(', ') || 'not yet specified'}
+		case 'vendor_suggest':
+			return `Recommend the best vendors for this buyer. Use everything below to pick options that genuinely fit.
 
-${existing.length > 0 ? `I already have these criteria: ${existing.join(', ')}` : 'I have no criteria yet.'}
+Category: ${str(ctx.category)}
+Approach: ${str(ctx.approach)}
+Problem: ${str(ctx.problem)}
+Cost of inaction: ${str(ctx.costOfInaction)}
+Success in 90 days: ${str(ctx.successKPI)}
+Replacing / existing: ${str(ctx.existingTool) || 'nothing'}
+Annual budget: ${str(ctx.budget)}
+Team size: ${str(ctx.teamSize)}
 
-Suggest 5-8 additional evaluation criteria. Return a JSON object like:
-\`\`\`json
-{
-  "criteria": [
-    { "name": "...", "category": "functional|technical|commercial|strategic|risk", "weight": 1-10, "description": "..." }
-  ]
-}
-\`\`\``;
+Return a JSON array of 5-7 vendor objects (include "Status Quo / Do Nothing" as last item):
+[{"name":"Vendor Name","tagline":"one-line description","bestFor":"ideal for","tier":"smb|enterprise|free","features":["strength1","strength2","strength3"],"flags":["risk1","risk2"],"migrationRisk":"one sentence","peerBadge":"market position","whyThisBuyer":"why this fits"}]
+
+Rank by fit for THIS buyer. Exclude vendors that clearly don't match budget or team size.`;
+
+		case 'challenges':
+			return `Generate 4 devil's advocate challenges for this software decision. Return JSON array of {"severity":"high|medium|low","icon":"emoji","title":"short title","question":"the challenge question","context":"1-sentence peer insight"}
+
+Problem: ${str(ctx.problem)}
+Approach: ${str(ctx.approach)}
+Replacing: ${str(ctx.existingTool) || 'nothing'}
+Category: ${str(ctx.category)}
+Team size: ${str(ctx.teamSize)}
+Annual budget: ${str(ctx.budget)}`;
+
+		case 'vendor_research':
+			return `Research "${str(ctx.vendorName)}" for a ${str(ctx.category)} evaluation. Return JSON:
+{"overview":"2-sentence summary","typicalPricing":"pricing model and range","knownStrengths":["s1","s2","s3"],"knownWeaknesses":["w1","w2"],"implementationComplexity":"low|medium|high","implementationNote":"one sentence","g2Position":"brief positioning","watchOutFor":"top contract gotcha","competitors":["c1","c2"]}`;
+
+		case 'score_prefill':
+			return `Based on this vendor profile, suggest scores (1-10) for each evaluation criterion. Be honest and differentiated — don't give everything a 7. Use the full range.
+
+Vendor: ${str(ctx.vendorName)}
+Overview: ${str(ctx.overview)}
+Strengths: ${arr(ctx.strengths).join('; ')}
+Weaknesses / concerns: ${arr(ctx.concerns).join('; ')}
+Implementation: ${str(ctx.implementationNote) || 'unknown'}
+
+Criteria to score: ${arr(ctx.criteria).join(', ')}
+
+Return JSON: {"scores":{"criterion name":score_integer},"reasoning":"one sentence summary"}`;
+
+		case 'score_anomaly':
+			return `Review these vendor evaluation scores for internal inconsistencies or red flags. Look for: high scores despite failed/disputed claims, suspiciously uniform scores, missing data on highly-scored criteria.
+
+Evaluation context: ${str(ctx.evaluationName)}
+Criteria: ${str(ctx.criteriaDescription)}
+
+Vendor scores:
+${str(ctx.scoreSummary)}
+
+Return JSON array of anomalies (empty array if none):
+[{"vendor":"name","criterion":"criterion or null","severity":"high|medium|low","flag":"one sentence describing the anomaly","suggestion":"one sentence on what to do"}]`;
+
+		case 'negotiation_coach':
+			return `Coach me on negotiating with "${str(ctx.vendor)}" for ${str(ctx.category) || 'software'}.
+
+Problem context: ${str(ctx.problem)}
+Team size: ${str(ctx.teamSize)}
+Budget: ${str(ctx.budget)}
+Year 1 quoted cost: ${str(ctx.year1Cost)}
+
+Negotiation log so far:
+${str(ctx.negotiationLog)}
+
+Return JSON:
+{"overallAssessment":"2-sentence read on negotiation","benchmarkInsight":"what deals like this typically achieve","counterAsks":["ask1","ask2","ask3"],"redFlags":["warning1"],"walkAwaySignal":"when to walk away","nextMove":"best next move"}`;
+
+		case 'hidden_cost_spotter':
+			return `Identify hidden costs and pricing traps for "${str(ctx.vendor)}" in the ${str(ctx.category) || 'software'} category.
+
+Context:
+- Problem: ${str(ctx.problem)}
+- Team size: ${str(ctx.teamSize)}
+- Quoted year 1: ${str(ctx.year1Cost)}
+- Budget: ${str(ctx.budget)}
+- License: ${str(ctx.license)}, Impl: ${str(ctx.impl)}, Training: ${str(ctx.training)}
+
+Return JSON:
+{"hiddenCosts":[{"category":"name","risk":"what could cost more","typicalOverrun":"e.g. 2-3x","priority":"high|medium|low"}],"negotiableItems":["item often free/discounted"],"totalRiskAddition":"rough extra cost estimate","topAdvice":"most important financial advice"}`;
+
+		case 'risk_register':
+			return `Identify narrative risks from the evaluation data below. Focus on qualitative signals — things people said, patterns in feedback, red flags in negotiation.
+
+Demo feedback: ${str(ctx.feedbackSummary)}
+Negotiation notes: ${str(ctx.negotiationNotes)}
+Materials logged: ${str(ctx.materialNotes)}
+Context: ${str(ctx.evaluationContext)}
+
+Return JSON array of qualitative risks (max 5):
+[{"vendor":"vendor name or null","severity":"high|medium|low","title":"short risk title","detail":"2-sentence detail","action":"recommended mitigation"}]`;
+
+		case 'contract_risk':
+			return `Review this software evaluation for contract risks. The team is evaluating: ${str(ctx.category) || 'software'} for ${str(ctx.problem) || 'their business'}.
+
+Materials logged: ${str(ctx.materials)}
+Vendor claims logged: ${str(ctx.claimsContext)}
+Budget range: ${str(ctx.budget)}
+Vendors: ${str(ctx.vendors)}
+
+Identify the top contract and commercial risks they should negotiate. Return JSON:
+{"criticalClauses":[{"clause":"clause name","risk":"what could go wrong","action":"what to negotiate","urgency":"must|should|nice"}],"vendorSpecific":[{"vendor":"name","risk":"specific risk"}],"topPriority":"single most important contract point"}`;
+
+		case 'score_explanation':
+			return `Generate 2-sentence justifications for each vendor's score on each criterion. Be specific and reference any claims or profile data.
+
+Criteria: ${str(ctx.criteriaNames)}
+Scores (0-10 scale):
+${str(ctx.scoreData)}
+
+Return JSON:
+{"explanations":{"VendorName":{"CriterionName":"2-sentence explanation referencing specific evidence"}}}`;
+
+		case 'executive_brief': {
+			const winner = ctx.winner as Record<string, unknown> | undefined;
+			const runner = ctx.runner as Record<string, unknown> | undefined;
+			return `Write the recommendation narrative for an executive brief. This will go to the CFO and exec team.
+
+Problem being solved: ${str(ctx.problem)}
+Success criteria: ${str(ctx.success)}
+Budget: ${str(ctx.budget)}
+Decision deadline: ${str(ctx.deadline)}
+Team size: ${str(ctx.teamSize)}
+
+Vendor rankings (out of 100):
+${str(ctx.vendorRankings)}
+
+Winner profile: ${JSON.stringify(winner ?? {})}
+Runner-up profile: ${JSON.stringify(runner ?? {})}
+
+Write 3 paragraphs:
+1. Why we recommend ${str(winner?.name)} — specific reasons tied to the problem and scoring
+2. What we considered — acknowledge runner-up, key trade-offs, TCO/commercial factors
+3. Risk acknowledgement — disputed claims, reference concerns, negotiation items; include mitigation
+
+Be direct, specific, and CFO-ready. If TCO data is present, cite 3-year figures. Max 280 words total.`;
+		}
+
+		case 'decision_readiness': {
+			const topVendors = arr(ctx.topVendors);
+			return `Generate a 5-question decision readiness interview to pressure-test this procurement decision before committing.
+
+Evaluation: ${str(ctx.evaluationName)}
+Leading vendor: ${str(topVendors[0]?.name)} (${str(topVendors[0]?.score)}/100)
+Runner-up: ${str(topVendors[1]?.name)} (${str(topVendors[1]?.score)}/100)
+Number of vendors evaluated: ${str(ctx.vendorCount)}
+Key criteria: ${str(ctx.keyCriteria)}
+Team size: ${str(ctx.evaluatorCount)} evaluators
+
+Generate 5 Socratic questions that surface blind spots, groupthink, or gaps. Mix types: pre-mortem, perspective-taking, assumption-testing, minority view surfacing, and reversibility.
+
+Return JSON:
+{"questions":[{"type":"pre-mortem|perspective|assumption|minority|reversibility","question":"the question","why":"why this matters for this decision"}]}`;
+		}
+
+		case 'demo_questions':
+			return `Generate 6 targeted demo questions for evaluating "${str(ctx.vendorName)}".
+
+Problem: ${str(ctx.problem)}
+Criteria: ${arr(ctx.criteria).join(', ')}
+${ctx.vendorOverview ? `Vendor overview: ${str(ctx.vendorOverview)}` : ''}
+${arr(ctx.concerns).length ? `Known concerns: ${arr(ctx.concerns).join(', ')}` : ''}
+
+Return JSON array:
+[{"text":"question to ask","crit":"related criterion","why":"brief rationale"}]
+
+Make questions specific to this vendor. Focus on validating strengths, probing concerns, testing criteria, uncovering limitations, understanding implementation reality.`;
+
+		case 'reference_questions':
+			return `Generate 5 targeted reference check questions for "${str(ctx.vendorName)}" in the ${str(ctx.category)} category.
+
+Problem: ${str(ctx.problem)}
+Key criteria: ${str(ctx.criteria)}
+Known concerns: ${str(ctx.concerns)}
+
+Return JSON array:
+[{"question":"the reference check question","area":"implementation|support|value|risk|culture","why":"why this matters"}]`;
+
+		case 'company_autofill':
+			return `Company description: "${str(ctx.description)}"
+
+Return JSON with these exact keys (use null for unknown):
+{"name":"company name or null","industry":"one of: Technology, Healthcare, Financial Services, Manufacturing, Retail, Education, Government, Non-profit, Professional Services, Media, Energy, Real Estate, Other","size":"one of: 1-10, 11-50, 51-200, 201-500, 501-1000, 1001-5000, 5000+","budget":"one of: Under $10k, $10k-$50k, $50k-$100k, $100k-$500k, $500k-$1M, $1M+","maturity":"one of: Ad-hoc, Developing, Established, Optimised","compliance":["from: SOC 2 Type II, ISO 27001, GDPR, HIPAA, FedRAMP, PCI-DSS, CCPA, NIST 800-53, FINRA, None required"],"priorities":["top 3-4 from: Cost reduction, Security first, Fast deployment, Ease of adoption, Deep integrations, Vendor consolidation, Scalability, Data sovereignty, Open-source preferred, Local support"],"vendorPref":["from: Enterprise tier, Mid-market, SMB-friendly, Open-source, Best of breed, Suite/platform"],"process":"one of: Individual, Committee, Formal RFP, Board approval","regions":["from: North America, Europe, APAC, LATAM, Middle East, Africa, Global"],"stack":"comma-separated tools or null","notes":"2-3 sentence procurement context"}`;
+
+		case 'compliance_suggest':
+			return `Based on this company profile: "${str(ctx.profileDesc)}"
+
+Which compliance frameworks are most likely required or strongly recommended?
+Choose from: SOC 2 Type II, ISO 27001, GDPR, HIPAA, FedRAMP, PCI-DSS, CCPA, NIST 800-53, FINRA, None required.
+Return JSON array of 2-5 most applicable: ["SOC 2 Type II", ...]`;
+
+		case 'priorities_suggest':
+			return `Based on this company profile: "${str(ctx.profileDesc)}"
+
+Which buying priorities are most important when evaluating software?
+Choose from: Cost reduction, Security first, Fast deployment, Ease of adoption, Deep integrations, Vendor consolidation, Scalability, Data sovereignty, Open-source preferred, Local support.
+Return JSON array of top 3-4: ["Security first", ...]`;
+
+		case 'stack_suggest':
+			return `Based on this company profile: "${str(ctx.profileDesc)}"
+${ctx.existingStack ? `They already use: ${str(ctx.existingStack)}` : ''}
+
+List 6-10 common tools this type of company typically runs — CRM, ERP, HRIS, project management, communication, cloud infrastructure, BI, etc.
+Return only tool names separated by commas: Salesforce, Slack, Jira, AWS, ...`;
+
+		case 'context_notes':
+			return `Based on this company profile:
+${str(ctx.fullProfile)}
+
+Write a concise context note (3-5 sentences) that an AI assistant should know when helping this company evaluate and buy software. Cover: key constraints, compliance sensitivities, procurement approach, what they optimise for, and any red flags. Start with "Your company…"`;
+
+		// Task-based routing for legacy evaluate engine
+		case 'evaluate': {
+			const task = str(ctx.task);
+			if (task === 'suggest_criteria') {
+				return `I'm evaluating vendors for: ${str(ctx.projectName)} (category: ${str(ctx.category)}).
+Vendors: ${arr(ctx.vendors).join(', ') || 'not yet specified'}
+${arr(ctx.existingCriteria).length > 0 ? `Existing criteria: ${arr(ctx.existingCriteria).join(', ')}` : 'No criteria yet.'}
+
+Suggest 5-8 evaluation criteria. Return JSON:
+{"criteria":[{"name":"...","category":"functional|technical|commercial|strategic|risk","weight":1-10,"description":"..."}]}`;
+			}
+			if (task === 'vendor_analysis') {
+				return `Analyze vendor "${str(ctx.vendor)}" for ${str(ctx.projectName)} (${str(ctx.category)}).
+Criteria: ${JSON.stringify(ctx.criteria)}
+Scores: ${JSON.stringify(ctx.scores)}
+Profile: ${JSON.stringify(ctx.profile ?? {})}
+
+Return JSON:
+{"strengths":["s1","s2","s3"],"weaknesses":["w1","w2"],"recommendation":"2-sentence recommendation","confidence":0-100}`;
+			}
+			return JSON.stringify(ctx, null, 2);
+		}
+
+		default:
+			return JSON.stringify(ctx, null, 2);
 	}
+}
 
-	// Generic fallback
-	return JSON.stringify(context, null, 2);
+// ============================================================
+// Company Context Injection (from prototype's getCompanyContext)
+// ============================================================
+
+function buildCompanyContext(profile: Record<string, unknown> | undefined): string {
+	if (!profile || Object.keys(profile).length === 0) return '';
+
+	const parts: string[] = ['=== BUYER CONTEXT ==='];
+	if (profile.name) parts.push(`Company: ${profile.name}`);
+	if (profile.industry) parts.push(`Industry: ${profile.industry}`);
+	if (profile.size) parts.push(`Size: ${profile.size}`);
+	if (profile.budget) parts.push(`Annual software budget: ${profile.budget}`);
+	if (profile.maturity) parts.push(`Procurement maturity: ${profile.maturity}`);
+	if (profile.process) parts.push(`Decision process: ${profile.process}`);
+	if (profile.compliance) parts.push(`Compliance requirements: ${arr(profile.compliance).join(', ')}`);
+	if (profile.priorities) parts.push(`Organisational priorities: ${arr(profile.priorities).join(', ')}`);
+	if (profile.vendorPref) parts.push(`Vendor tier preference: ${arr(profile.vendorPref).join(', ')}`);
+	if (profile.regions) parts.push(`Operating regions: ${arr(profile.regions).join(', ')}`);
+	if (profile.stack) parts.push(`Existing tech stack: ${profile.stack}`);
+	if (profile.notes) parts.push(`Additional context: ${profile.notes}`);
+	parts.push('=== END BUYER CONTEXT ===');
+	parts.push('Tailor all analysis, suggestions, and recommendations to the above buyer profile. Do not mention the context block in your response.');
+
+	return parts.join('\n');
+}
+
+// Helpers
+function str(v: unknown): string {
+	if (v === null || v === undefined) return '';
+	if (typeof v === 'string') return v;
+	if (typeof v === 'number' || typeof v === 'boolean') return String(v);
+	return JSON.stringify(v);
+}
+
+function arr(v: unknown): any[] {
+	if (Array.isArray(v)) return v;
+	return [];
 }
 
 function estimateConfidence(depth: EngineDepth, result: any): number {
-	const inputTokens = result.usage?.input_tokens ?? 0;
 	const outputTokens = result.usage?.output_tokens ?? 0;
-
-	// Heuristic confidence based on depth and response quality
 	let base = depth === 'deep' ? 75 : depth === 'standard' ? 65 : 55;
-
-	// More output generally means more detailed analysis
 	if (outputTokens > 1000) base += 10;
 	if (outputTokens > 2000) base += 5;
-
-	// Cap at 95 (we never claim 100% confidence)
 	return Math.min(base, 95);
 }

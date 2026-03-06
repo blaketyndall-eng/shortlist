@@ -15,9 +15,9 @@
 
 <style>
 	.card {
-		background: var(--c1);
-		border: 1px solid var(--b);
-		border-radius: 14px;
+		background: white;
+		border: 1px solid var(--neutral-200);
+		border-radius: var(--radius-lg);
 	}
 
 	.card-sm { padding: var(--space-3); }

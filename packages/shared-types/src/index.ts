@@ -4,3 +4,5 @@ export * from './vendor.js';
 export * from './ai.js';
 export * from './collaboration.js';
 export * from './billing.js';
+export * from './demos.js';
+export * from './vendor-analysis.js';

@@ -9,22 +9,60 @@
 	const supabase = createSupabaseBrowserClient();
 	let collaborators = $state<string[]>([]);
 
-	// Subscribe to realtime changes on this project
+	const projectId = $derived(data.project.id);
+	const phase = $derived(data.project.phase ?? 'define');
+
+	const isDashboardView = $derived($page.url.pathname.includes('/dashboard'));
+
+	const phases = $derived([
+		{
+			phase: 'define' as const,
+			label: 'Define',
+			steps: [
+				{ key: 'triggers', label: 'Diagnose', href: `/project/${projectId}/solve/triggers` },
+				{ key: 'category', label: 'Category', href: `/project/${projectId}/solve/category` },
+				{ key: 'vendor_discovery', label: 'Discovery', href: `/project/${projectId}/solve/discovery` },
+				{ key: 'constraints', label: 'Constraints', href: `/project/${projectId}/solve/constraints` },
+				{ key: 'priorities', label: 'Priorities', href: `/project/${projectId}/solve/priorities` },
+				{ key: 'brief', label: 'Brief', href: `/project/${projectId}/solve/brief` },
+				{ key: 'challenges', label: 'Validate', href: `/project/${projectId}/solve/challenges` },
+			]
+		},
+		{
+			phase: 'evaluate' as const,
+			label: 'Evaluate',
+			steps: [
+				{ key: 'setup', label: 'Setup', href: `/project/${projectId}/setup` },
+				{ key: 'criteria', label: 'Criteria', href: `/project/${projectId}/criteria` },
+				{ key: 'workflow', label: 'Workflow', href: `/project/${projectId}/workflow` },
+				{ key: 'materials', label: 'Materials', href: `/project/${projectId}/materials` },
+				{ key: 'ratings', label: 'Ratings', href: `/project/${projectId}/ratings` },
+				{ key: 'results', label: 'Results', href: `/project/${projectId}/results` },
+				{ key: 'dashboard', label: 'Dashboard', href: `/project/${projectId}/dashboard/overview` },
+			]
+		}
+	]);
+
+	const currentStep = $derived(
+		$page.url.pathname.split('/').pop() ?? data.project.current_step ?? 'triggers'
+	);
+
+	const completedSteps = $derived(
+		data.project.solve_data?.completedSteps ?? []
+	);
+
 	onMount(() => {
 		const channel = supabase
-			.channel(`project-${data.project.id}`)
+			.channel(`project-${projectId}`)
 			.on(
 				'postgres_changes',
 				{
 					event: '*',
 					schema: 'public',
 					table: 'projects',
-					filter: `id=eq.${data.project.id}`
+					filter: `id=eq.${projectId}`
 				},
-				() => {
-					// Refresh data when project is updated by another user
-					invalidateAll();
-				}
+				() => { invalidateAll(); }
 			)
 			.on(
 				'postgres_changes',
@@ -32,11 +70,9 @@
 					event: 'INSERT',
 					schema: 'public',
 					table: 'activity_log',
-					filter: `project_id=eq.${data.project.id}`
+					filter: `project_id=eq.${projectId}`
 				},
-				() => {
-					invalidateAll();
-				}
+				() => { invalidateAll(); }
 			)
 			.on('presence', { event: 'sync' }, () => {
 				const state = channel.presenceState();
@@ -55,23 +91,8 @@
 				}
 			});
 
-		return () => {
-			supabase.removeChannel(channel);
-		};
+		return () => { supabase.removeChannel(channel); };
 	});
-
-	const steps = [
-		{ key: 'setup', label: 'Setup', href: `/project/${data.project.id}/setup` },
-		{ key: 'criteria', label: 'Criteria', href: `/project/${data.project.id}/criteria` },
-		{ key: 'workflow', label: 'Workflow', href: `/project/${data.project.id}/workflow` },
-		{ key: 'materials', label: 'Materials', href: `/project/${data.project.id}/materials` },
-		{ key: 'ratings', label: 'Ratings', href: `/project/${data.project.id}/ratings` },
-		{ key: 'results', label: 'Results', href: `/project/${data.project.id}/results` }
-	];
-
-	const currentStep = $derived(
-		$page.url.pathname.split('/').pop() ?? data.project.current_step ?? 'setup'
-	);
 </script>
 
 <div class="wizard-layout">
@@ -84,6 +105,9 @@
 					<span class="project-category">{data.project.category}</span>
 				{/if}
 			</div>
+			<span class="phase-badge" class:define={phase === 'define'} class:evaluate={phase === 'evaluate'}>
+				{phase === 'define' ? 'Define' : phase === 'evaluate' ? 'Evaluate' : 'Complete'}
+			</span>
 		</div>
 
 		{#if collaborators.length > 0}
@@ -98,7 +122,9 @@
 			</div>
 		{/if}
 
-		<WizardStepper {steps} {currentStep} />
+		{#if !isDashboardView}
+			<WizardStepper {phases} {currentStep} currentPhase={phase} {completedSteps} />
+		{/if}
 	</header>
 
 	<div class="wizard-content">
@@ -152,6 +178,26 @@
 		font-size: 0.75rem;
 		color: var(--neutral-500);
 		text-transform: capitalize;
+	}
+
+	.phase-badge {
+		font-size: 0.6875rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		padding: 2px 10px;
+		border-radius: 999px;
+		margin-left: auto;
+	}
+
+	.phase-badge.define {
+		background: rgba(0, 204, 150, 0.12);
+		color: #00cc96;
+	}
+
+	.phase-badge.evaluate {
+		background: rgba(74, 150, 248, 0.12);
+		color: #4a96f8;
 	}
 
 	.wizard-content {
