@@ -240,7 +240,7 @@
 		border: 1px solid var(--neutral-300);
 		border-radius: var(--radius-md);
 		font-size: 0.9375rem;
-		background: white;
+		background: var(--color-bg-secondary);
 	}
 	.form-select-sm { min-width: 120px; }
 

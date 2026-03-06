@@ -97,14 +97,15 @@
 
 	.btn-secondary {
 		padding: var(--space-2) var(--space-5);
-		background: white;
-		color: var(--neutral-700);
-		border: 1px solid var(--neutral-300);
+		background: transparent;
+		color: var(--color-text);
+		border: 1px solid var(--color-border-strong);
 		border-radius: var(--radius-md);
 		font-size: 0.875rem;
 		font-weight: 500;
 		cursor: pointer;
+		font-family: var(--font-sans);
 	}
 
-	.btn-secondary:hover { background: var(--neutral-50); }
+	.btn-secondary:hover { background: rgba(255, 255, 255, 0.04); border-color: rgba(255, 255, 255, 0.2); }
 </style>

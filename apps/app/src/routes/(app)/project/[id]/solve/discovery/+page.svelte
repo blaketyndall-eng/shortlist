@@ -330,7 +330,7 @@
 	.swiper-container { position: relative; }
 
 	.vendor-card {
-		background: white;
+		background: var(--color-bg-secondary);
 		border: 1px solid var(--neutral-200);
 		border-radius: var(--radius-lg, 12px);
 		padding: var(--space-5);
@@ -390,7 +390,7 @@
 
 	.swipe-btn {
 		width: 56px; height: 56px; border-radius: 50%;
-		border: 2px solid var(--neutral-200); background: white;
+		border: 2px solid var(--neutral-200); background: var(--color-bg-secondary);
 		font-size: 1.25rem; cursor: pointer;
 		display: flex; align-items: center; justify-content: center;
 		transition: all 0.15s ease;

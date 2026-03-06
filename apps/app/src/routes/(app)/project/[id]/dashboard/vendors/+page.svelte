@@ -145,7 +145,7 @@
 
 	.vendor-card {
 		display: flex; flex-direction: column; gap: var(--space-2);
-		padding: var(--space-4); background: white;
+		padding: var(--space-4); background: var(--color-bg-secondary);
 		border: 1px solid var(--neutral-200); border-radius: var(--radius-lg);
 		text-decoration: none; color: inherit;
 		transition: border-color 0.15s, box-shadow 0.15s;

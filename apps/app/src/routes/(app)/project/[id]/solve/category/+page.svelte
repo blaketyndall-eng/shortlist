@@ -360,7 +360,7 @@
 		align-items: center;
 		gap: var(--space-2);
 		padding: var(--space-4);
-		background: white;
+		background: var(--color-bg-secondary);
 		border: 1.5px solid var(--neutral-200);
 		border-radius: var(--radius-lg, 12px);
 		cursor: pointer;

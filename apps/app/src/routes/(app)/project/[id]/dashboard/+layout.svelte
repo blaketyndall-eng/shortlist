@@ -62,7 +62,7 @@
 		position: sticky;
 		top: 0;
 		z-index: 10;
-		background: white;
+		background: var(--color-bg-secondary);
 		border-bottom: 1px solid var(--neutral-200);
 		padding: var(--space-4) var(--space-6) 0;
 	}

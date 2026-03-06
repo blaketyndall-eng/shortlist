@@ -84,7 +84,7 @@
 <style>
 	.briefing-overlay {
 		position: fixed; inset: 0; z-index: 100;
-		background: white;
+		background: var(--color-bg-secondary);
 		display: flex; flex-direction: column;
 	}
 	.briefing-container {
@@ -152,7 +152,7 @@
 	.bnav-btn {
 		padding: var(--space-2) var(--space-4);
 		border-radius: var(--radius-md); border: 1px solid var(--neutral-200);
-		background: white; color: var(--neutral-600);
+		background: var(--color-bg-secondary); color: var(--neutral-600);
 		font-size: 0.875rem; font-weight: 500; cursor: pointer;
 		transition: all 0.15s;
 	}

@@ -59,7 +59,7 @@
 	}
 
 	.modal-content {
-		background: white;
+		background: var(--color-bg-secondary);
 		border-radius: var(--radius-lg);
 		width: 100%;
 		max-width: 520px;

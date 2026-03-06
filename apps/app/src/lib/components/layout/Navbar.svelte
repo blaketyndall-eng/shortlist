@@ -22,7 +22,9 @@
 <header class="navbar">
 	<div class="navbar-left">
 		<button class="sidebar-toggle" onclick={onToggleSidebar} aria-label="Toggle sidebar">
-			☰
+			<svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+				<path d="M2 4h14M2 9h14M2 14h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+			</svg>
 		</button>
 	</div>
 
@@ -43,9 +45,13 @@
 		justify-content: space-between;
 		padding: 0 var(--space-4);
 		height: var(--nav-height);
-		background: white;
-		border-bottom: 1px solid var(--neutral-200);
+		background: rgba(11, 16, 23, 0.9);
+		backdrop-filter: blur(14px);
+		border-bottom: 1px solid var(--color-border);
 		flex-shrink: 0;
+		position: sticky;
+		top: 0;
+		z-index: var(--z-nav);
 	}
 
 	.navbar-left {
@@ -58,15 +64,18 @@
 		background: none;
 		border: none;
 		cursor: pointer;
-		font-size: 1.25rem;
-		color: var(--neutral-500);
-		padding: var(--space-1);
-		border-radius: var(--radius-sm);
-		transition: color var(--transition-fast);
+		color: var(--color-text-secondary);
+		padding: 6px;
+		border-radius: var(--radius-md);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition: color var(--transition-fast), background var(--transition-fast);
 	}
 
 	.sidebar-toggle:hover {
-		color: var(--neutral-900);
+		color: var(--color-text);
+		background: rgba(255, 255, 255, 0.04);
 	}
 
 	.navbar-right {
@@ -77,17 +86,19 @@
 
 	.logout-btn {
 		background: none;
-		border: 1px solid var(--neutral-300);
-		padding: var(--space-1) var(--space-3);
+		border: 1px solid var(--color-border-strong);
+		padding: 5px 14px;
 		border-radius: var(--radius-md);
-		font-size: 0.8125rem;
-		color: var(--neutral-600);
+		font-size: var(--text-sm);
+		color: var(--color-text-secondary);
 		cursor: pointer;
+		font-family: var(--font-sans);
 		transition: all var(--transition-fast);
 	}
 
 	.logout-btn:hover {
-		background: var(--neutral-50);
-		color: var(--neutral-900);
+		background: rgba(255, 255, 255, 0.04);
+		border-color: rgba(255, 255, 255, 0.2);
+		color: var(--color-text);
 	}
 </style>

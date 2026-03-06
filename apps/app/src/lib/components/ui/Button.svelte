@@ -62,7 +62,7 @@
 	.btn-primary:hover:not(:disabled) { background: var(--primary-700); }
 
 	.btn-secondary {
-		background: white;
+		background: var(--color-bg-secondary);
 		color: var(--neutral-700);
 		border-color: var(--neutral-300);
 	}

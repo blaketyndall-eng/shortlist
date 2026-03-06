@@ -716,7 +716,7 @@
 	.vnav-btn {
 		padding: var(--space-1) var(--space-3);
 		border: 1px solid var(--neutral-200); border-radius: var(--radius-md);
-		background: white; color: var(--neutral-600);
+		background: var(--color-bg-secondary); color: var(--neutral-600);
 		font-size: 0.8125rem; cursor: pointer; transition: all 0.15s;
 	}
 	.vnav-btn:hover:not(:disabled) { border-color: var(--primary-400); color: var(--primary-600); }
@@ -739,7 +739,7 @@
 
 	.vendor-score-badge {
 		text-align: center; padding: var(--space-3) var(--space-5);
-		background: white; border: 1px solid var(--neutral-200);
+		background: var(--color-bg-secondary); border: 1px solid var(--neutral-200);
 		border-radius: var(--radius-lg);
 	}
 	.score-value { display: block; font-size: 2rem; font-weight: 700; color: var(--neutral-900); }

@@ -103,7 +103,7 @@
 <style>
 	.swiper-overlay {
 		position: fixed; inset: 0; z-index: 100;
-		background: white;
+		background: var(--color-bg-secondary);
 		display: flex; flex-direction: column;
 	}
 	.swiper-container {
@@ -177,7 +177,7 @@
 		cursor: pointer; transition: all 0.15s;
 	}
 	.sw-skip {
-		border-color: var(--neutral-300); background: white; color: var(--neutral-600);
+		border-color: var(--neutral-300); background: var(--color-bg-secondary); color: var(--neutral-600);
 	}
 	.sw-skip:hover { border-color: #f05050; color: #f05050; background: rgba(240, 80, 80, 0.04); }
 	.sw-keep {

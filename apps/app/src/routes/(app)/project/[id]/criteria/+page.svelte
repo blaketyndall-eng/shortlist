@@ -256,7 +256,7 @@
 		border: 1px solid var(--neutral-300);
 		border-radius: var(--radius-md);
 		font-size: 0.875rem;
-		background: white;
+		background: var(--color-bg-secondary);
 	}
 
 	.add-form input:focus,

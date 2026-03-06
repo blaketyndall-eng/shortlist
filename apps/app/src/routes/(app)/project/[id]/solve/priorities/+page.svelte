@@ -193,7 +193,7 @@
 		padding: var(--space-2) var(--space-3);
 		border: 1px solid var(--neutral-300);
 		border-radius: var(--radius-md); font-size: 0.9375rem;
-		background: white; min-width: 140px;
+		background: var(--color-bg-secondary); min-width: 140px;
 	}
 
 	.tiers { display: flex; flex-direction: column; gap: var(--space-4); }

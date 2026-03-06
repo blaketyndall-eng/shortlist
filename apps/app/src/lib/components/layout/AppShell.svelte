@@ -46,7 +46,9 @@
 
 	.app-content {
 		flex: 1;
-		background: var(--neutral-50);
+		background: var(--color-bg);
+		position: relative;
+		z-index: 1;
 	}
 
 	@media (max-width: 768px) {

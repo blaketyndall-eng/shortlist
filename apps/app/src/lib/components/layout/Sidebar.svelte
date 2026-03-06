@@ -10,20 +10,19 @@
 	let { profile, open = $bindable() }: Props = $props();
 
 	const navItems = [
-		{ label: 'Dashboard', href: '/dashboard', icon: '◻' },
-		{ label: 'Projects', href: '/projects', icon: '▦' },
-		{ label: 'Discover', href: '/discover', icon: '🔍' },
-		{ label: 'Compare', href: '/compare', icon: '⇄' },
-		{ label: 'Teams', href: '/account/teams', icon: '👥' },
-		{ label: 'Account', href: '/account', icon: '⚙' }
+		{ label: 'Dashboard', href: '/dashboard', icon: 'dashboard' },
+		{ label: 'Projects', href: '/projects', icon: 'projects' },
+		{ label: 'Discover', href: '/discover', icon: 'discover' },
+		{ label: 'Compare', href: '/compare', icon: 'compare' },
+		{ label: 'Teams', href: '/account/teams', icon: 'teams' },
+		{ label: 'Account', href: '/account', icon: 'account' }
 	];
 </script>
 
 <aside class="sidebar" class:open aria-label="Main navigation">
 	<div class="sidebar-header">
 		<a href="/dashboard" class="logo">
-			<span class="logo-mark">S</span>
-			<span class="logo-text">Shortlist</span>
+			<span class="logo-text">Short<em>list</em></span>
 		</a>
 	</div>
 
@@ -35,7 +34,28 @@
 				class:active={$page.url.pathname.startsWith(item.href)}
 				aria-current={$page.url.pathname.startsWith(item.href) ? 'page' : undefined}
 			>
-				<span class="nav-icon">{item.icon}</span>
+				<svg class="nav-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+					{#if item.icon === 'dashboard'}
+						<rect x="1" y="1" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.4"/>
+						<rect x="9" y="1" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.4"/>
+						<rect x="1" y="9" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.4"/>
+						<rect x="9" y="9" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.4"/>
+					{:else if item.icon === 'projects'}
+						<rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.4"/>
+						<path d="M5 6h6M5 8.5h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+					{:else if item.icon === 'discover'}
+						<circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.4"/>
+						<path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+					{:else if item.icon === 'compare'}
+						<path d="M4 2v12M12 2v12M1 8h14" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+					{:else if item.icon === 'teams'}
+						<circle cx="8" cy="5" r="3" stroke="currentColor" stroke-width="1.4"/>
+						<path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+					{:else if item.icon === 'account'}
+						<circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.4"/>
+						<path d="M10.5 6.5L7 10l-1.5-1.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+					{/if}
+				</svg>
 				<span class="nav-label">{item.label}</span>
 			</a>
 		{/each}
@@ -58,8 +78,8 @@
 
 <style>
 	.sidebar {
-		background: white;
-		border-right: 1px solid var(--neutral-200);
+		background: var(--color-bg-secondary);
+		border-right: 1px solid var(--color-border);
 		display: flex;
 		flex-direction: column;
 		overflow: hidden;
@@ -74,31 +94,27 @@
 	}
 
 	.sidebar-header {
-		padding: var(--space-4) var(--space-5);
-		border-bottom: 1px solid var(--neutral-100);
+		padding: 16px 20px;
+		border-bottom: 1px solid var(--color-border);
 	}
 
 	.logo {
 		display: flex;
 		align-items: center;
-		gap: var(--space-2);
 		text-decoration: none;
-		color: var(--neutral-900);
-		font-weight: 700;
-		font-size: 1.125rem;
+		color: var(--color-text-heading);
 	}
 
-	.logo-mark {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 28px;
-		height: 28px;
-		background: var(--primary-600);
-		color: white;
-		border-radius: var(--radius-md);
-		font-size: 0.875rem;
+	.logo-text {
+		font-family: var(--font-serif);
+		font-size: 19px;
 		font-weight: 700;
+		color: var(--color-text-heading);
+	}
+
+	.logo-text em {
+		color: var(--color-primary);
+		font-style: normal;
 	}
 
 	.sidebar-nav {
@@ -106,42 +122,45 @@
 		padding: var(--space-3) var(--space-2);
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-1);
+		gap: 2px;
 	}
 
 	.nav-item {
 		display: flex;
 		align-items: center;
-		gap: var(--space-3);
-		padding: var(--space-2) var(--space-3);
-		border-radius: var(--radius-md);
-		color: var(--neutral-600);
+		gap: 10px;
+		padding: 8px 12px;
+		border-radius: var(--radius-lg);
+		color: var(--color-text-secondary);
 		text-decoration: none;
-		font-size: 0.9375rem;
+		font-size: var(--text-sm);
 		font-weight: 500;
 		transition: background var(--transition-fast), color var(--transition-fast);
 	}
 
 	.nav-item:hover {
-		background: var(--neutral-100);
-		color: var(--neutral-900);
+		background: rgba(255, 255, 255, 0.04);
+		color: var(--color-text);
 		text-decoration: none;
 	}
 
 	.nav-item.active {
-		background: var(--primary-50);
-		color: var(--primary-700);
+		background: var(--color-primary-light);
+		color: var(--color-primary);
 	}
 
 	.nav-icon {
-		font-size: 1rem;
-		width: 20px;
-		text-align: center;
+		flex-shrink: 0;
+		opacity: 0.8;
+	}
+
+	.nav-item.active .nav-icon {
+		opacity: 1;
 	}
 
 	.sidebar-footer {
 		padding: var(--space-3) var(--space-4);
-		border-top: 1px solid var(--neutral-100);
+		border-top: 1px solid var(--color-border);
 	}
 
 	.user-info {
@@ -154,8 +173,8 @@
 		width: 32px;
 		height: 32px;
 		border-radius: 50%;
-		background: var(--primary-100);
-		color: var(--primary-700);
+		background: var(--color-primary-light);
+		color: var(--color-primary);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -174,7 +193,7 @@
 	.user-name {
 		font-size: 0.8125rem;
 		font-weight: 600;
-		color: var(--neutral-800);
+		color: var(--color-text);
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
@@ -182,7 +201,7 @@
 
 	.user-role {
 		font-size: 0.6875rem;
-		color: var(--neutral-500);
+		color: var(--color-text-secondary);
 		text-transform: capitalize;
 	}
 </style>

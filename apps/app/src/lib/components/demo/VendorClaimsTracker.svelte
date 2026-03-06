@@ -172,7 +172,7 @@
 	.ct-category-select {
 		padding: 6px 10px; border: 1px solid var(--neutral-200);
 		border-radius: var(--radius-md); font-size: 0.8125rem;
-		background: white; color: var(--neutral-700);
+		background: var(--color-bg-secondary); color: var(--neutral-700);
 	}
 	.ct-input {
 		flex: 1; padding: 6px 12px; border: 1px solid var(--neutral-200);
@@ -205,7 +205,7 @@
 	.ct-verify-btns { display: flex; gap: 4px; flex-shrink: 0; }
 	.ct-verify-btn {
 		width: 26px; height: 26px; border-radius: 50%;
-		border: 1px solid var(--neutral-200); background: white;
+		border: 1px solid var(--neutral-200); background: var(--color-bg-secondary);
 		cursor: pointer; font-size: 0.75rem; font-weight: 700;
 		display: flex; align-items: center; justify-content: center;
 		transition: all 0.15s;

@@ -191,7 +191,7 @@
 	.form-select {
 		padding: var(--space-2) var(--space-3);
 		border: 1px solid var(--neutral-300); border-radius: var(--radius-md);
-		font-size: 0.875rem; background: white; min-width: 130px;
+		font-size: 0.875rem; background: var(--color-bg-secondary); min-width: 130px;
 	}
 
 	.legend { display: flex; gap: var(--space-3); flex-wrap: wrap; font-size: 0.75rem; }
@@ -208,7 +208,7 @@
 
 	.event-row {
 		display: flex; align-items: center; gap: var(--space-3);
-		padding: var(--space-3); background: white;
+		padding: var(--space-3); background: var(--color-bg-secondary);
 		border: 1px solid var(--neutral-100); border-radius: var(--radius-md);
 	}
 	.event-row.past { opacity: 0.6; }

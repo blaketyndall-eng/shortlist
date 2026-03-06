@@ -15,7 +15,7 @@
 
 <style>
 	.card {
-		background: white;
+		background: var(--color-bg-secondary);
 		border: 1px solid var(--neutral-200);
 		border-radius: var(--radius-lg);
 	}
