@@ -5,8 +5,7 @@
 <div class="marketing-layout">
 	<nav class="top-nav">
 		<a href="/" class="nav-logo">
-			<span class="logo-mark">S</span>
-			<span>Shortlist</span>
+			<span class="logo-text">Short<em>list</em></span>
 		</a>
 		<div class="nav-links">
 			<a href="/features">Features</a>
@@ -21,8 +20,7 @@
 	<footer class="site-footer">
 		<div class="footer-inner">
 			<div class="footer-brand">
-				<span class="logo-mark">S</span>
-				<span>Shortlist</span>
+				<span class="footer-logo-text">Short<em>list</em></span>
 			</div>
 			<div class="footer-links">
 				<a href="/features">Features</a>
@@ -45,6 +43,17 @@
 		-webkit-font-smoothing: antialiased;
 	}
 
+	:global(body::before) {
+		content: '';
+		position: fixed;
+		inset: 0;
+		pointer-events: none;
+		z-index: 0;
+		background:
+			radial-gradient(ellipse 65% 45% at 10% 0%, rgba(0, 204, 150, 0.07), transparent 58%),
+			radial-gradient(ellipse 45% 35% at 90% 96%, rgba(74, 150, 248, 0.055), transparent 58%);
+	}
+
 	:global(*, *::before, *::after) { box-sizing: border-box; }
 
 	.marketing-layout { min-height: 100vh; display: flex; flex-direction: column; }
@@ -58,29 +67,29 @@
 		width: 100%;
 		margin: 0 auto;
 		border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+		position: sticky;
+		top: 0;
+		z-index: 100;
+		background: rgba(11, 16, 23, 0.9);
+		backdrop-filter: blur(14px);
 	}
 
 	.nav-logo {
 		display: flex;
 		align-items: center;
-		gap: 8px;
 		text-decoration: none;
-		color: #ffffff;
-		font-weight: 700;
-		font-size: 1.125rem;
 	}
 
-	.logo-mark {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 28px;
-		height: 28px;
-		background: linear-gradient(135deg, #00cc96, #4a96f8);
-		color: white;
-		border-radius: 6px;
-		font-size: 0.875rem;
+	.logo-text, .footer-logo-text {
+		font-family: 'Playfair Display', serif;
+		font-size: 19px;
 		font-weight: 700;
+		color: #ffffff;
+	}
+
+	.logo-text em, .footer-logo-text em {
+		color: #00cc96;
+		font-style: normal;
 	}
 
 	.nav-links {
