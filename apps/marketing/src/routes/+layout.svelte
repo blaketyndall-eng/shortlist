@@ -12,7 +12,6 @@
 	<nav class="top-nav">
 		<a href="/" class="nav-logo">
 			<span class="logo-text">Short<em class="logo-accent">list</em></span>
-			<span class="nav-tagline">Procurement Intelligence</span>
 		</a>
 		<div class="nav-links">
 			<a href="/features">Features</a>
@@ -29,7 +28,7 @@
 			<div class="footer-brand">
 				<span class="logo-text">Short<em class="logo-accent">list</em></span>
 			</div>
-			<div class="footer-mid">Procurement Intelligence · © {new Date().getFullYear()} Shortlist</div>
+			<div class="footer-mid">© {new Date().getFullYear()} Shortlist. All rights reserved.</div>
 			<div class="footer-links">
 				<a href="/features">Features</a>
 				<a href="/pricing">Pricing</a>
@@ -82,15 +81,6 @@
 
 	.nav-logo {
 		text-decoration: none;
-		display: flex;
-		align-items: center;
-		gap: 12px;
-		margin-right: auto;
-	}
-
-	.nav-tagline {
-		font-size: 11px;
-		color: #6b7e96;
 	}
 
 	.logo-text {
