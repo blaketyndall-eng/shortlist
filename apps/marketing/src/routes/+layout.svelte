@@ -12,6 +12,7 @@
 	<nav class="top-nav">
 		<a href="/" class="nav-logo">
 			<span class="logo-text">Short<em class="logo-accent">list</em></span>
+			<span class="nav-tagline">Procurement Intelligence</span>
 		</a>
 		<div class="nav-links">
 			<a href="/features">Features</a>
@@ -28,12 +29,12 @@
 			<div class="footer-brand">
 				<span class="logo-text">Short<em class="logo-accent">list</em></span>
 			</div>
+			<div class="footer-mid">Procurement Intelligence · © {new Date().getFullYear()} Shortlist</div>
 			<div class="footer-links">
 				<a href="/features">Features</a>
 				<a href="/pricing">Pricing</a>
 				<a href="mailto:hello@tryshortlist.app">Contact</a>
 			</div>
-			<p class="footer-copy">© {new Date().getFullYear()} Shortlist. All rights reserved.</p>
 		</div>
 	</footer>
 </div>
@@ -81,6 +82,15 @@
 
 	.nav-logo {
 		text-decoration: none;
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		margin-right: auto;
+	}
+
+	.nav-tagline {
+		font-size: 11px;
+		color: #6b7e96;
 	}
 
 	.logo-text {
@@ -164,12 +174,9 @@
 
 	.footer-links a:hover { color: #6b7e96; }
 
-	.footer-copy {
-		font-size: 0.8125rem;
+	.footer-mid {
+		font-size: 11px;
 		color: #3a4a5c;
-		width: 100%;
-		text-align: center;
-		margin-top: 16px;
 	}
 
 	@media (max-width: 640px) {
