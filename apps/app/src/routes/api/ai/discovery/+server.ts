@@ -4,6 +4,13 @@ import { env } from '$env/dynamic/private';
 import { createServerSupabase } from '$services/supabase.server';
 
 /**
+ * Sanitize search string by escaping special PostgREST filter characters
+ */
+function sanitizeSearch(input: string): string {
+	return input.replace(/[\\%_]/g, '\\$&');
+}
+
+/**
  * POST /api/ai/discovery — AI-powered vendor discovery
  * Searches internal vendor library + generates AI suggestions
  */
@@ -22,10 +29,11 @@ export const POST: RequestHandler = async ({ request, locals, cookies }) => {
 	const supabase = createServerSupabase(cookies);
 
 	// 1. Search internal vendor library (fuzzy match on name + category)
+	const sanitized = sanitizeSearch(query);
 	const { data: libraryResults } = await supabase
 		.from('vendor_library')
 		.select('*')
-		.or(`name.ilike.%${query}%,category.ilike.%${query}%,description.ilike.%${query}%`)
+		.or(`name.ilike.%${sanitized}%,category.ilike.%${sanitized}%,description.ilike.%${sanitized}%`)
 		.limit(10);
 
 	// 2. Search org vendor intelligence if user has org context
@@ -34,7 +42,7 @@ export const POST: RequestHandler = async ({ request, locals, cookies }) => {
 		const { data: orgVendors } = await supabase
 			.from('org_vendor_intelligence')
 			.select('*')
-			.or(`vendor_name.ilike.%${query}%,category.ilike.%${query}%`)
+			.or(`vendor_name.ilike.%${sanitized}%,category.ilike.%${sanitized}%`)
 			.limit(5);
 		orgResults = orgVendors ?? [];
 	}

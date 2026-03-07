@@ -3,6 +3,13 @@ import type { RequestHandler } from './$types';
 import { createServerSupabase } from '$services/supabase.server';
 
 /**
+ * Sanitize search string by escaping special PostgREST filter characters
+ */
+function sanitizeSearch(input: string): string {
+	return input.replace(/[\\%_]/g, '\\$&');
+}
+
+/**
  * GET /api/vendors — List vendors with filtering, search, and pagination
  */
 export const GET: RequestHandler = async ({ url, locals, cookies }) => {
@@ -29,7 +36,8 @@ export const GET: RequestHandler = async ({ url, locals, cookies }) => {
 
 	// Search filter (fuzzy match across name, tagline, description)
 	if (search) {
-		query = query.or(`name.ilike.%${search}%,tagline.ilike.%${search}%,description.ilike.%${search}%,best_for.ilike.%${search}%`);
+		const sanitized = sanitizeSearch(search);
+		query = query.or(`name.ilike.%${sanitized}%,tagline.ilike.%${sanitized}%,description.ilike.%${sanitized}%,best_for.ilike.%${sanitized}%`);
 	}
 
 	// Sorting

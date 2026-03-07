@@ -18,6 +18,8 @@ html {
 	background: var(--color-bg);
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
+	--focus-ring: 2px solid var(--primary-400, #4a96f8);
+	--focus-ring-offset: 2px;
 }
 
 body {

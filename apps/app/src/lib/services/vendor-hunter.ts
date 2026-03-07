@@ -308,9 +308,13 @@ export async function enrichBatch(
 		);
 
 		for (const r of results) {
-			if (r.status === 'fulfilled' && r.value.proposals > 0) {
-				succeeded++;
+			if (r.status === 'fulfilled') {
+				if (r.value.proposals > 0) {
+					succeeded++;
+				}
+				// Fulfilled with 0 proposals is neither succeeded nor failed - it's skipped
 			} else {
+				// rejected status
 				failed++;
 			}
 		}
@@ -376,10 +380,15 @@ export async function markStaleForReenrich(
 	}
 
 	const ids = stale.map((v) => v.id);
-	await supabase
+	const { error: updateErr } = await supabase
 		.from('vendor_library')
 		.update({ enrichment_status: 'pending' })
 		.in('id', ids);
+
+	if (updateErr) {
+		console.error(`Failed to mark stale vendors for re-enrichment: ${updateErr.message}`);
+		return { marked: 0 };
+	}
 
 	return { marked: ids.length };
 }

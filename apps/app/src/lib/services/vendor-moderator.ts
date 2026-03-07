@@ -118,7 +118,7 @@ export async function processQueue(): Promise<ProcessResult> {
 
 		// Mark auto-applied items
 		if (autoAppliedIds.length > 0) {
-			await supabase
+			const { error: applyErr } = await supabase
 				.from('vendor_enrichment_queue')
 				.update({
 					status: 'auto_applied',
@@ -126,11 +126,15 @@ export async function processQueue(): Promise<ProcessResult> {
 					reason: 'Confidence above auto-apply threshold (≥0.85)',
 				})
 				.in('id', autoAppliedIds);
+
+			if (applyErr) {
+				result.errors.push(`Failed to mark auto-applied items for vendor ${vendorId}: ${applyErr.message}`);
+			}
 		}
 
 		// Mark rejected items
 		if (rejectedIds.length > 0) {
-			await supabase
+			const { error: rejectErr } = await supabase
 				.from('vendor_enrichment_queue')
 				.update({
 					status: 'rejected',
@@ -138,6 +142,10 @@ export async function processQueue(): Promise<ProcessResult> {
 					reason: 'Confidence below reject threshold (<0.50)',
 				})
 				.in('id', rejectedIds);
+
+			if (rejectErr) {
+				result.errors.push(`Failed to mark rejected items for vendor ${vendorId}: ${rejectErr.message}`);
+			}
 		}
 
 		// Check if vendor has no more pending items — if all applied, mark as enriched
@@ -198,7 +206,7 @@ export async function reviewItem(
 	}
 
 	// Update queue item status
-	await supabase
+	const { error: statusErr } = await supabase
 		.from('vendor_enrichment_queue')
 		.update({
 			status: approved ? 'approved' : 'rejected',
@@ -207,6 +215,10 @@ export async function reviewItem(
 			reason: reason ?? (approved ? 'Manually approved' : 'Manually rejected'),
 		})
 		.eq('id', queueItemId);
+
+	if (statusErr) {
+		return { success: false, error: `Failed to update queue status: ${statusErr.message}` };
+	}
 
 	return { success: true };
 }

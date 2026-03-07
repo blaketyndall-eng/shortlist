@@ -21,7 +21,8 @@
 		{ value: 'other', label: 'Other' }
 	];
 
-	async function handleCreate() {
+	async function handleCreate(e?: Event) {
+		e?.preventDefault();
 		if (!name.trim()) {
 			error = 'Project name is required';
 			return;
@@ -85,7 +86,7 @@
 			<div class="error-banner" role="alert">{error}</div>
 		{/if}
 
-		<form onsubmit={handleCreate}>
+		<form onsubmit={(e) => { e.preventDefault(); handleCreate(e); }}>
 			<label class="field">
 				<span>Project name <em>*</em></span>
 				<input
