@@ -5,8 +5,12 @@
 
 <div class="pricing-page">
 	<header class="hero">
-		<h1>Simple, transparent pricing</h1>
-		<p>Start free. Upgrade when your team needs more.</p>
+		<div class="hero-badge">
+			<span class="badge-dot"></span>
+			Pricing
+		</div>
+		<h1>Simple, <span class="highlight">transparent</span> pricing</h1>
+		<p class="hero-sub">Start free. Upgrade when your team needs more power.</p>
 	</header>
 
 	<div class="plans-grid">
@@ -43,9 +47,9 @@
 				<li>Unlimited projects</li>
 				<li>Unlimited vendors</li>
 				<li>500 AI credits/month</li>
-				<li>All 8 AI engines</li>
+				<li>All 21 AI engines</li>
 				<li>Team collaboration (up to 10)</li>
-				<li>Vendor discovery</li>
+				<li>Vendor discovery & SOLVE workflow</li>
 				<li>File uploads & storage</li>
 				<li>Priority support</li>
 			</ul>
@@ -102,29 +106,66 @@
 		max-width: 1100px;
 		margin: 0 auto;
 		padding: 80px 24px;
+		position: relative;
+		z-index: 1;
 	}
 
+	/* ═══════ HERO ═══════ */
 	.hero {
 		text-align: center;
 		margin-bottom: 64px;
 	}
-
+	.hero-badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		padding: 6px 18px;
+		background: rgba(0, 204, 150, 0.06);
+		border: 1px solid rgba(0, 204, 150, 0.15);
+		border-radius: 9999px;
+		font-size: 0.8125rem;
+		font-weight: 600;
+		color: #00cc96;
+		margin-bottom: 1.5rem;
+		letter-spacing: 0.01em;
+	}
+	.badge-dot {
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		background: #00cc96;
+		animation: pulse 2s infinite;
+	}
+	@keyframes pulse {
+		0%, 100% { opacity: 1; }
+		50% { opacity: 0.4; }
+	}
 	.hero h1 {
-		font-size: 2.5rem;
+		font-family: 'Playfair Display', serif;
+		font-size: 3rem;
 		font-weight: 800;
-		color: #1a1a2e;
+		color: #ffffff;
 		margin-bottom: 12px;
+		line-height: 1.1;
+		letter-spacing: -0.02em;
 	}
-
-	.hero p {
+	.highlight {
+		background: linear-gradient(135deg, #00cc96, #4a96f8);
+		-webkit-background-clip: text;
+		-webkit-text-fill-color: transparent;
+		background-clip: text;
+	}
+	.hero-sub {
 		font-size: 1.125rem;
-		color: #6b7280;
+		color: #6b7e96;
+		line-height: 1.7;
 	}
 
+	/* ═══════ PLANS GRID ═══════ */
 	.plans-grid {
 		display: grid;
 		grid-template-columns: repeat(3, 1fr);
-		gap: 24px;
+		gap: 20px;
 		margin-bottom: 80px;
 	}
 
@@ -133,18 +174,21 @@
 	}
 
 	.plan-card {
-		background: white;
-		border: 1px solid #e5e7eb;
+		background: rgba(255, 255, 255, 0.02);
+		border: 1px solid rgba(255, 255, 255, 0.06);
 		border-radius: 16px;
 		padding: 32px;
 		display: flex;
 		flex-direction: column;
 		position: relative;
+		transition: border-color 0.2s;
 	}
+	.plan-card:hover { border-color: rgba(255, 255, 255, 0.12); }
 
 	.plan-card.featured {
-		border-color: #4f46e5;
-		box-shadow: 0 8px 32px rgba(79, 70, 229, 0.12);
+		border-color: rgba(0, 204, 150, 0.35);
+		background: rgba(0, 204, 150, 0.03);
+		box-shadow: 0 8px 32px rgba(0, 204, 150, 0.08);
 	}
 
 	.plan-badge {
@@ -152,8 +196,8 @@
 		top: -12px;
 		left: 50%;
 		transform: translateX(-50%);
-		background: linear-gradient(135deg, #4f46e5, #7c3aed);
-		color: white;
+		background: linear-gradient(135deg, #00cc96, #00b386);
+		color: #061510;
 		font-size: 0.75rem;
 		font-weight: 700;
 		padding: 4px 16px;
@@ -165,8 +209,10 @@
 
 	.plan-header h2 {
 		font-size: 1.25rem;
-		color: #1a1a2e;
+		font-weight: 700;
+		color: #ffffff;
 		margin-bottom: 8px;
+		font-family: 'Figtree', sans-serif;
 	}
 
 	.plan-price { display: flex; align-items: baseline; gap: 4px; margin-bottom: 8px; }
@@ -174,17 +220,17 @@
 	.price {
 		font-size: 2.25rem;
 		font-weight: 800;
-		color: #1a1a2e;
+		color: #ffffff;
 	}
 
 	.period {
 		font-size: 0.875rem;
-		color: #6b7280;
+		color: #6b7e96;
 	}
 
 	.plan-desc {
 		font-size: 0.875rem;
-		color: #6b7280;
+		color: #6b7e96;
 	}
 
 	.plan-features {
@@ -197,13 +243,13 @@
 	.plan-features li {
 		padding: 8px 0;
 		font-size: 0.875rem;
-		color: #374151;
-		border-bottom: 1px solid #f3f4f6;
+		color: #c0c8d4;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.04);
 	}
 
 	.plan-features li::before {
 		content: '✓ ';
-		color: #16a34a;
+		color: #00cc96;
 		font-weight: 700;
 	}
 
@@ -211,32 +257,41 @@
 		display: block;
 		text-align: center;
 		padding: 12px 24px;
-		border: 1px solid #d1d5db;
-		border-radius: 8px;
+		border: 1px solid rgba(255, 255, 255, 0.12);
+		border-radius: 10px;
 		font-size: 0.9375rem;
 		font-weight: 600;
-		color: #374151;
+		color: #dde4ef;
 		text-decoration: none;
-		transition: all 0.15s;
+		transition: all 0.17s;
+		font-family: 'Figtree', sans-serif;
 	}
 
-	.plan-cta:hover { background: #f9fafb; text-decoration: none; }
+	.plan-cta:hover { border-color: rgba(255, 255, 255, 0.28); text-decoration: none; }
 
 	.featured-cta {
-		background: #4f46e5;
-		color: white;
-		border-color: #4f46e5;
+		background: #00cc96;
+		color: #061510;
+		border-color: #00cc96;
+		font-weight: 700;
 	}
 
-	.featured-cta:hover { background: #4338ca; }
+	.featured-cta:hover {
+		background: #009e74;
+		border-color: #009e74;
+		box-shadow: 0 8px 22px rgba(0, 204, 150, 0.22);
+	}
 
+	/* ═══════ FAQ ═══════ */
 	.faq { max-width: 800px; margin: 0 auto; }
 
 	.faq h2 {
-		font-size: 1.5rem;
+		font-family: 'Playfair Display', serif;
+		font-size: 1.75rem;
+		font-weight: 800;
 		text-align: center;
 		margin-bottom: 40px;
-		color: #1a1a2e;
+		color: #ffffff;
 	}
 
 	.faq-grid {
@@ -247,15 +302,31 @@
 
 	@media (max-width: 640px) { .faq-grid { grid-template-columns: 1fr; } }
 
+	.faq-item {
+		background: rgba(255, 255, 255, 0.02);
+		border: 1px solid rgba(255, 255, 255, 0.06);
+		border-radius: 12px;
+		padding: 24px;
+		transition: border-color 0.2s;
+	}
+	.faq-item:hover { border-color: rgba(255, 255, 255, 0.12); }
+
 	.faq-item h3 {
 		font-size: 0.9375rem;
-		color: #1a1a2e;
+		font-weight: 700;
+		color: #dde4ef;
 		margin-bottom: 8px;
+		font-family: 'Figtree', sans-serif;
 	}
 
 	.faq-item p {
 		font-size: 0.875rem;
-		color: #6b7280;
-		line-height: 1.6;
+		color: #6b7e96;
+		line-height: 1.65;
+		margin: 0;
+	}
+
+	@media (max-width: 768px) {
+		.hero h1 { font-size: 2.25rem; }
 	}
 </style>
