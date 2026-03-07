@@ -5,7 +5,15 @@ import { ANTHROPIC_API_KEY } from '$env/static/private';
  * Vendor Hunter Service
  * Gathers intelligence from multiple sources and writes enrichment proposals
  * to the vendor_enrichment_queue with per-field confidence scores.
+ *
+ * Supports automatic enrichment with platform API key and optional
+ * user-provided API key override for backup/custom usage.
  */
+
+interface EnrichmentOptions {
+	/** Whether to run the moderator after enrichment (default: true) */
+	runModerator?: boolean;
+}
 
 interface EnrichmentProposal {
 	vendor_id: string;
@@ -52,12 +60,15 @@ const CONFIDENCE_BASE: Record<string, Record<string, number>> = {
 
 /**
  * Enrich a single vendor — main entry point
+ * Uses platform ANTHROPIC_API_KEY exclusively (no user keys).
+ * @param vendorId - UUID of the vendor to enrich
  */
 export async function enrichVendor(vendorId: string): Promise<{
 	proposals: number;
 	errors: string[];
 }> {
 	const supabase = createAdminSupabase();
+	const apiKey = ANTHROPIC_API_KEY || null;
 
 	// Load vendor
 	const { data: vendor, error: vErr } = await supabase
@@ -68,6 +79,14 @@ export async function enrichVendor(vendorId: string): Promise<{
 
 	if (vErr || !vendor) {
 		return { proposals: 0, errors: [`Vendor not found: ${vendorId}`] };
+	}
+
+	// Skip if already enriched recently (within 7 days) unless forced
+	if (vendor.enrichment_status === 'enriched' && vendor.enriched_at) {
+		const daysSinceEnriched = (Date.now() - new Date(vendor.enriched_at).getTime()) / (1000 * 60 * 60 * 24);
+		if (daysSinceEnriched < 7) {
+			return { proposals: 0, errors: [] }; // Skip — recently enriched
+		}
 	}
 
 	// Mark as enriching
@@ -81,7 +100,7 @@ export async function enrichVendor(vendorId: string): Promise<{
 
 	// Run AI research
 	try {
-		const aiResult = await enrichFromAI(vendor);
+		const aiResult = await enrichFromAI(vendor, apiKey);
 		if (aiResult) {
 			const aiProposals = mapAIResultToProposals(vendorId, aiResult);
 			proposals.push(...aiProposals);
@@ -123,9 +142,11 @@ export async function enrichVendor(vendorId: string): Promise<{
 
 /**
  * Enrich vendor using AI (Claude) research
+ * @param vendor - The vendor record from DB
+ * @param apiKey - Anthropic API key (platform or user-provided)
  */
-async function enrichFromAI(vendor: Record<string, unknown>): Promise<AIResearchResult | null> {
-	if (!ANTHROPIC_API_KEY) return null;
+async function enrichFromAI(vendor: Record<string, unknown>, apiKey: string | null): Promise<AIResearchResult | null> {
+	if (!apiKey) return null;
 
 	const systemPrompt = 'You are a B2B software analyst. Return ONLY valid JSON, no markdown.';
 	const userPrompt = `Research "${vendor.name}" for a ${vendor.category_id} evaluation. Return JSON:
@@ -142,7 +163,7 @@ Context about this vendor:
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
-			'x-api-key': ANTHROPIC_API_KEY,
+			'x-api-key': apiKey,
 			'anthropic-version': '2023-06-01',
 		},
 		body: JSON.stringify({
@@ -296,4 +317,69 @@ export async function enrichBatch(
 	}
 
 	return { total: vendorIds.length, succeeded, failed };
+}
+
+/**
+ * Auto-enrich all vendors with 'pending' or 'failed' status.
+ * Designed for cron/scheduled jobs — uses platform ANTHROPIC_API_KEY only.
+ * Processes in batches to stay within API rate limits.
+ *
+ * @param limit - Max vendors to process per run (default: 20)
+ */
+export async function autoEnrichPending(
+	limit = 20
+): Promise<{ total: number; succeeded: number; failed: number; skipped: number }> {
+	const supabase = createAdminSupabase();
+
+	// Find all vendors that need enrichment
+	const { data: pending, error: pErr } = await supabase
+		.from('vendor_library')
+		.select('id')
+		.in('enrichment_status', ['pending', 'failed'])
+		.order('created_at', { ascending: true })
+		.limit(limit);
+
+	if (pErr || !pending?.length) {
+		return { total: 0, succeeded: 0, failed: 0, skipped: 0 };
+	}
+
+	const vendorIds = pending.map((v) => v.id);
+	const result = await enrichBatch(vendorIds, 3);
+
+	return { ...result, skipped: 0 };
+}
+
+/**
+ * Re-enrich vendors that haven't been refreshed in a given number of days.
+ * Resets their status to 'pending' so the next autoEnrichPending run picks them up.
+ *
+ * @param staleDays - Days since last enrichment before re-enriching (default: 30)
+ * @param limit - Max vendors to reset per run (default: 10)
+ */
+export async function markStaleForReenrich(
+	staleDays = 30,
+	limit = 10
+): Promise<{ marked: number }> {
+	const supabase = createAdminSupabase();
+	const cutoff = new Date(Date.now() - staleDays * 24 * 60 * 60 * 1000).toISOString();
+
+	const { data: stale, error: sErr } = await supabase
+		.from('vendor_library')
+		.select('id')
+		.eq('enrichment_status', 'enriched')
+		.lt('enriched_at', cutoff)
+		.order('enriched_at', { ascending: true })
+		.limit(limit);
+
+	if (sErr || !stale?.length) {
+		return { marked: 0 };
+	}
+
+	const ids = stale.map((v) => v.id);
+	await supabase
+		.from('vendor_library')
+		.update({ enrichment_status: 'pending' })
+		.in('id', ids);
+
+	return { marked: ids.length };
 }

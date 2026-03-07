@@ -2,10 +2,13 @@ import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { createAdminSupabase } from '$services/supabase.server';
 import { vendorSeeds } from '$lib/data/vendor-seeds';
+import { autoEnrichPending } from '$lib/services/vendor-hunter';
+import { processQueue } from '$lib/services/vendor-moderator';
 
 /**
  * POST /api/vendors/seed — Seed vendor library with initial data
  * Admin-only endpoint (uses service role client)
+ * Automatically triggers platform-managed enrichment after seeding.
  */
 export const POST: RequestHandler = async ({ locals }) => {
 	if (!locals.session || !locals.user) {
@@ -99,11 +102,23 @@ export const POST: RequestHandler = async ({ locals }) => {
 			.eq('slug', slug);
 	}
 
+	// 4. Auto-trigger platform-managed enrichment (first batch, rest via scheduled cron)
+	let enrichResult = null;
+	let moderatorResult = null;
+	try {
+		enrichResult = await autoEnrichPending(10); // First 10 immediately
+		moderatorResult = await processQueue();
+	} catch (enrichErr: any) {
+		errors.push(`Auto-enrich error: ${enrichErr.message}`);
+	}
+
 	return json({
 		success: true,
 		total: vendorSeeds.length,
 		inserted,
 		updated,
+		enrichment: enrichResult,
+		moderation: moderatorResult,
 		errors: errors.length > 0 ? errors : undefined,
 	});
 };
