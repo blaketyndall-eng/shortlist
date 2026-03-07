@@ -44,6 +44,7 @@ const TOKEN_LIMITS: Partial<Record<string, number>> = {
 	priorities_suggest: 300,
 	stack_suggest: 300,
 	context_notes: 500,
+	profile_interview: 600,
 	reference_questions: 500,
 	// Alignment engines
 	alignment_analyze: 600,
@@ -62,6 +63,7 @@ const ENGINE_MODEL_OVERRIDE: Partial<Record<string, string>> = {
 	compliance_suggest: 'claude-haiku-4-5-20251001',
 	priorities_suggest: 'claude-haiku-4-5-20251001',
 	stack_suggest: 'claude-haiku-4-5-20251001',
+	profile_interview: 'claude-haiku-4-5-20251001',
 	demo_questions: 'claude-haiku-4-5-20251001',
 	reference_questions: 'claude-haiku-4-5-20251001',
 	problem_brief: 'claude-sonnet-4-6',
@@ -105,6 +107,7 @@ const ENGINE_SCHEMAS: Record<string, { required: string[]; type: 'object' | 'arr
 	demo_questions: { required: ['text', 'crit'], type: 'array' },
 	reference_questions: { required: ['question', 'area'], type: 'array' },
 	company_autofill: { required: ['industry', 'size'], type: 'object' },
+	profile_interview: { required: [], type: 'object' },
 	alignment_analyze: { required: ['overall', 'gaps'], type: 'object' },
 	alignment_summary: { required: ['headline', 'status'], type: 'object' },
 	executive_insight: { required: ['title', 'insight'], type: 'object' },
@@ -130,6 +133,23 @@ export const POST: RequestHandler = async ({ request, locals, cookies }) => {
 
 	if (!body.engine || !body.projectId) {
 		error(400, 'Missing required fields: engine, projectId');
+	}
+
+	// Auto-inject company profile if not already provided in context
+	if (!body.context.companyProfile && locals.user) {
+		try {
+			const supabase = createServerSupabase(cookies);
+			const { data: profileRow } = await supabase
+				.from('profiles')
+				.select('company_profile')
+				.eq('id', locals.user.id)
+				.single();
+			if (profileRow?.company_profile && Object.keys(profileRow.company_profile).length > 0) {
+				body.context.companyProfile = profileRow.company_profile;
+			}
+		} catch {
+			// Non-critical — proceed without company context
+		}
 	}
 
 	const depth = body.depth ?? 'standard';
@@ -285,6 +305,7 @@ function buildSystemPrompt(engine: string, context: Record<string, unknown>): st
 		priorities_suggest: 'You are a purchase intelligence strategist. Return ONLY a JSON array of strings, no markdown.',
 		stack_suggest: 'You are a solutions architect. Return ONLY a comma-separated list of tool names, no markdown or explanation.',
 		context_notes: 'You are a purchase intelligence assistant writing buyer context notes. Write in second person, clear and direct. 3–5 sentences max.',
+		profile_interview: 'You are a purchase intelligence assistant extracting structured company profile data from conversational answers. Return ONLY valid JSON with the fields you can extract. Use null for fields that cannot be determined. Match values to the allowed option lists exactly.',
 
 		// --- Comparison & Intelligence ---
 		vendor_comparison_narrative: 'You are a senior B2B purchase intelligence analyst writing comparative vendor narratives for executive decision-makers. Be specific, data-driven, and opinionated. Return ONLY valid JSON.',
@@ -564,7 +585,7 @@ Return JSON array:
 			return `Company description: "${str(ctx.description)}"
 
 Return JSON with these exact keys (use null for unknown):
-{"name":"company name or null","industry":"one of: Technology, Healthcare, Financial Services, Manufacturing, Retail, Education, Government, Non-profit, Professional Services, Media, Energy, Real Estate, Other","size":"one of: 1-10, 11-50, 51-200, 201-500, 501-1000, 1001-5000, 5000+","budget":"one of: Under $10k, $10k-$50k, $50k-$100k, $100k-$500k, $500k-$1M, $1M+","maturity":"one of: Ad-hoc, Developing, Established, Optimised","compliance":["from: SOC 2 Type II, ISO 27001, GDPR, HIPAA, FedRAMP, PCI-DSS, CCPA, NIST 800-53, FINRA, None required"],"priorities":["top 3-4 from: Cost reduction, Security first, Fast deployment, Ease of adoption, Deep integrations, Vendor consolidation, Scalability, Data sovereignty, Open-source preferred, Local support"],"vendorPref":["from: Enterprise tier, Mid-market, SMB-friendly, Open-source, Best of breed, Suite/platform"],"process":"one of: Individual, Committee, Formal RFP, Board approval","regions":["from: North America, Europe, APAC, LATAM, Middle East, Africa, Global"],"stack":"comma-separated tools or null","notes":"2-3 sentence purchase context"}`;
+{"name":"company name or null","industry":"one of: Technology, Healthcare, Financial Services, Manufacturing, Retail, Education, Government, Non-profit, Professional Services, Media, Energy, Real Estate, Other","size":"one of: 1-10, 11-50, 51-200, 201-500, 501-1000, 1001-5000, 5000+","budget":"one of: Under $10k, $10k-$50k, $50k-$100k, $100k-$500k, $500k-$1M, $1M+","maturity":"one of: Ad-hoc, Developing, Established, Optimised","compliance":["from: SOC 2 Type II, ISO 27001, GDPR, HIPAA, FedRAMP, PCI-DSS, CCPA, NIST 800-53, FINRA, None required"],"priorities":["top 3-4 from: Cost reduction, Security first, Fast deployment, Ease of adoption, Deep integrations, Vendor consolidation, Scalability, Data sovereignty, Open-source preferred, Local support"],"vendorPref":["from: Enterprise tier, Mid-market, SMB-friendly, Open-source, Best of breed, Suite/platform"],"process":"one of: Individual, Committee, Formal RFP, Board approval","regions":["from: North America, Europe, APAC, LATAM, Middle East, Africa, Global"],"stack":"comma-separated tools or null","notes":"2-3 sentence purchase context","typicalTimeline":"one of: Under 2 weeks, 2-4 weeks, 1-3 months, 3-6 months, 6-12 months, 12+ months or null","stakeholders":"key decision-maker roles or null","dealBreakers":["from: No SSO support, No on-prem option, Vendor lock-in, No API access, Poor mobile experience, No audit logging, Limited customization, No SLA guarantees, Data residency issues, No offline mode"],"integrationReqs":["from: SSO/SAML, REST API, Webhooks, Native Salesforce, Native Slack, Native Microsoft 365, Native Google Workspace, SCIM provisioning, Data warehouse sync, Custom ETL, iPaaS (Zapier/Make/Workato)"],"painPoints":"key frustrations or null","successMetrics":"how they measure success or null"}`;
 
 		case 'compliance_suggest':
 			return `Based on this company profile: "${str(ctx.profileDesc)}"
@@ -586,6 +607,26 @@ ${ctx.existingStack ? `They already use: ${str(ctx.existingStack)}` : ''}
 
 List 6-10 common tools this type of company typically runs — CRM, ERP, HRIS, project management, communication, cloud infrastructure, BI, etc.
 Return only tool names separated by commas: Salesforce, Slack, Jira, AWS, ...`;
+
+		case 'profile_interview':
+			return `Question asked: "${str(ctx.questionAsked)}"
+User's answer: "${str(ctx.userAnswer)}"
+Extract type: ${str(ctx.extractType)}
+Current profile state: ${str(ctx.currentProfile)}
+
+Based on the user's answer, extract structured data. Return JSON with ONLY the fields you can confidently extract.
+
+Field rules by extract type:
+- basics: {"name":"company name","industry":"one of: Technology, Healthcare, Financial Services, Manufacturing, Retail, Education, Government, Non-profit, Professional Services, Media, Energy, Real Estate, Other","size":"one of: 1-10, 11-50, 51-200, 201-500, 501-1000, 1001-5000, 5000+"}
+- budget_maturity: {"budget":"one of: Under $10k, $10k-$50k, $50k-$100k, $100k-$500k, $500k-$1M, $1M+","maturity":"one of: Ad-hoc, Developing, Established, Optimised"}
+- governance: {"process":"one of: Individual, Committee, Formal RFP, Board approval","stakeholders":"free text describing key decision makers","approvalWorkflow":"free text describing approval steps"}
+- stack: {"stack":"comma-separated tool names"}
+- integrations: {"integrationReqs":["from: SSO/SAML, REST API, Webhooks, Native Salesforce, Native Slack, Native Microsoft 365, Native Google Workspace, SCIM provisioning, Data warehouse sync, Custom ETL, iPaaS (Zapier/Make/Workato)"]}
+- compliance: {"compliance":["from: SOC 2 Type II, ISO 27001, GDPR, HIPAA, FedRAMP, PCI-DSS, CCPA, NIST 800-53, FINRA, None required"],"regions":["from: North America, Europe, APAC, LATAM, Middle East, Africa, Global"]}
+- pain_lessons: {"painPoints":"free text","pastVendorLessons":"free text"}
+- dealbreakers_success: {"dealBreakers":["from: No SSO support, No on-prem option, Vendor lock-in, No API access, Poor mobile experience, No audit logging, Limited customization, No SLA guarantees, Data residency issues, No offline mode"],"successMetrics":"free text","priorities":["from: Cost reduction, Security first, Fast deployment, Ease of adoption, Deep integrations, Vendor consolidation, Scalability, Data sovereignty, Open-source preferred, Local support"]}
+
+Return ONLY JSON, no explanation.`;
 
 		case 'context_notes':
 			return `Based on this company profile:
@@ -778,14 +819,22 @@ function buildCompanyContext(profile: Record<string, unknown> | undefined): stri
 	if (profile.budget) parts.push(`Annual software budget: ${profile.budget}`);
 	if (profile.maturity) parts.push(`Purchase maturity: ${profile.maturity}`);
 	if (profile.process) parts.push(`Decision process: ${profile.process}`);
+	if (profile.typicalTimeline) parts.push(`Typical evaluation timeline: ${profile.typicalTimeline}`);
+	if (profile.stakeholders) parts.push(`Key stakeholders: ${profile.stakeholders}`);
+	if (profile.approvalWorkflow) parts.push(`Approval workflow: ${profile.approvalWorkflow}`);
 	if (profile.compliance) parts.push(`Compliance requirements: ${arr(profile.compliance).join(', ')}`);
 	if (profile.priorities) parts.push(`Organisational priorities: ${arr(profile.priorities).join(', ')}`);
 	if (profile.vendorPref) parts.push(`Vendor tier preference: ${arr(profile.vendorPref).join(', ')}`);
 	if (profile.regions) parts.push(`Operating regions: ${arr(profile.regions).join(', ')}`);
 	if (profile.stack) parts.push(`Existing tech stack: ${profile.stack}`);
+	if (profile.integrationReqs) parts.push(`Integration requirements: ${arr(profile.integrationReqs).join(', ')}`);
+	if (profile.dealBreakers) parts.push(`Deal-breakers: ${arr(profile.dealBreakers).join(', ')}`);
+	if (profile.painPoints) parts.push(`Key pain points: ${profile.painPoints}`);
+	if (profile.successMetrics) parts.push(`Success metrics: ${profile.successMetrics}`);
+	if (profile.pastVendorLessons) parts.push(`Past vendor lessons: ${profile.pastVendorLessons}`);
 	if (profile.notes) parts.push(`Additional context: ${profile.notes}`);
 	parts.push('=== END BUYER CONTEXT ===');
-	parts.push('Tailor all analysis, suggestions, and recommendations to the above buyer profile. Do not mention the context block in your response.');
+	parts.push('Tailor all analysis, suggestions, and recommendations to the above buyer profile. Factor in their deal-breakers, compliance needs, integration requirements, and past lessons when making any recommendation. Do not mention the context block in your response.');
 
 	return parts.join('\n');
 }
