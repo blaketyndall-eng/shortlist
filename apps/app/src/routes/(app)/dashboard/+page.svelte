@@ -1,12 +1,21 @@
 <script lang="ts">
 	import Card from '$components/ui/Card.svelte';
 	import ActivityFeed from '$components/ActivityFeed.svelte';
-	import WelcomeModal from '$components/WelcomeModal.svelte';
+	import OnboardingChecklist from '$components/OnboardingChecklist.svelte';
+	import ProductTour from '$components/ProductTour.svelte';
 
 	let { data } = $props();
 
-	// Show welcome modal for users who haven't completed onboarding
-	let showWelcome = $state(!data.profile?.onboarding_completed);
+	// Show product tour for users who haven't completed onboarding yet
+	let showTour = $state(!data.profile?.onboarding_completed);
+	let checklistDismissed = $state(false);
+
+	// Show checklist when not all onboarding tasks are done
+	const showChecklist = $derived(
+		!checklistDismissed &&
+		data.onboarding &&
+		(!data.onboarding.hasCompanyProfile || !data.onboarding.hasTeamInvites || !data.onboarding.hasProject)
+	);
 
 	const stepLabels: Record<string, string> = {
 		discovery: 'Discovery',
@@ -42,6 +51,18 @@
 		</div>
 		<a href="/project/new" class="btn-primary">+ New Project</a>
 	</header>
+
+	{#if showChecklist && data.profile?.id}
+		<section class="onboarding-section">
+			<OnboardingChecklist
+				hasCompanyProfile={data.onboarding.hasCompanyProfile}
+				hasTeamInvites={data.onboarding.hasTeamInvites}
+				hasProject={data.onboarding.hasProject}
+				profileId={data.profile.id}
+				ondismiss={() => checklistDismissed = true}
+			/>
+		</section>
+	{/if}
 
 	<section class="dashboard-grid">
 		<div class="stat-card">
@@ -139,8 +160,8 @@
 	</section>
 </div>
 
-{#if showWelcome && data.profile?.id}
-	<WelcomeModal bind:open={showWelcome} profileId={data.profile.id} />
+{#if showTour && data.profile?.id}
+	<ProductTour bind:open={showTour} profileId={data.profile.id} />
 {/if}
 
 <style>
@@ -302,6 +323,10 @@
 
 	.empty-state p {
 		margin-bottom: var(--space-4);
+	}
+
+	.onboarding-section {
+		margin-bottom: var(--space-6);
 	}
 
 	.activity-section {

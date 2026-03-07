@@ -89,6 +89,22 @@ export const load: PageServerLoad = async ({ locals }) => {
 		}
 	}
 
+	// Onboarding task completion checks
+	const hasCompanyProfile = !!(locals.profile?.company);
+
+	// Check for team invites or team members beyond self
+	let hasTeamInvites = false;
+	if (userTeams && userTeams.length > 0) {
+		// User has at least one team — check if they've invited anyone
+		const { count: inviteCount } = await locals.supabase
+			.from('team_invitations')
+			.select('*', { count: 'exact', head: true })
+			.eq('invited_by', userId);
+		hasTeamInvites = (inviteCount ?? 0) > 0 || (teamCount > 1);
+	}
+
+	const hasProject = (projects?.length ?? 0) > 0;
+
 	return {
 		projects: projects ?? [],
 		activities,
@@ -97,7 +113,11 @@ export const load: PageServerLoad = async ({ locals }) => {
 			vendorsTracked: vendorCount,
 			aiCreditsUsed: totalCredits,
 			teamMembers: teamCount ?? 0
+		},
+		onboarding: {
+			hasCompanyProfile,
+			hasTeamInvites,
+			hasProject
 		}
 	};
 };
-// Updated 1772866800
