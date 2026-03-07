@@ -19,6 +19,7 @@
 		<div class="nav-links" class:mobile-open={mobileOpen}>
 			<a href="/features" class:nav-active={page.url.pathname === '/features'} onclick={() => mobileOpen = false}>Features</a>
 			<a href="/demo" class:nav-active={page.url.pathname === '/demo'} onclick={() => mobileOpen = false}>Demo</a>
+			<a href="/compare" class:nav-active={page.url.pathname === '/compare'} onclick={() => mobileOpen = false}>vs. Spreadsheets</a>
 			<a href="/pricing" class:nav-active={page.url.pathname === '/pricing'} onclick={() => mobileOpen = false}>Pricing</a>
 			<a href="https://app.tryshortlist.app/auth/login" class="nav-login" onclick={() => mobileOpen = false}>Log in</a>
 			<a href="https://app.tryshortlist.app/auth/signup" class="nav-cta" onclick={() => mobileOpen = false}>Get Started</a>
@@ -34,6 +35,7 @@
 			</div>
 			<div class="footer-links">
 				<a href="/features">Features</a>
+				<a href="/compare">vs. Spreadsheets</a>
 				<a href="/demo">Demo</a>
 				<a href="/pricing">Pricing</a>
 				<a href="mailto:hello@tryshortlist.app">Contact</a>
