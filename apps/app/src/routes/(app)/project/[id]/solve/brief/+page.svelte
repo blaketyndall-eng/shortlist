@@ -15,8 +15,19 @@
 
 	// Gather all solve data for brief generation
 	const triggers = solveData.triggers ?? [];
-	const questions = solveData.questions ?? {};
-	const category = solveData.category ?? {};
+	// Map triggerQuestions array into a more accessible object
+	const tq = solveData.triggerQuestions ?? [];
+	const questions = {
+		problemDescription: tq[0]?.answer ?? '',
+		whoAffected: tq[1]?.answer ?? '',
+		frequency: tq[2]?.answer ?? '',
+		costOfNothing: tq[3]?.answer ?? '',
+		successIn90Days: tq[4]?.answer ?? '',
+		currentTool: tq[5]?.answer ?? '',
+		companySize: tq[6]?.answer ?? '',
+		budget: solveData.budgetRange ?? '',
+	};
+	const category = solveData.category ?? { label: solveData.categoryDetected ?? '' };
 	const approach = solveData.approach ?? 'buy';
 	const vendors = (solveData.discoveredVendors ?? []).filter((v: any) =>
 		(solveData.shortlistedVendorIds ?? []).includes(v.id)

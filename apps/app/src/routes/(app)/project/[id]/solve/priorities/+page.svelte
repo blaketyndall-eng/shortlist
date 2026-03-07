@@ -27,12 +27,69 @@
 	let newLabel = $state('');
 	let newTier = $state<Tier>('must_have');
 	let saving = $state(false);
+	let suggestingPriorities = $state(false);
+	let suggestedPriorities = $state<string[]>([]);
 
 	const tierMeta: { key: Tier; label: string; color: string; bg: string; description: string }[] = [
 		{ key: 'must_have', label: 'Must Have', color: '#dc2626', bg: 'rgba(239, 68, 68, 0.06)', description: 'Non-negotiable — vendor fails without these' },
 		{ key: 'nice_to_have', label: 'Nice to Have', color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.06)', description: 'Important but not dealbreakers' },
 		{ key: 'bonus', label: 'Bonus', color: '#00cc96', bg: 'rgba(0, 204, 150, 0.06)', description: 'Would be great, but not required' },
 	];
+
+	async function suggestPriorities() {
+		suggestingPriorities = true;
+		try {
+			const problemDesc = solveData.triggerQuestions?.[0]?.answer ?? '';
+			const companySize = solveData.triggerQuestions?.[6]?.answer ?? '';
+			const category = solveData.category?.label ?? solveData.categoryDetected ?? '';
+			const budget = solveData.budgetRange ?? '';
+			const currentTool = solveData.triggerQuestions?.[5]?.answer ?? '';
+
+			const profileDesc = [
+				problemDesc,
+				companySize ? `Company size: ${companySize}` : '',
+				category ? `Evaluating: ${category}` : '',
+				budget ? `Budget: ${budget}` : '',
+				currentTool ? `Currently using: ${currentTool}` : '',
+			].filter(Boolean).join('. ');
+
+			const res = await fetch('/api/ai/engine', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					engine: 'priorities_suggest',
+					projectId,
+					context: { profileDesc },
+				}),
+			});
+
+			if (res.ok) {
+				const result = await res.json();
+				const data = result.data ?? result.result ?? [];
+				suggestedPriorities = Array.isArray(data) ? data : [];
+			}
+		} catch (err) {
+			console.error('Priority suggestion failed:', err);
+		}
+		suggestingPriorities = false;
+	}
+
+	function addSuggestedPriority(suggestion: string) {
+		// Check all tiers for duplicate
+		const allPriorities = [...priorities.must_have, ...priorities.nice_to_have, ...priorities.bonus];
+		if (allPriorities.some(p => p.label.toLowerCase() === suggestion.toLowerCase())) return;
+
+		priorities = {
+			...priorities,
+			must_have: [...priorities.must_have, {
+				id: crypto.randomUUID(),
+				label: suggestion,
+				tier: 'must_have' as Tier,
+				description: null,
+			}],
+		};
+		suggestedPriorities = suggestedPriorities.filter(s => s !== suggestion);
+	}
 
 	function addPriority() {
 		if (!newLabel.trim()) return;
@@ -99,6 +156,26 @@
 	<p class="step-description">
 		Categorize your requirements into must-have, nice-to-have, and bonus tiers.
 	</p>
+
+	<!-- AI suggestions -->
+	{#if suggestedPriorities.length > 0}
+		<div class="ai-suggestions">
+			<div class="ai-label">✦ AI-suggested priorities based on your evaluation</div>
+			<div class="suggestion-chips">
+				{#each suggestedPriorities as suggestion}
+					<button class="suggestion-chip" onclick={() => addSuggestedPriority(suggestion)}>
+						+ {suggestion}
+					</button>
+				{/each}
+			</div>
+		</div>
+	{:else if totalPriorities === 0}
+		<div class="ai-suggest-prompt">
+			<Button variant="secondary" size="sm" onclick={suggestPriorities} disabled={suggestingPriorities}>
+				{suggestingPriorities ? '✦ Analyzing your profile...' : '✦ Suggest priorities based on your evaluation'}
+			</Button>
+		</div>
+	{/if}
 
 	<div class="add-priority">
 		<input
@@ -243,6 +320,36 @@
 		margin-top: var(--space-6); padding-top: var(--space-4);
 		border-top: 1px solid var(--neutral-100);
 	}
+
+	.ai-suggestions {
+		padding: var(--space-3);
+		background: rgba(74, 150, 248, 0.04);
+		border: 1px solid rgba(74, 150, 248, 0.15);
+		border-radius: var(--radius-md);
+		margin-bottom: var(--space-4);
+	}
+	.ai-label {
+		font-size: 0.75rem; font-weight: 600;
+		color: var(--primary-500); margin-bottom: var(--space-2);
+		letter-spacing: 0.3px;
+	}
+	.suggestion-chips { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+	.suggestion-chip {
+		padding: var(--space-1) var(--space-3);
+		background: var(--neutral-50);
+		border: 1px solid var(--neutral-200);
+		border-radius: 999px;
+		font-size: 0.8125rem;
+		color: var(--neutral-700);
+		cursor: pointer;
+		transition: all 0.15s;
+	}
+	.suggestion-chip:hover {
+		border-color: var(--primary-500);
+		background: rgba(74, 150, 248, 0.08);
+		color: var(--primary-600);
+	}
+	.ai-suggest-prompt { margin-bottom: var(--space-3); }
 
 	@media (max-width: 640px) {
 		.add-priority { flex-direction: column; }

@@ -36,6 +36,7 @@ const TOKEN_LIMITS: Partial<Record<string, number>> = {
 	risk_register: 700,
 	contract_risk: 700,
 	score_explanation: 2000,
+	problem_brief: 800,
 	executive_brief: 800,
 	decision_readiness: 700,
 	company_autofill: 1200,
@@ -63,6 +64,7 @@ const ENGINE_MODEL_OVERRIDE: Partial<Record<string, string>> = {
 	stack_suggest: 'claude-haiku-4-5-20251001',
 	demo_questions: 'claude-haiku-4-5-20251001',
 	reference_questions: 'claude-haiku-4-5-20251001',
+	problem_brief: 'claude-sonnet-4-6',
 	score_explanation: 'claude-opus-4-6',
 	executive_brief: 'claude-opus-4-6',
 	vendor_comparison_narrative: 'claude-sonnet-4-6',
@@ -97,6 +99,7 @@ const ENGINE_SCHEMAS: Record<string, { required: string[]; type: 'object' | 'arr
 	hidden_cost_spotter: { required: ['hiddenCosts', 'topAdvice'], type: 'object' },
 	risk_register: { required: [], type: 'array' },
 	contract_risk: { required: ['criticalClauses', 'topPriority'], type: 'object' },
+	problem_brief: { required: ['execSummary', 'problem'], type: 'object' },
 	executive_brief: { required: [], type: 'object' },
 	decision_readiness: { required: ['questions'], type: 'object' },
 	demo_questions: { required: ['text', 'crit'], type: 'array' },
@@ -266,6 +269,7 @@ function buildSystemPrompt(engine: string, context: Record<string, unknown>): st
 		hidden_cost_spotter: 'You are a software purchase cost expert. Return ONLY valid JSON.',
 		risk_register: 'You are a purchase risk analyst. Return ONLY valid JSON.',
 		contract_risk: 'You are a software contract expert. Return ONLY valid JSON.',
+		problem_brief: 'You are a senior B2B purchase intelligence analyst writing a problem brief for a software evaluation. Synthesize the buyer\'s pain points, requirements, and context into a clear, actionable brief that aligns the evaluation team. Be specific, reference the buyer\'s actual situation, and provide peer benchmarks. Return ONLY valid JSON, no markdown.',
 		executive_brief: 'You are a senior management consultant writing an executive decision memo. Write in clear, confident prose. No bullet points.',
 		decision_readiness: 'You are a decision quality facilitator using structured decision-making. Return ONLY valid JSON.',
 
@@ -314,10 +318,31 @@ function buildSystemPrompt(engine: string, context: Record<string, unknown>): st
 function buildUserPrompt(engine: string, ctx: Record<string, unknown>): string {
 	switch (engine) {
 		case 'category_detect':
-			return `Identify the software category for this problem. Return JSON:
-{"category":"crm|hris|project|finance|marketing|support|data|devtools|collab|security|ecommerce|ops|other","label":"Full Category Name","icon":"emoji","confidence":0-100,"why":"one sentence","alternatives":[{"category":"id","label":"name","icon":"emoji"}]}
+			return `Identify the most specific software category for this business problem. Read the problem carefully and match to the MOST RELEVANT category — don't default to generic categories.
 
-Problem: ${str(ctx.text).slice(0, 400)}`;
+Categories (pick the best fit):
+- crm: CRM & Sales (Salesforce, HubSpot, Pipedrive — customer relationship management, sales pipeline, lead tracking)
+- hris: HR & People Management (BambooHR, Rippling, Gusto — HRIS, payroll, employee onboarding, workforce management, talent management, recruiting)
+- project: Project Management (Asana, Monday, Jira — task tracking, project planning, workflow automation)
+- finance: Finance & Accounting (QuickBooks, Xero, Bill.com — AP/AR, expense management, financial planning)
+- marketing: Marketing & Advertising (Marketo, Mailchimp, HubSpot Marketing — email marketing, marketing automation, analytics)
+- support: Customer Support & ITSM (Zendesk, Freshdesk, ServiceNow — helpdesk, ticketing, customer service, IT service management)
+- data: Data & Analytics (Tableau, Looker, Snowflake — BI, data warehousing, data integration, reporting)
+- devtools: Developer Tools (GitHub, GitLab, Datadog — CI/CD, monitoring, code management, API platforms)
+- collab: Collaboration & Communication (Slack, Teams, Notion — team chat, document collaboration, knowledge management)
+- security: Security & Compliance (Okta, CrowdStrike, Vanta — identity management, endpoint protection, compliance automation)
+- ecommerce: E-Commerce & Payments (Shopify, Stripe, BigCommerce — online stores, payment processing, order management)
+- ops: Operations & IT (Zapier, ServiceNow, Kandji — IT asset management, workflow automation, MDM, procurement)
+- erp: ERP & Business Suite (NetSuite, SAP, Odoo — enterprise resource planning, integrated business management)
+- lms: Learning & Training (Lessonly, TalentLMS, Docebo — LMS, employee training, onboarding training, compliance training)
+- other: Other (only if nothing above fits at all)
+
+IMPORTANT: Match based on the PROBLEM being solved, not surface-level keywords. Employee onboarding → hris. IT ticket tracking → support. Sales pipeline → crm.
+
+Return JSON:
+{"category":"category_id","label":"Full Category Name","icon":"emoji","confidence":0-100,"why":"one sentence explaining why this category fits the problem","alternatives":[{"category":"id","label":"name","icon":"emoji","confidence":0-100}]}
+
+Problem: ${str(ctx.text).slice(0, 600)}`;
 
 		case 'vendor_suggest':
 			return `Recommend the best vendors for this buyer. Use everything below to pick options that genuinely fit.
@@ -345,6 +370,28 @@ Replacing: ${str(ctx.existingTool) || 'nothing'}
 Category: ${str(ctx.category)}
 Team size: ${str(ctx.teamSize)}
 Annual budget: ${str(ctx.budget)}`;
+
+		case 'problem_brief':
+			return `Generate a comprehensive problem brief for this software evaluation. This brief will be the shared starting point for the entire evaluation team.
+
+Category: ${str(ctx.category)}
+Approach: ${str(ctx.approach)}
+Existing tool: ${str(ctx.existingTool) || 'none'}
+Team size: ${str(ctx.teamSize)}
+Annual budget: ${str(ctx.budget)}
+Vendors in scope: ${str(ctx.vendorCount)}
+
+Problem description: ${str(ctx.problemDesc)}
+Who's affected: ${str(ctx.whoAffected)}
+Cost of doing nothing: ${str(ctx.costOfNothing)}
+Success in 90 days: ${str(ctx.successIn90)}
+Must-haves: ${arr(ctx.mustHaves).join(', ') || 'not yet defined'}
+Hard constraints: ${arr(ctx.constraints).join(', ') || 'not yet defined'}
+
+Return JSON:
+{"execSummary":"3-4 sentence executive summary covering the problem, scope, approach, and key constraints. Reference specific details from the buyer's situation — team size, budget, existing tools, timeline. Make it feel like a consultant wrote it, not a template.","problem":"2-3 paragraph problem statement that goes deeper than the buyer's description. Connect the symptoms they described to root causes. Reference who's affected and the business impact. Show insight they may not have articulated themselves.","successCriteria":"2-3 sentences expanding on their 90-day success vision. Add measurable benchmarks based on typical outcomes for this category. Example: 'Based on similar implementations, expect 40-60% reduction in manual onboarding tasks within 60 days.'","peerBenchmark":"2-3 sentences comparing this buyer's situation to industry peers. How does their budget compare? Their timeline? What do similar-sized companies in their position typically prioritize? Provide genuine peer insight, not generic statements."}
+
+Be specific to THIS buyer's situation. Reference their actual numbers, tools, and pain points. Avoid generic advice.`;
 
 		case 'vendor_research':
 			return `Conduct a comprehensive analysis of "${str(ctx.vendorName)}" for a ${str(ctx.category)} evaluation.

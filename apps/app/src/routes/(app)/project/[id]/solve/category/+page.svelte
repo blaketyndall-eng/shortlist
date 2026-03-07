@@ -43,40 +43,62 @@
 		detecting = true;
 
 		try {
+			// Build comprehensive text from all Scope data for accurate detection
+			const problemDesc = solveData.triggerQuestions?.[0]?.answer ?? '';
+			const whoAffected = solveData.triggerQuestions?.[1]?.answer ?? '';
+			const costOfNothing = solveData.triggerQuestions?.[3]?.answer ?? '';
+			const successLooks = solveData.triggerQuestions?.[4]?.answer ?? '';
+			const currentTool = solveData.triggerQuestions?.[5]?.answer ?? '';
+			const companySize = solveData.triggerQuestions?.[6]?.answer ?? '';
+			const triggers = solveData.triggers?.filter((t: any) => t.selected).map((t: any) => t.label) ?? [];
+
+			const fullText = [
+				problemDesc,
+				whoAffected ? `Who's affected: ${whoAffected}` : '',
+				costOfNothing ? `Cost of doing nothing: ${costOfNothing}` : '',
+				successLooks ? `Success looks like: ${successLooks}` : '',
+				currentTool ? `Currently using: ${currentTool}` : '',
+				companySize ? `Company size: ${companySize}` : '',
+				triggers.length > 0 ? `Triggers: ${triggers.join(', ')}` : '',
+			].filter(Boolean).join('\n');
+
 			const res = await fetch('/api/ai/engine', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
 					engine: 'category_detect',
 					projectId,
-					input: {
-						triggers: solveData.triggers?.filter((t: any) => t.selected).map((t: any) => t.label) ?? [],
-						problemDescription: solveData.triggerQuestions?.[0]?.answer ?? '',
-						currentTool: solveData.triggerQuestions?.[5]?.answer ?? '',
-						companySize: solveData.triggerQuestions?.[6]?.answer ?? '',
+					context: {
+						text: fullText,
+						problemDescription: problemDesc,
+						currentTool,
+						companySize,
+						triggers,
 					},
 				}),
 			});
 
 			if (res.ok) {
 				const result = await res.json();
-				categoryName = result.category ?? 'Unknown';
-				confidence = result.confidence ?? 50;
-				alternatives = result.alternatives ?? [];
+				const aiData = result.data ?? result.result ?? {};
+				categoryName = aiData.label ?? aiData.category ?? 'Unknown';
+				confidence = aiData.confidence ?? result.confidence ?? 50;
+				alternatives = (aiData.alternatives ?? []).map((a: any) => ({
+					name: a.label ?? a.category ?? 'Unknown',
+					confidence: a.confidence ?? 30,
+				}));
 				detected = true;
 			} else {
-				// Fallback: set a placeholder
-				categoryName = 'Software Platform';
-				confidence = 60;
-				alternatives = [
-					{ name: 'CRM', confidence: 45 },
-					{ name: 'Project Management', confidence: 30 },
-				];
+				// Fallback: let user pick manually
+				categoryName = 'Unknown — Please select manually';
+				confidence = 0;
+				alternatives = [];
 				detected = true;
 			}
-		} catch {
-			categoryName = 'Software Platform';
-			confidence = 60;
+		} catch (err) {
+			console.error('Category detection failed:', err);
+			categoryName = 'Unknown — Please select manually';
+			confidence = 0;
 			alternatives = [];
 			detected = true;
 		}
@@ -98,6 +120,7 @@
 			categoryDetected: categoryName,
 			categoryConfidence: confidence,
 			categoryAlternatives: alternatives,
+			category: { label: categoryName, confidence },
 			approach: selectedApproach,
 			completedSteps: [...new Set([...(solveData.completedSteps ?? []), 'triggers', 'category'])],
 		};

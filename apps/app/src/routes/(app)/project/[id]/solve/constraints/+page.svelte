@@ -28,6 +28,8 @@
 	let constraints = $state<Constraint[]>(solveData.constraints ?? []);
 	let stakeholders = $state<Stakeholder[]>(solveData.stakeholders ?? []);
 	let saving = $state(false);
+	let suggestingConstraints = $state(false);
+	let suggestedConstraints = $state<string[]>([]);
 
 	// New constraint form
 	let newType = $state('technical');
@@ -55,6 +57,54 @@
 		{ value: 'user', label: 'End User' },
 		{ value: 'approver', label: 'Approver' },
 	];
+
+	async function suggestConstraints() {
+		suggestingConstraints = true;
+		try {
+			const problemDesc = solveData.triggerQuestions?.[0]?.answer ?? '';
+			const companySize = solveData.triggerQuestions?.[6]?.answer ?? '';
+			const category = solveData.category?.label ?? solveData.categoryDetected ?? '';
+			const budget = solveData.budgetRange ?? '';
+
+			const profileDesc = [
+				problemDesc,
+				companySize ? `Company size: ${companySize}` : '',
+				category ? `Category: ${category}` : '',
+				budget ? `Budget: ${budget}` : '',
+			].filter(Boolean).join('. ');
+
+			const res = await fetch('/api/ai/engine', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					engine: 'compliance_suggest',
+					projectId,
+					context: { profileDesc },
+				}),
+			});
+
+			if (res.ok) {
+				const result = await res.json();
+				const data = result.data ?? result.result ?? [];
+				suggestedConstraints = Array.isArray(data) ? data : [];
+			}
+		} catch (err) {
+			console.error('Constraint suggestion failed:', err);
+		}
+		suggestingConstraints = false;
+	}
+
+	function addSuggestedConstraint(suggestion: string) {
+		// Don't add duplicates
+		if (constraints.some(c => c.description.toLowerCase() === suggestion.toLowerCase())) return;
+		constraints = [...constraints, {
+			id: crypto.randomUUID(),
+			type: 'compliance',
+			description: suggestion,
+			hardLimit: true,
+		}];
+		suggestedConstraints = suggestedConstraints.filter(s => s !== suggestion);
+	}
 
 	function addConstraint() {
 		if (!newDescription.trim()) return;
@@ -126,6 +176,26 @@
 	<Card>
 		<h3>Constraints</h3>
 		<p class="section-hint">What are the non-negotiable requirements or limits?</p>
+
+		<!-- AI suggestions -->
+		{#if suggestedConstraints.length > 0}
+			<div class="ai-suggestions">
+				<div class="ai-label">✦ AI-suggested compliance requirements</div>
+				<div class="suggestion-chips">
+					{#each suggestedConstraints as suggestion}
+						<button class="suggestion-chip" onclick={() => addSuggestedConstraint(suggestion)}>
+							+ {suggestion}
+						</button>
+					{/each}
+				</div>
+			</div>
+		{:else if constraints.length === 0}
+			<div class="ai-suggest-prompt">
+				<Button variant="secondary" size="sm" onclick={suggestConstraints} disabled={suggestingConstraints}>
+					{suggestingConstraints ? '✦ Analyzing...' : '✦ Suggest constraints based on your profile'}
+				</Button>
+			</div>
+		{/if}
 
 		<div class="add-row">
 			<select bind:value={newType} class="form-select form-select-sm">
@@ -300,4 +370,34 @@
 		margin-top: var(--space-6); padding-top: var(--space-4);
 		border-top: 1px solid var(--neutral-100);
 	}
+
+	.ai-suggestions {
+		padding: var(--space-3);
+		background: rgba(74, 150, 248, 0.04);
+		border: 1px solid rgba(74, 150, 248, 0.15);
+		border-radius: var(--radius-md);
+		margin-bottom: var(--space-4);
+	}
+	.ai-label {
+		font-size: 0.75rem; font-weight: 600;
+		color: var(--primary-500); margin-bottom: var(--space-2);
+		letter-spacing: 0.3px;
+	}
+	.suggestion-chips { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+	.suggestion-chip {
+		padding: var(--space-1) var(--space-3);
+		background: var(--neutral-50);
+		border: 1px solid var(--neutral-200);
+		border-radius: 999px;
+		font-size: 0.8125rem;
+		color: var(--neutral-700);
+		cursor: pointer;
+		transition: all 0.15s;
+	}
+	.suggestion-chip:hover {
+		border-color: var(--primary-500);
+		background: rgba(74, 150, 248, 0.08);
+		color: var(--primary-600);
+	}
+	.ai-suggest-prompt { margin-bottom: var(--space-3); }
 </style>
