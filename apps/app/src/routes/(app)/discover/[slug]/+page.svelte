@@ -101,6 +101,9 @@
 	const competitors = parseArr(vendor.ai_competitors);
 	const features = parseArr(vendor.features);
 	const certs = parseArr(vendor.compliance_certs);
+	const targetSegments = parseArr(vendor.ai_target_segments);
+	const keyIntegrations = parseArr(vendor.ai_key_integrations);
+	const securityCerts = parseArr(vendor.ai_security_certs);
 </script>
 
 <svelte:head>
@@ -274,6 +277,72 @@
 				</Card>
 			{/if}
 
+			<!-- Extended Intelligence: Contract, Deployment, Support, Stability -->
+			{#if vendor.ai_contract_terms || vendor.ai_deployment_model || vendor.ai_support_model || vendor.ai_vendor_stability || vendor.ai_impl_timeline}
+				<Card>
+					<h2>Procurement Intelligence</h2>
+					<div class="intel-grid">
+						{#if vendor.ai_impl_timeline}
+							<div class="intel-item">
+								<span class="intel-icon">⏱️</span>
+								<div>
+									<span class="intel-label">Implementation Timeline</span>
+									<p class="intel-value">{vendor.ai_impl_timeline}</p>
+								</div>
+							</div>
+						{/if}
+						{#if vendor.ai_contract_terms}
+							<div class="intel-item">
+								<span class="intel-icon">📝</span>
+								<div>
+									<span class="intel-label">Contract Terms</span>
+									<p class="intel-value">{vendor.ai_contract_terms}</p>
+								</div>
+							</div>
+						{/if}
+						{#if vendor.ai_deployment_model}
+							<div class="intel-item">
+								<span class="intel-icon">☁️</span>
+								<div>
+									<span class="intel-label">Deployment</span>
+									<p class="intel-value" style="text-transform: capitalize">{vendor.ai_deployment_model.replace(/-/g, ' ')}</p>
+								</div>
+							</div>
+						{/if}
+						{#if vendor.ai_support_model}
+							<div class="intel-item">
+								<span class="intel-icon">🎧</span>
+								<div>
+									<span class="intel-label">Support</span>
+									<p class="intel-value">{vendor.ai_support_model}</p>
+								</div>
+							</div>
+						{/if}
+						{#if vendor.ai_vendor_stability}
+							<div class="intel-item">
+								<span class="intel-icon">📈</span>
+								<div>
+									<span class="intel-label">Vendor Stability</span>
+									<p class="intel-value">{vendor.ai_vendor_stability}</p>
+								</div>
+							</div>
+						{/if}
+					</div>
+				</Card>
+			{/if}
+
+			<!-- Key Integrations -->
+			{#if keyIntegrations.length > 0}
+				<Card>
+					<h2>Key Integrations</h2>
+					<div class="competitor-chips">
+						{#each keyIntegrations as i}
+							<span class="feature-chip">{i}</span>
+						{/each}
+					</div>
+				</Card>
+			{/if}
+
 			<!-- Competitors -->
 			{#if competitors.length > 0}
 				<Card>
@@ -281,6 +350,18 @@
 					<div class="competitor-chips">
 						{#each competitors as c}
 							<span class="competitor-chip">{c}</span>
+						{/each}
+					</div>
+				</Card>
+			{/if}
+
+			<!-- Target Customer Segments -->
+			{#if targetSegments.length > 0}
+				<Card>
+					<h2>Target Segments</h2>
+					<div class="competitor-chips">
+						{#each targetSegments as s}
+							<span class="competitor-chip">{s}</span>
 						{/each}
 					</div>
 				</Card>
@@ -367,14 +448,25 @@
 			{/if}
 
 			<!-- Compliance -->
-			{#if certs.length > 0}
+			{#if certs.length > 0 || securityCerts.length > 0}
 				<Card>
-					<h2>Compliance</h2>
+					<h2>Security & Compliance</h2>
 					<div class="cert-list">
-						{#each certs as cert}
+						{#each securityCerts as cert}
+							<span class="cert-chip">{cert}</span>
+						{/each}
+						{#each certs.filter((c) => !securityCerts.includes(c)) as cert}
 							<span class="cert-chip">{cert}</span>
 						{/each}
 					</div>
+				</Card>
+			{/if}
+
+			<!-- Pricing Model -->
+			{#if vendor.ai_pricing_model}
+				<Card>
+					<h2>Pricing Model</h2>
+					<span class="meta-tag" style="text-transform: capitalize">{vendor.ai_pricing_model.replace(/-/g, ' ')}</span>
 				</Card>
 			{/if}
 

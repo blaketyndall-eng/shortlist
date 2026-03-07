@@ -23,7 +23,7 @@ const TOKEN_LIMITS: Partial<Record<string, number>> = {
 	category_detect: 300,
 	vendor_suggest: 900,
 	challenges: 600,
-	vendor_research: 500,
+	vendor_research: 2048,
 	score_prefill: 400,
 	demo_questions: 600,
 	demo_debrief: 600,
@@ -47,7 +47,7 @@ const TOKEN_LIMITS: Partial<Record<string, number>> = {
 const ENGINE_MODEL_OVERRIDE: Partial<Record<string, string>> = {
 	category_detect: 'claude-haiku-4-5-20251001',
 	challenges: 'claude-haiku-4-5-20251001',
-	vendor_research: 'claude-haiku-4-5-20251001',
+	vendor_research: 'claude-sonnet-4-6',
 	score_prefill: 'claude-haiku-4-5-20251001',
 	compliance_suggest: 'claude-haiku-4-5-20251001',
 	priorities_suggest: 'claude-haiku-4-5-20251001',
@@ -167,7 +167,7 @@ function buildSystemPrompt(engine: string, context: Record<string, unknown>): st
 		category_detect: 'You are a software procurement expert. Respond ONLY with valid JSON, no markdown.',
 		vendor_suggest: 'You are a B2B software procurement advisor. Return ONLY valid JSON, no markdown.',
 		challenges: 'You are a procurement consultant. Respond ONLY with a JSON array, no markdown.',
-		vendor_research: 'You are a B2B software analyst. Return ONLY valid JSON, no markdown.',
+		vendor_research: 'You are a senior B2B software procurement analyst with deep expertise in vendor evaluation, market positioning, and TCO analysis. Be specific with numbers, names, and facts. Avoid generic statements. Return ONLY valid JSON, no markdown.',
 
 		// --- Evaluate Phase ---
 		evaluate: 'You are Shortlist AI, a procurement intelligence assistant specializing in vendor evaluation: scoring, comparison, and analysis. Always respond with structured, actionable insights.',
@@ -246,8 +246,18 @@ Team size: ${str(ctx.teamSize)}
 Annual budget: ${str(ctx.budget)}`;
 
 		case 'vendor_research':
-			return `Research "${str(ctx.vendorName)}" for a ${str(ctx.category)} evaluation. Return JSON:
-{"overview":"2-sentence summary","typicalPricing":"pricing model and range","knownStrengths":["s1","s2","s3"],"knownWeaknesses":["w1","w2"],"implementationComplexity":"low|medium|high","implementationNote":"one sentence","g2Position":"brief positioning","watchOutFor":"top contract gotcha","competitors":["c1","c2"]}`;
+			return `Conduct a comprehensive analysis of "${str(ctx.vendorName)}" for a ${str(ctx.category)} evaluation.
+
+${ctx.vendorWebsite ? `Website: ${str(ctx.vendorWebsite)}` : ''}
+${ctx.vendorOverview ? `Existing overview: ${str(ctx.vendorOverview)}` : ''}
+${ctx.problem ? `Buyer's problem: ${str(ctx.problem)}` : ''}
+${ctx.teamSize ? `Team size: ${str(ctx.teamSize)}` : ''}
+${ctx.budget ? `Budget: ${str(ctx.budget)}` : ''}
+
+Return JSON with specific, actionable intelligence:
+{"overview":"3-4 sentence executive summary","typicalPricing":"specific pricing tiers and ranges with numbers","pricingModel":"per-seat|per-usage|flat-rate|tiered|custom-quote|freemium","knownStrengths":["4 specific strengths with detail"],"knownWeaknesses":["3 specific weaknesses"],"implementationComplexity":"low|medium|high","implementationNote":"2-sentence reality check","implementationTimeline":"timeline range","g2Position":"market position with approx rating","watchOutFor":["2-3 contract/pricing gotchas"],"competitors":["5 direct competitors"],"targetCustomerSegments":["2-3 ideal customer profiles"],"keyIntegrations":["5 key integrations"],"securityCertifications":["known certs"],"contractTerms":"typical terms","deploymentModel":"cloud-only|on-premise|hybrid","supportModel":"support tiers","vendorStability":"financial health assessment"}
+
+Be specific with real numbers, names, and facts. Avoid generic statements.`;
 
 		case 'score_prefill':
 			return `Based on this vendor profile, suggest scores (1-10) for each evaluation criterion. Be honest and differentiated — don't give everything a 7. Use the full range.
