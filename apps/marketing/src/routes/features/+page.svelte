@@ -1,880 +1,388 @@
 <svelte:head>
-	<title>Features — Shortlist</title>
-	<meta name="description" content="AI-powered vendor evaluation, SOLVE discovery workflow, team collaboration, and procurement intelligence tools." />
+	<title>Features — Shortlist Purchase Intelligence Platform</title>
+	<meta name="description" content="25 AI engines, structured SOLVE workflow, team alignment, executive dashboards, and 100+ pre-loaded vendors. Everything you need to make confident purchase decisions." />
 </svelte:head>
 
-<div class="features-page">
-	<!-- ════════ HERO ════════ -->
-	<header class="hero">
-		<div class="hero-badge">
-			<span class="badge-dot"></span>
-			Platform Features
-		</div>
-		<h1>Everything you need to choose <span class="highlight">better vendors</span></h1>
-		<p class="hero-sub">From initial trigger to final recommendation — Shortlist guides every step with AI-powered intelligence across two distinct phases.</p>
-	</header>
+<section class="hero">
+	<div class="hero-inner">
+		<div class="hero-badge"><span class="badge-dot"></span> Platform Features</div>
+		<h1>Everything you need to make <span class="highlight">confident purchases</span></h1>
+		<p class="hero-sub">From initial purchase trigger to final vendor selection — Shortlist guides every step with AI-powered intelligence, team alignment, and executive visibility.</p>
+	</div>
+</section>
 
-	<!-- ════════ SOLVE DISCOVERY WORKFLOW ════════ -->
-	<section class="feature-section">
-		<div class="section-inner">
-			<div class="feature-block">
-				<div class="feature-content">
-					<span class="feature-tag teal">Define Phase</span>
-					<h2>SOLVE discovery workflow</h2>
-					<p>Before you evaluate, get crystal-clear on what you need. The 7-step SOLVE workflow guides your team from initial trigger through vendor discovery, constraints mapping, stakeholder alignment, and problem brief generation.</p>
-					<p>AI classifies your category automatically, generates knockout matrices, and produces challenge questions to validate your brief.</p>
-				</div>
-				<div class="feature-visual">
-					<div class="solve-visual">
-						<div class="solve-step-card">
-							<div class="step-marker t">S</div>
-							<div class="step-info">
-								<span class="step-title">Scope</span>
-								<span class="step-desc">Diagnose triggers, budget, timeline</span>
-							</div>
-							<span class="step-status done">Complete</span>
+<!-- ═══════ FEATURE 1: SOLVE WORKFLOW ═══════ -->
+<section class="feature-row">
+	<div class="feature-inner">
+		<div class="feature-text">
+			<div class="f-tag teal">Define Phase</div>
+			<h2>SOLVE Discovery Workflow</h2>
+			<p>Before you evaluate, get crystal-clear on what you need. The 7-step SOLVE workflow guides your team from initial purchase trigger through vendor discovery, constraints mapping, stakeholder alignment, and problem brief generation.</p>
+			<ul class="feature-list">
+				<li>AI classifies your purchase category automatically</li>
+				<li>Generates knockout criteria and challenge questions</li>
+				<li>Team alignment polls embedded at every stage</li>
+				<li>Executive briefings auto-generated at milestones</li>
+			</ul>
+		</div>
+		<div class="feature-visual">
+			<div class="solve-visual">
+				{#each [
+					{ letter: 'S', label: 'Scope', desc: 'Define triggers & stakeholders', status: 'complete' },
+					{ letter: 'O', label: 'Observe', desc: 'AI vendor discovery', status: 'complete' },
+					{ letter: 'L', label: 'Leverage', desc: 'Weighted scoring & comparison', status: 'active' },
+					{ letter: 'V', label: 'Validate', desc: 'Demo evaluation & tracking', status: 'pending' },
+					{ letter: 'E', label: 'Execute', desc: 'Reports & negotiation', status: 'pending' }
+				] as step}
+					<div class="solve-card {step.status}">
+						<span class="solve-letter">{step.letter}</span>
+						<div class="solve-text">
+							<span class="solve-label">{step.label}</span>
+							<span class="solve-desc">{step.desc}</span>
 						</div>
-						<div class="solve-connector"></div>
-						<div class="solve-step-card">
-							<div class="step-marker bl">O</div>
-							<div class="step-info">
-								<span class="step-title">Observe</span>
-								<span class="step-desc">AI category detection & mapping</span>
-							</div>
-							<span class="step-status done">Complete</span>
-						</div>
-						<div class="solve-connector"></div>
-						<div class="solve-step-card active">
-							<div class="step-marker t">L</div>
-							<div class="step-info">
-								<span class="step-title">Leverage</span>
-								<span class="step-desc">Vendor discovery & swiper</span>
-							</div>
-							<span class="step-status active-status">In Progress</span>
-						</div>
-						<div class="solve-connector"></div>
-						<div class="solve-step-card">
-							<div class="step-marker bl">V</div>
-							<div class="step-info">
-								<span class="step-title">Validate</span>
-								<span class="step-desc">Constraints & stakeholder alignment</span>
-							</div>
-							<span class="step-status">Pending</span>
-						</div>
-						<div class="solve-connector"></div>
-						<div class="solve-step-card">
-							<div class="step-marker t">E</div>
-							<div class="step-info">
-								<span class="step-title">Execute</span>
-								<span class="step-desc">Problem brief & knockout matrix</span>
-							</div>
-							<span class="step-status">Pending</span>
-						</div>
+						<span class="solve-status">{step.status === 'complete' ? '✓' : step.status === 'active' ? '●' : '○'}</span>
 					</div>
+				{/each}
+			</div>
+		</div>
+	</div>
+</section>
+
+<!-- ═══════ FEATURE 2: 25 AI ENGINES ═══════ -->
+<section class="feature-row alt">
+	<div class="feature-inner reverse">
+		<div class="feature-text">
+			<div class="f-tag">AI-Powered</div>
+			<h2>25 Specialized AI Engines</h2>
+			<p>Each engine is purpose-built for a specific purchase intelligence task — from vendor evaluation and discovery to contract risk analysis, negotiation coaching, alignment analysis, and executive briefings.</p>
+			<ul class="feature-list">
+				<li>Three depth levels: quick, standard, deep analysis</li>
+				<li>Company-profile-aware context for every prompt</li>
+				<li>Outputs structured data, not generic text</li>
+				<li>Intelligence Web connects all engines together</li>
+			</ul>
+		</div>
+		<div class="feature-visual">
+			<div class="engine-grid">
+				<div class="engine-card primary"><span class="e-icon">🔍</span><span class="e-name">Evaluate</span></div>
+				<div class="engine-card primary"><span class="e-icon">🌐</span><span class="e-name">Discovery</span></div>
+				<div class="engine-card primary"><span class="e-icon">⚠️</span><span class="e-name">Risk Analysis</span></div>
+				<div class="engine-card primary"><span class="e-icon">💰</span><span class="e-name">TCO Estimate</span></div>
+			</div>
+			<div class="engine-chips">
+				<span class="e-chip t">Alignment Analyze</span>
+				<span class="e-chip bl">Executive Insight</span>
+				<span class="e-chip">Negotiate</span>
+				<span class="e-chip bl">Milestone Brief</span>
+				<span class="e-chip">Contract Risk</span>
+				<span class="e-chip t">Alignment Summary</span>
+				<span class="e-chip">Demo Debrief</span>
+				<span class="e-chip">Hidden Cost</span>
+				<span class="e-chip bl">Score Anomaly</span>
+				<span class="e-chip">RFP</span>
+				<span class="e-chip t">Fit Score</span>
+				<span class="e-chip">Company Profile</span>
+			</div>
+			<div class="engine-count">25 Engine Types Available</div>
+		</div>
+	</div>
+</section>
+
+<!-- ═══════ FEATURE 3: TEAM ALIGNMENT ═══════ -->
+<section class="feature-row">
+	<div class="feature-inner">
+		<div class="feature-text">
+			<div class="f-tag teal">New: Alignment Engine</div>
+			<h2>AI Team Alignment</h2>
+			<p>Know whether your team is aligned before you commit. AI-powered polls with role-based scoring detect misalignment across dimensions — and recommend how to close the gaps.</p>
+			<ul class="feature-list">
+				<li>Likert, ranking, multiple choice, and yes/no poll types</li>
+				<li>Scores broken down by role (admin, member, leadership)</li>
+				<li>Gap detection: flags where stakeholders disagree</li>
+				<li>AI recommendations to resolve alignment gaps</li>
+				<li>Embedded in SOLVE stages + standalone dashboard</li>
+			</ul>
+		</div>
+		<div class="feature-visual">
+			<div class="alignment-visual">
+				<div class="align-score-ring">
+					<svg width="120" height="120" viewBox="0 0 120 120">
+						<circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="8"/>
+						<circle cx="60" cy="60" r="52" fill="none" stroke="#00cc96" stroke-width="8" stroke-dasharray="326.7" stroke-dashoffset="42.5" stroke-linecap="round" transform="rotate(-90 60 60)"/>
+					</svg>
+					<span class="align-score-val">87</span>
+					<span class="align-score-label">Alignment</span>
+				</div>
+				<div class="align-roles">
+					<div class="role-row"><span class="role-name">Leadership</span><div class="role-bar"><div class="role-fill" style="width:92%"></div></div><span class="role-val">92</span></div>
+					<div class="role-row"><span class="role-name">Engineering</span><div class="role-bar"><div class="role-fill bl" style="width:84%"></div></div><span class="role-val">84</span></div>
+					<div class="role-row"><span class="role-name">Operations</span><div class="role-bar"><div class="role-fill" style="width:88%"></div></div><span class="role-val">88</span></div>
+				</div>
+				<div class="align-gap">
+					<span class="gap-icon">⚡</span>
+					<span class="gap-text">Gap detected: Pricing priority (spread: 24)</span>
 				</div>
 			</div>
 		</div>
-	</section>
+	</div>
+</section>
 
-	<!-- ════════ 21 AI ENGINES ════════ -->
-	<section class="feature-section alt">
-		<div class="section-inner">
-			<div class="feature-block reverse">
-				<div class="feature-content">
-					<span class="feature-tag blue">AI-Powered</span>
-					<h2>21 specialized AI engines</h2>
-					<p>Each engine is purpose-built for a specific procurement task — from vendor evaluation and discovery to contract risk analysis, negotiation coaching, and executive briefings.</p>
-					<p>Choose your depth — quick, standard, or deep — and get analysis with confidence scores you can trust.</p>
+<!-- ═══════ FEATURE 4: EXECUTIVE DASHBOARD ═══════ -->
+<section class="feature-row alt">
+	<div class="feature-inner reverse">
+		<div class="feature-text">
+			<div class="f-tag">New: Executive Engine</div>
+			<h2>Executive Dashboard & Briefings</h2>
+			<p>Leadership gets real-time visibility without attending meetings. AI auto-generates milestone briefings, risk alerts surface automatically, and the dashboard shows health across every active purchase.</p>
+			<ul class="feature-list">
+				<li>Project health cards with risk levels and alignment scores</li>
+				<li>AI-generated briefings at stage completions and milestones</li>
+				<li>Automatic risk alerts when alignment drops below threshold</li>
+				<li>Briefing approval workflow for leadership sign-off</li>
+				<li>Role-gated: only leadership and admin roles see it</li>
+			</ul>
+		</div>
+		<div class="feature-visual">
+			<div class="exec-visual">
+				<div class="exec-metrics">
+					<div class="exec-metric"><span class="em-val">5</span><span class="em-label">Active</span></div>
+					<div class="exec-metric"><span class="em-val t">87</span><span class="em-label">Alignment</span></div>
+					<div class="exec-metric"><span class="em-val bl">12</span><span class="em-label">Vendors</span></div>
+					<div class="exec-metric"><span class="em-val rd">1</span><span class="em-label">Risk Alert</span></div>
 				</div>
-				<div class="feature-visual">
-					<div class="engines-visual">
-						<div class="engine-row">
-							<div class="engine-card t-engine">
-								<span class="engine-icon">⚡</span>
-								<span class="engine-name">Evaluate</span>
-								<span class="engine-desc">Score vendors intelligently</span>
-							</div>
-							<div class="engine-card bl-engine">
-								<span class="engine-icon">🔍</span>
-								<span class="engine-name">Discovery</span>
-								<span class="engine-desc">Find matching vendors</span>
-							</div>
-						</div>
-						<div class="engine-row">
-							<div class="engine-card t-engine">
-								<span class="engine-icon">🛡️</span>
-								<span class="engine-name">Risk Analysis</span>
-								<span class="engine-desc">Detect hidden risks</span>
-							</div>
-							<div class="engine-card bl-engine">
-								<span class="engine-icon">📊</span>
-								<span class="engine-name">TCO Estimate</span>
-								<span class="engine-desc">3-year cost modeling</span>
-							</div>
-						</div>
-						<div class="engine-chips">
-							<span class="e-chip t-chip">Negotiate</span>
-							<span class="e-chip bl-chip">Executive Brief</span>
-							<span class="e-chip t-chip">Contract Risk</span>
-							<span class="e-chip bl-chip">Demo Debrief</span>
-							<span class="e-chip t-chip">Hidden Cost</span>
-							<span class="e-chip bl-chip">Score Anomaly</span>
-							<span class="e-chip t-chip">RFP</span>
-							<span class="e-chip bl-chip">Implement</span>
-							<span class="e-chip t-chip">Auto Setup</span>
-							<span class="e-chip bl-chip">Company Profile</span>
-							<span class="e-chip t-chip">Decision Ready</span>
-							<span class="e-chip bl-chip">Score Explain</span>
-						</div>
-						<div class="engine-counter">
-							<span class="engine-count">21</span>
-							<span class="engine-count-label">Engine Types Available</span>
-						</div>
+				<div class="exec-briefing">
+					<div class="brief-header">
+						<span class="brief-type">Milestone</span>
+						<span class="brief-status">Draft</span>
 					</div>
+					<span class="brief-title">CRM Evaluation: Discovery Phase Complete</span>
+					<span class="brief-summary">8 vendors evaluated, top 3 shortlisted. Team alignment at 87%. Budget on track.</span>
+					<div class="brief-actions"><span class="brief-btn">Approve & Publish</span></div>
 				</div>
 			</div>
 		</div>
-	</section>
+	</div>
+</section>
 
-	<!-- ════════ WEIGHTED SCORING ════════ -->
-	<section class="feature-section">
-		<div class="section-inner">
-			<div class="feature-block">
-				<div class="feature-content">
-					<span class="feature-tag teal">Evaluate Phase</span>
-					<h2>Weighted scoring with sensitivity analysis</h2>
-					<p>Define custom criteria with configurable weights. Score each vendor on a 0-10 scale, then let the algorithm calculate normalized, weighted totals and rank vendors automatically.</p>
-					<p>Run sensitivity analysis with weight sliders to see how changing priorities affects the outcome.</p>
+<!-- ═══════ FEATURE 5: VENDOR LIBRARY ═══════ -->
+<section class="feature-row">
+	<div class="feature-inner">
+		<div class="feature-text">
+			<div class="f-tag teal">100+ Vendors</div>
+			<h2>Pre-Built Vendor Library</h2>
+			<p>Over 100 vendors across CRM, HR, Cloud, Analytics, Security, DevOps, and more — pre-enriched with pricing tiers, key features, company size, and industry focus. Start comparing on day one.</p>
+			<ul class="feature-list">
+				<li>AI enrichment with real-time company data</li>
+				<li>Category filtering and search across all vendors</li>
+				<li>One-click add to any project evaluation</li>
+				<li>Fit scores personalized to your company profile</li>
+			</ul>
+		</div>
+		<div class="feature-visual">
+			<div class="library-visual">
+				<div class="lib-categories">
+					<span class="lib-cat active">CRM</span><span class="lib-cat">HR & People</span><span class="lib-cat">Cloud</span><span class="lib-cat">Analytics</span><span class="lib-cat">Security</span><span class="lib-cat">DevOps</span>
 				</div>
-				<div class="feature-visual">
-					<div class="scoring-visual">
-						<div class="scoring-header">
-							<span class="scoring-title">Vendor Comparison</span>
-							<span class="scoring-badge">3 criteria · 4 vendors</span>
-						</div>
-						<div class="scoring-vendor">
-							<div class="sv-header">
-								<div class="sv-av t-bg">SF</div>
-								<span class="sv-name">Salesforce</span>
-								<span class="sv-total t-col">8.7</span>
-							</div>
-							<div class="sv-bar"><div class="sv-fill" style="width: 87%"></div></div>
-						</div>
-						<div class="scoring-vendor">
-							<div class="sv-header">
-								<div class="sv-av bl-bg">HS</div>
-								<span class="sv-name">HubSpot</span>
-								<span class="sv-total bl-col">8.2</span>
-							</div>
-							<div class="sv-bar"><div class="sv-fill b" style="width: 82%"></div></div>
-						</div>
-						<div class="scoring-vendor">
-							<div class="sv-header">
-								<div class="sv-av pu-bg">PD</div>
-								<span class="sv-name">Pipedrive</span>
-								<span class="sv-total pu-col">7.4</span>
-							</div>
-							<div class="sv-bar"><div class="sv-fill p" style="width: 74%"></div></div>
-						</div>
-						<div class="scoring-criteria">
-							<div class="sc-row"><span class="sc-name">Security</span><div class="sc-weight"><div class="sc-w-fill" style="width: 40%"></div></div><span class="sc-pct">40%</span></div>
-							<div class="sc-row"><span class="sc-name">Usability</span><div class="sc-weight"><div class="sc-w-fill bl" style="width: 35%"></div></div><span class="sc-pct">35%</span></div>
-							<div class="sc-row"><span class="sc-name">Price</span><div class="sc-weight"><div class="sc-w-fill am" style="width: 25%"></div></div><span class="sc-pct">25%</span></div>
-						</div>
-					</div>
+				<div class="lib-vendors">
+					<div class="lib-row"><div class="lib-av t-bg">SF</div><span class="lib-name">Salesforce</span><span class="lib-cat-tag">CRM</span><span class="lib-fit t">94 fit</span></div>
+					<div class="lib-row"><div class="lib-av bl-bg">HS</div><span class="lib-name">HubSpot</span><span class="lib-cat-tag">CRM</span><span class="lib-fit bl">88 fit</span></div>
+					<div class="lib-row"><div class="lib-av pu-bg">DY</div><span class="lib-name">Dynamics 365</span><span class="lib-cat-tag">CRM</span><span class="lib-fit pu">82 fit</span></div>
+					<div class="lib-row"><div class="lib-av am-bg">PD</div><span class="lib-name">Pipedrive</span><span class="lib-cat-tag">CRM</span><span class="lib-fit">76 fit</span></div>
 				</div>
+				<span class="lib-count">+96 more vendors</span>
 			</div>
 		</div>
-	</section>
+	</div>
+</section>
 
-	<!-- ════════ DEMO MANAGEMENT ════════ -->
-	<section class="feature-section alt">
-		<div class="section-inner">
-			<div class="feature-block reverse">
-				<div class="feature-content">
-					<span class="feature-tag blue">Demos</span>
-					<h2>Demo management & vendor tracking</h2>
-					<p>Schedule demos, generate pre-call briefings with AI, capture real-time feedback during calls, and run post-demo debriefs that automatically update vendor scores and claims tracking.</p>
-					<p>Track vendor claims against reality, monitor demo question coverage, and build a comprehensive evidence trail.</p>
-				</div>
-				<div class="feature-visual">
-					<div class="demo-visual">
-						<div class="demo-card">
-							<div class="demo-header">
-								<span class="demo-vendor">Salesforce Demo</span>
-								<span class="demo-date">Mar 12, 2:00 PM</span>
-							</div>
-							<div class="demo-steps">
-								<div class="demo-step complete">
-									<span class="ds-dot done"></span>
-									<div class="ds-content">
-										<span class="ds-title">Pre-call briefing generated</span>
-										<span class="ds-meta">12 questions · 5 focus areas</span>
-									</div>
-								</div>
-								<div class="demo-step active-step">
-									<span class="ds-dot active"></span>
-									<div class="ds-content">
-										<span class="ds-title">Demo session in progress</span>
-										<span class="ds-meta">Recording feedback...</span>
-									</div>
-								</div>
-								<div class="demo-step">
-									<span class="ds-dot pending"></span>
-									<div class="ds-content">
-										<span class="ds-title">Post-call debrief</span>
-										<span class="ds-meta">AI-generated summary</span>
-									</div>
-								</div>
-								<div class="demo-step">
-									<span class="ds-dot pending"></span>
-									<div class="ds-content">
-										<span class="ds-title">Claims tracker updated</span>
-										<span class="ds-meta">Verified vs unverified</span>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
+<!-- ═══════ FEATURE 6: SCORING ═══════ -->
+<section class="feature-row alt">
+	<div class="feature-inner reverse">
+		<div class="feature-text">
+			<div class="f-tag">Evaluate Phase</div>
+			<h2>Weighted Scoring & Comparison</h2>
+			<p>Define custom criteria with configurable weights, get AI-assisted scores with confidence levels, and compare vendors side-by-side with automated reports and TCO analysis.</p>
+			<ul class="feature-list">
+				<li>Custom criteria with 0-10 weight configuration</li>
+				<li>AI-generated fit scores based on company profile</li>
+				<li>Side-by-side comparison with automated insights</li>
+				<li>Sensitivity analysis and what-if scenarios</li>
+			</ul>
+		</div>
+		<div class="feature-visual">
+			<div class="scoring-visual">
+				<div class="score-row"><span class="sc-label">Security</span><div class="sc-track"><div class="sc-fill t" style="width:92%"></div></div><span class="sc-val">92</span></div>
+				<div class="score-row"><span class="sc-label">Price</span><div class="sc-track"><div class="sc-fill bl" style="width:78%"></div></div><span class="sc-val">78</span></div>
+				<div class="score-row"><span class="sc-label">Support</span><div class="sc-track"><div class="sc-fill t" style="width:85%"></div></div><span class="sc-val">85</span></div>
+				<div class="score-row"><span class="sc-label">Integration</span><div class="sc-track"><div class="sc-fill bl" style="width:90%"></div></div><span class="sc-val">90</span></div>
+				<div class="score-row"><span class="sc-label">Scalability</span><div class="sc-track"><div class="sc-fill t" style="width:88%"></div></div><span class="sc-val">88</span></div>
 			</div>
 		</div>
-	</section>
+	</div>
+</section>
 
-	<!-- ════════ TEAM COLLABORATION ════════ -->
-	<section class="feature-section">
-		<div class="section-inner">
-			<div class="feature-block">
-				<div class="feature-content">
-					<span class="feature-tag teal">Collaboration</span>
-					<h2>Evaluate as a team</h2>
-					<p>Invite team members to score vendors independently, then see results aggregated in real time. Create polls for quick group decisions, leave inline comments on any criterion, and track who's contributed with the activity feed.</p>
-					<p>Role-based permissions ensure the right people have the right access. The 5-tab project dashboard gives everyone the view they need.</p>
+<!-- ═══════ FEATURE 7: INTELLIGENCE WEB ═══════ -->
+<section class="feature-row">
+	<div class="feature-inner">
+		<div class="feature-text">
+			<div class="f-tag teal">Connected Intelligence</div>
+			<h2>The Intelligence Web</h2>
+			<p>All AI features work together as one connected system. Vendor enrichment feeds into scoring, scoring feeds into alignment, alignment triggers executive briefings. Every action generates intelligence that makes the next decision smarter.</p>
+			<ul class="feature-list">
+				<li>Enrichment → Fit Scoring → Alignment → Executive Insights</li>
+				<li>Auto-triggers on stage completions and vendor changes</li>
+				<li>Risk alerts fire when alignment drops below threshold</li>
+				<li>Cross-reference insights across all project data</li>
+			</ul>
+		</div>
+		<div class="feature-visual">
+			<div class="web-visual">
+				<div class="web-node center">Intelligence Web</div>
+				<div class="web-connections">
+					<div class="web-node-sm t">Enrichment</div>
+					<div class="web-node-sm bl">Fit Scoring</div>
+					<div class="web-node-sm t">Alignment</div>
+					<div class="web-node-sm pu">Executive</div>
 				</div>
-				<div class="feature-visual">
-					<div class="team-visual">
-						<div class="team-header-row">
-							<div class="team-avatars">
-								<div class="t-avatar" style="background:rgba(0,204,150,.15);color:#00cc96;">ST</div>
-								<div class="t-avatar" style="background:rgba(74,150,248,.15);color:#4a96f8;margin-left:-10px;">JD</div>
-								<div class="t-avatar" style="background:rgba(160,108,240,.15);color:#a06cf0;margin-left:-10px;">MK</div>
-								<div class="t-avatar" style="background:rgba(240,160,52,.15);color:#f0a034;margin-left:-10px;">AL</div>
-								<span class="t-more">+4 more</span>
-							</div>
-						</div>
-						<div class="team-activity">
-							<div class="ta-row">
-								<span class="ta-dot" style="background:#00cc96;"></span>
-								<span class="ta-text"><strong>Sarah</strong> scored 4 criteria</span>
-								<span class="ta-time">2m ago</span>
-							</div>
-							<div class="ta-row">
-								<span class="ta-dot" style="background:#4a96f8;"></span>
-								<span class="ta-text"><strong>Jake</strong> started a decision poll</span>
-								<span class="ta-time">8m ago</span>
-							</div>
-							<div class="ta-row">
-								<span class="ta-dot" style="background:#a06cf0;"></span>
-								<span class="ta-text"><strong>Maria</strong> commented on Security</span>
-								<span class="ta-time">15m ago</span>
-							</div>
-						</div>
-						<div class="team-alignment">
-							<span class="ta-label">Team Alignment</span>
-							<div class="ta-bar"><div class="ta-fill" style="width: 87%"></div></div>
-							<span class="ta-pct">87%</span>
-						</div>
-					</div>
-				</div>
+				<div class="web-flow"><span class="web-arrow">→</span> Vendor data flows through AI engines automatically</div>
 			</div>
 		</div>
-	</section>
+	</div>
+</section>
 
-	<!-- ════════ ADVANCED TOOLS ════════ -->
-	<section class="feature-section alt">
-		<div class="section-inner">
-			<div class="feature-block reverse">
-				<div class="feature-content">
-					<span class="feature-tag blue">Advanced Tools</span>
-					<h2>10+ specialized procurement tools</h2>
-					<p>Go beyond basic scoring with a full toolkit: 3-year TCO calculator, unified risk register, negotiation log with AI coaching, reference check tracker, Gantt-style timeline, and implementation planning.</p>
-					<p>Each tool integrates with AI engines for automated analysis, anomaly detection, and actionable recommendations.</p>
-				</div>
-				<div class="feature-visual">
-					<div class="tools-visual">
-						<div class="tool-card-row">
-							<div class="tool-card">
-								<span class="tool-icon">📊</span>
-								<span class="tool-name">Comparison Matrix</span>
-							</div>
-							<div class="tool-card">
-								<span class="tool-icon">🛡️</span>
-								<span class="tool-name">Risk Register</span>
-							</div>
-						</div>
-						<div class="tool-card-row">
-							<div class="tool-card">
-								<span class="tool-icon">💰</span>
-								<span class="tool-name">TCO Calculator</span>
-							</div>
-							<div class="tool-card">
-								<span class="tool-icon">🤝</span>
-								<span class="tool-name">Negotiation Log</span>
-							</div>
-						</div>
-						<div class="tool-tags">
-							<span class="tool-tag">Reference Tracker</span>
-							<span class="tool-tag">Timeline / Gantt</span>
-							<span class="tool-tag">Confidence Calc</span>
-							<span class="tool-tag">Implementation</span>
-							<span class="tool-tag">Sensitivity Analysis</span>
-							<span class="tool-tag">Export & Reports</span>
-						</div>
-					</div>
-				</div>
-			</div>
+<!-- ═══════ CTA ═══════ -->
+<section class="final-cta">
+	<div class="section-inner">
+		<h2>Ready to transform your purchase decisions?</h2>
+		<p>Start evaluating vendors with AI-powered purchase intelligence — no credit card required.</p>
+		<div class="cta-group">
+			<a href="https://app.tryshortlist.app/auth/signup" class="btn-primary">Get Started Free <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10m0 0L9 4m4 4L9 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+			<a href="/demo" class="btn-ghost">See Live Demo</a>
 		</div>
-	</section>
-
-	<!-- ════════ COMPANY PROFILE ════════ -->
-	<section class="feature-section">
-		<div class="section-inner">
-			<div class="feature-block">
-				<div class="feature-content">
-					<span class="feature-tag teal">Intelligence</span>
-					<h2>Company profile & contextual AI</h2>
-					<p>Set up your company profile once — industry, size, maturity, compliance requirements, tech stack, and vendor preferences — and every AI prompt across the platform is enriched with your context.</p>
-					<p>Build institutional knowledge over time. Every evaluation enriches your organization's vendor intelligence, so the next project starts smarter.</p>
-				</div>
-				<div class="feature-visual">
-					<div class="profile-visual">
-						<div class="profile-card">
-							<div class="profile-header">
-								<div class="profile-av">AC</div>
-								<div class="profile-company-info">
-									<span class="pc-name">Acme Corp</span>
-									<span class="pc-type">Enterprise · Financial Services</span>
-								</div>
-							</div>
-							<div class="profile-fields">
-								<div class="pf-row"><span class="pf-label">Industry</span><span class="pf-val">Financial Services</span></div>
-								<div class="pf-row"><span class="pf-label">Size</span><span class="pf-val">500-1000 employees</span></div>
-								<div class="pf-row"><span class="pf-label">Compliance</span><span class="pf-val">SOC 2, GDPR, PCI-DSS</span></div>
-								<div class="pf-row"><span class="pf-label">Tech Stack</span><span class="pf-val">AWS, React, Node.js</span></div>
-								<div class="pf-row"><span class="pf-label">AI Context</span><span class="pf-val accent">Active — enriching all prompts</span></div>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</section>
-
-	<!-- ════════ FINAL CTA ════════ -->
-	<section class="final-cta">
-		<div class="section-inner">
-			<h2>Ready to transform your procurement process?</h2>
-			<p>Start evaluating vendors with AI-powered intelligence — no credit card required.</p>
-			<div class="cta-group">
-				<a href="https://app.tryshortlist.app/auth/signup" class="btn-primary">
-					Get Started Free
-					<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10m0 0L9 4m4 4L9 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-				</a>
-				<a href="/" class="btn-ghost">Back to Home</a>
-			</div>
-		</div>
-	</section>
-</div>
+	</div>
+</section>
 
 <style>
-	/* ═══════ PAGE LAYOUT ═══════ */
-	.features-page { position: relative; z-index: 1; }
-
-	/* ═══════ HERO ═══════ */
-	.hero {
-		text-align: center;
-		padding: 5rem 2rem 3rem;
-		max-width: 760px;
-		margin: 0 auto;
-	}
-	.hero-badge {
-		display: inline-flex;
-		align-items: center;
-		gap: 8px;
-		padding: 6px 18px;
-		background: rgba(74, 150, 248, 0.06);
-		border: 1px solid rgba(74, 150, 248, 0.15);
-		border-radius: 9999px;
-		font-size: 0.8125rem;
-		font-weight: 600;
-		color: #4a96f8;
-		margin-bottom: 2rem;
-		letter-spacing: 0.01em;
-	}
-	.badge-dot {
-		width: 6px;
-		height: 6px;
-		border-radius: 50%;
-		background: #4a96f8;
-		animation: pulse 2s infinite;
-	}
-	@keyframes pulse {
-		0%, 100% { opacity: 1; }
-		50% { opacity: 0.4; }
-	}
-	.hero h1 {
-		font-family: 'Playfair Display', serif;
-		font-size: 3.25rem;
-		font-weight: 800;
-		color: #ffffff;
-		line-height: 1.1;
-		margin-bottom: 1.25rem;
-		letter-spacing: -0.02em;
-	}
-	.highlight {
-		background: linear-gradient(135deg, #00cc96, #4a96f8);
-		-webkit-background-clip: text;
-		-webkit-text-fill-color: transparent;
-		background-clip: text;
-	}
-	.hero-sub {
-		font-size: 1.125rem;
-		color: #6b7e96;
-		line-height: 1.75;
-	}
-
-	/* ═══════ SECTION LAYOUT ═══════ */
-	.feature-section { padding: 4.5rem 2rem; }
+	section { padding: 5rem 2rem; }
 	.section-inner { max-width: 1080px; margin: 0 auto; }
-	.feature-section.alt {
-		background: rgba(255, 255, 255, 0.015);
-		border-top: 1px solid rgba(255, 255, 255, 0.04);
-		border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-	}
-	.feature-block {
-		display: grid;
-		grid-template-columns: 1fr 1.15fr;
-		gap: 64px;
-		align-items: center;
-	}
-	.feature-block.reverse { direction: rtl; }
-	.feature-block.reverse > * { direction: ltr; }
-
-	.feature-tag {
-		display: inline-block;
-		padding: 4px 14px;
-		border-radius: 9999px;
-		font-size: 0.75rem;
-		font-weight: 700;
-		letter-spacing: 0.04em;
-		text-transform: uppercase;
-		margin-bottom: 1rem;
-	}
-	.feature-tag.teal {
-		background: rgba(0, 204, 150, 0.08);
-		border: 1px solid rgba(0, 204, 150, 0.16);
-		color: #00cc96;
-	}
-	.feature-tag.blue {
-		background: rgba(74, 150, 248, 0.08);
-		border: 1px solid rgba(74, 150, 248, 0.16);
-		color: #4a96f8;
-	}
-	.feature-content h2 {
-		font-family: 'Playfair Display', serif;
-		font-size: 2rem;
-		font-weight: 800;
-		color: #ffffff;
-		margin-bottom: 1rem;
-		line-height: 1.15;
-	}
-	.feature-content p {
-		font-size: 0.9375rem;
-		color: #6b7e96;
-		line-height: 1.7;
-		margin-bottom: 0.75rem;
-	}
-	.feature-visual {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-
-	/* ═══════ SOLVE VISUAL ═══════ */
-	.solve-visual { width: 100%; max-width: 420px; }
-	.solve-step-card {
-		display: flex;
-		align-items: center;
-		gap: 12px;
-		padding: 12px 16px;
-		background: rgba(255, 255, 255, 0.02);
-		border: 1px solid rgba(255, 255, 255, 0.06);
-		border-radius: 10px;
-		transition: border-color 0.2s;
-	}
-	.solve-step-card.active {
-		border-color: rgba(0, 204, 150, 0.35);
-		background: rgba(0, 204, 150, 0.04);
-	}
-	.solve-step-card:hover { border-color: rgba(255, 255, 255, 0.12); }
-	.step-marker {
-		width: 36px;
-		height: 36px;
-		border-radius: 10px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-family: 'Playfair Display', serif;
-		font-size: 16px;
-		font-weight: 700;
-		flex-shrink: 0;
-	}
-	.step-marker.t { background: rgba(0, 204, 150, 0.12); color: #00cc96; border: 1px solid rgba(0, 204, 150, 0.24); }
-	.step-marker.bl { background: rgba(74, 150, 248, 0.12); color: #4a96f8; border: 1px solid rgba(74, 150, 248, 0.24); }
-	.step-info { flex: 1; display: flex; flex-direction: column; gap: 2px; }
-	.step-title { font-size: 0.875rem; font-weight: 700; color: #dde4ef; }
-	.step-desc { font-size: 0.75rem; color: #4a5568; }
-	.step-status { font-size: 0.6875rem; font-weight: 600; color: #3a4a5c; flex-shrink: 0; }
-	.step-status.done { color: #00cc96; }
-	.step-status.active-status { color: #4a96f8; }
-	.solve-connector { width: 2px; height: 12px; background: rgba(255, 255, 255, 0.06); margin-left: 29px; }
-
-	/* ═══════ AI ENGINES VISUAL ═══════ */
-	.engines-visual { width: 100%; max-width: 420px; }
-	.engine-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-	.engine-card {
-		padding: 14px;
-		border-radius: 10px;
-		display: flex;
-		flex-direction: column;
-		gap: 4px;
-	}
-	.t-engine { background: rgba(0, 204, 150, 0.06); border: 1px solid rgba(0, 204, 150, 0.14); }
-	.bl-engine { background: rgba(74, 150, 248, 0.06); border: 1px solid rgba(74, 150, 248, 0.14); }
-	.engine-icon { font-size: 1.25rem; margin-bottom: 4px; }
-	.engine-name { font-size: 0.8125rem; font-weight: 700; color: #dde4ef; }
-	.engine-desc { font-size: 0.6875rem; color: #4a5568; }
-	.engine-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
-	.e-chip {
-		padding: 4px 12px;
-		border-radius: 9999px;
-		font-size: 0.6875rem;
-		font-weight: 600;
-	}
-	.t-chip { background: rgba(0, 204, 150, 0.08); border: 1px solid rgba(0, 204, 150, 0.16); color: #00cc96; }
-	.bl-chip { background: rgba(74, 150, 248, 0.08); border: 1px solid rgba(74, 150, 248, 0.16); color: #4a96f8; }
-	.engine-counter {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		padding: 10px 16px;
-		background: rgba(255, 255, 255, 0.02);
-		border: 1px solid rgba(255, 255, 255, 0.06);
-		border-radius: 8px;
-	}
-	.engine-count {
-		font-size: 1.5rem;
-		font-weight: 800;
-		background: linear-gradient(135deg, #00cc96, #4a96f8);
-		-webkit-background-clip: text;
-		-webkit-text-fill-color: transparent;
-		background-clip: text;
-	}
-	.engine-count-label { font-size: 0.75rem; color: #6b7e96; font-weight: 500; }
-
-	/* ═══════ SCORING VISUAL ═══════ */
-	.scoring-visual {
-		width: 100%;
-		max-width: 420px;
-		background: rgba(255, 255, 255, 0.02);
-		border: 1px solid rgba(255, 255, 255, 0.06);
-		border-radius: 12px;
-		padding: 20px;
-	}
-	.scoring-header {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		margin-bottom: 16px;
-		padding-bottom: 12px;
-		border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-	}
-	.scoring-title { font-size: 0.875rem; font-weight: 700; color: #dde4ef; }
-	.scoring-badge { font-size: 0.6875rem; color: #4a5568; background: rgba(255,255,255,0.03); padding: 3px 10px; border-radius: 9999px; }
-	.scoring-vendor { margin-bottom: 12px; }
-	.sv-header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
-	.sv-av {
-		width: 28px;
-		height: 28px;
-		border-radius: 7px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-size: 0.625rem;
-		font-weight: 700;
-		flex-shrink: 0;
-	}
-	.t-bg { background: rgba(0, 204, 150, 0.14); color: #00cc96; }
-	.bl-bg { background: rgba(74, 150, 248, 0.14); color: #4a96f8; }
-	.pu-bg { background: rgba(160, 108, 240, 0.14); color: #a06cf0; }
-	.sv-name { flex: 1; font-size: 0.8125rem; font-weight: 600; color: #dde4ef; }
-	.sv-total { font-size: 1rem; font-weight: 800; }
-	.t-col { color: #00cc96; }
-	.bl-col { color: #4a96f8; }
-	.pu-col { color: #a06cf0; }
-	.sv-bar { height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px; }
-	.sv-fill { height: 100%; border-radius: 2px; background: #00cc96; }
-	.sv-fill.b { background: #4a96f8; }
-	.sv-fill.p { background: #a06cf0; }
-	.scoring-criteria { margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.06); }
-	.sc-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-	.sc-name { font-size: 0.75rem; color: #6b7e96; width: 60px; flex-shrink: 0; font-weight: 500; }
-	.sc-weight { flex: 1; height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px; }
-	.sc-w-fill { height: 100%; border-radius: 2px; background: #00cc96; }
-	.sc-w-fill.bl { background: #4a96f8; }
-	.sc-w-fill.am { background: #f0a034; }
-	.sc-pct { font-size: 0.6875rem; font-weight: 700; color: #dde4ef; width: 28px; text-align: right; }
-
-	/* ═══════ DEMO VISUAL ═══════ */
-	.demo-visual { width: 100%; max-width: 420px; }
-	.demo-card {
-		background: rgba(255, 255, 255, 0.02);
-		border: 1px solid rgba(255, 255, 255, 0.06);
-		border-radius: 12px;
-		padding: 20px;
-	}
-	.demo-header {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		margin-bottom: 16px;
-		padding-bottom: 12px;
-		border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-	}
-	.demo-vendor { font-size: 0.875rem; font-weight: 700; color: #dde4ef; }
-	.demo-date { font-size: 0.75rem; color: #4a5568; }
-	.demo-steps { display: flex; flex-direction: column; gap: 0; }
-	.demo-step {
-		display: flex;
-		align-items: flex-start;
-		gap: 12px;
-		padding: 10px 0;
-		border-left: 2px solid rgba(255, 255, 255, 0.06);
-		margin-left: 7px;
-		padding-left: 16px;
-		position: relative;
-	}
-	.demo-step.complete { border-left-color: rgba(0, 204, 150, 0.4); }
-	.demo-step.active-step { border-left-color: rgba(74, 150, 248, 0.4); }
-	.ds-dot {
-		width: 10px;
-		height: 10px;
-		border-radius: 50%;
-		flex-shrink: 0;
-		margin-top: 3px;
-		position: absolute;
-		left: -6px;
-	}
-	.ds-dot.done { background: #00cc96; }
-	.ds-dot.active { background: #4a96f8; animation: pulse 1.5s infinite; }
-	.ds-dot.pending { background: #2a3444; border: 1px solid rgba(255,255,255,0.1); }
-	.ds-content { margin-left: 8px; display: flex; flex-direction: column; gap: 2px; }
-	.ds-title { font-size: 0.8125rem; font-weight: 600; color: #dde4ef; }
-	.ds-meta { font-size: 0.6875rem; color: #4a5568; }
-
-	/* ═══════ TEAM VISUAL ═══════ */
-	.team-visual {
-		width: 100%;
-		max-width: 420px;
-		background: rgba(255, 255, 255, 0.02);
-		border: 1px solid rgba(255, 255, 255, 0.06);
-		border-radius: 12px;
-		padding: 20px;
-	}
-	.team-header-row { margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.06); }
-	.team-avatars { display: flex; align-items: center; }
-	.t-avatar {
-		width: 34px;
-		height: 34px;
-		border-radius: 50%;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-size: 0.6875rem;
-		font-weight: 700;
-		border: 2px solid #0b1017;
-	}
-	.t-more { font-size: 0.75rem; color: #4a5568; margin-left: 10px; }
-	.team-activity { margin-bottom: 14px; }
-	.ta-row {
-		display: flex;
-		align-items: center;
-		gap: 10px;
-		padding: 8px 0;
-		border-bottom: 1px solid rgba(255,255,255,0.04);
-	}
-	.ta-row:last-child { border-bottom: none; }
-	.ta-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-	.ta-text { flex: 1; font-size: 0.8125rem; color: #6b7e96; }
-	.ta-text strong { color: #dde4ef; font-weight: 600; }
-	.ta-time { font-size: 0.6875rem; color: #3a4a5c; flex-shrink: 0; }
-	.team-alignment {
-		display: flex;
-		align-items: center;
-		gap: 10px;
-		padding: 12px;
-		background: rgba(0, 204, 150, 0.04);
-		border: 1px solid rgba(0, 204, 150, 0.12);
-		border-radius: 8px;
-	}
-	.ta-label { font-size: 0.75rem; color: #6b7e96; font-weight: 500; flex-shrink: 0; }
-	.ta-bar { flex: 1; height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px; }
-	.ta-fill { height: 100%; border-radius: 2px; background: #00cc96; }
-	.ta-pct { font-size: 0.875rem; font-weight: 800; color: #00cc96; flex-shrink: 0; }
-
-	/* ═══════ TOOLS VISUAL ═══════ */
-	.tools-visual { width: 100%; max-width: 420px; }
-	.tool-card-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-	.tool-card {
-		background: rgba(255, 255, 255, 0.02);
-		border: 1px solid rgba(255, 255, 255, 0.06);
-		border-radius: 10px;
-		padding: 16px;
-		display: flex;
-		flex-direction: column;
-		gap: 6px;
-		transition: border-color 0.2s;
-	}
-	.tool-card:hover { border-color: rgba(0, 204, 150, 0.25); }
-	.tool-icon { font-size: 1.25rem; }
-	.tool-name { font-size: 0.8125rem; font-weight: 700; color: #dde4ef; }
-	.tool-tags { display: flex; flex-wrap: wrap; gap: 6px; }
-	.tool-tag {
-		padding: 5px 12px;
-		background: rgba(255, 255, 255, 0.02);
-		border: 1px solid rgba(255, 255, 255, 0.06);
-		border-radius: 6px;
-		font-size: 0.6875rem;
-		font-weight: 500;
-		color: #6b7e96;
-		transition: border-color 0.15s;
-	}
-	.tool-tag:hover { border-color: rgba(255, 255, 255, 0.12); }
-
-	/* ═══════ PROFILE VISUAL ═══════ */
-	.profile-visual { width: 100%; max-width: 420px; }
-	.profile-card {
-		background: rgba(255, 255, 255, 0.02);
-		border: 1px solid rgba(255, 255, 255, 0.06);
-		border-radius: 12px;
-		padding: 20px;
-	}
-	.profile-header {
-		display: flex;
-		align-items: center;
-		gap: 12px;
-		margin-bottom: 16px;
-		padding-bottom: 12px;
-		border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-	}
-	.profile-av {
-		width: 40px;
-		height: 40px;
-		border-radius: 10px;
-		background: rgba(0, 204, 150, 0.12);
-		color: #00cc96;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-size: 0.875rem;
-		font-weight: 700;
-		flex-shrink: 0;
-	}
-	.profile-company-info { display: flex; flex-direction: column; gap: 2px; }
-	.pc-name { font-size: 0.9375rem; font-weight: 700; color: #dde4ef; }
-	.pc-type { font-size: 0.75rem; color: #4a5568; }
-	.profile-fields { display: flex; flex-direction: column; }
-	.pf-row {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		padding: 8px 0;
-		border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-		font-size: 0.8125rem;
-	}
-	.pf-row:last-child { border-bottom: none; }
-	.pf-label { color: #4a5568; }
-	.pf-val { color: #c0c8d4; font-weight: 500; text-align: right; }
-	.pf-val.accent { color: #00cc96; }
-
-	/* ═══════ FINAL CTA ═══════ */
-	.final-cta {
-		text-align: center;
-		padding: 5rem 2rem 6rem;
-		border-top: 1px solid rgba(255, 255, 255, 0.04);
-	}
-	.final-cta h2 {
-		font-family: 'Playfair Display', serif;
-		font-size: 2.25rem;
-		font-weight: 800;
-		color: #ffffff;
-		margin-bottom: 0.75rem;
-		line-height: 1.15;
-	}
+	h2 { font-family: 'Playfair Display', serif; font-size: 2.25rem; font-weight: 800; color: #fff; line-height: 1.15; margin: 0 0 1rem; }
+	.hero { padding: 3rem 2rem 2rem; text-align: center; }
+	.hero-inner { max-width: 720px; margin: 0 auto; }
+	.hero-badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 18px; background: rgba(0,204,150,0.06); border: 1px solid rgba(0,204,150,0.15); border-radius: 9999px; font-size: 0.8125rem; font-weight: 600; color: #00cc96; margin-bottom: 2rem; }
+	.badge-dot { width: 6px; height: 6px; border-radius: 50%; background: #00cc96; animation: pulse 2s infinite; }
+	@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+	h1 { font-family: 'Playfair Display', serif; font-size: 3.25rem; font-weight: 800; line-height: 1.1; margin-bottom: 1.5rem; color: #fff; }
+	.highlight { background: linear-gradient(135deg, #00cc96, #4a96f8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+	.hero-sub { font-size: 1.125rem; color: #6b7e96; line-height: 1.7; max-width: 600px; margin: 0 auto; }
+	.feature-row { padding: 4rem 2rem; }
+	.feature-row.alt { background: rgba(255,255,255,0.01); }
+	.feature-inner { max-width: 1080px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; }
+	.feature-inner.reverse { direction: rtl; }
+	.feature-inner.reverse > * { direction: ltr; }
+	.f-tag { display: inline-block; padding: 4px 14px; border-radius: 9999px; font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 1rem; background: rgba(240,80,80,0.08); border: 1px solid rgba(240,80,80,0.16); color: #f05050; }
+	.f-tag.teal { background: rgba(0,204,150,0.08); border-color: rgba(0,204,150,0.16); color: #00cc96; }
+	.feature-text p { font-size: 1rem; color: #6b7e96; line-height: 1.7; margin: 0 0 1.25rem; }
+	.feature-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+	.feature-list li { font-size: 0.875rem; color: #8b95a5; padding-left: 20px; position: relative; line-height: 1.6; }
+	.feature-list li::before { content: '✓'; position: absolute; left: 0; color: #00cc96; font-weight: 700; font-size: 0.75rem; }
+	.solve-visual { display: flex; flex-direction: column; gap: 8px; }
+	.solve-card { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; }
+	.solve-card.complete { border-color: rgba(0,204,150,0.2); }
+	.solve-card.active { border-color: rgba(74,150,248,0.3); background: rgba(74,150,248,0.04); }
+	.solve-letter { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-size: 14px; font-weight: 700; background: rgba(255,255,255,0.04); color: #6b7e96; flex-shrink: 0; }
+	.solve-card.complete .solve-letter { background: rgba(0,204,150,0.12); color: #00cc96; }
+	.solve-card.active .solve-letter { background: rgba(74,150,248,0.12); color: #4a96f8; }
+	.solve-text { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+	.solve-label { font-size: 0.8125rem; font-weight: 600; color: #dde4ef; }
+	.solve-desc { font-size: 0.6875rem; color: #6b7e96; }
+	.solve-status { font-size: 0.75rem; flex-shrink: 0; }
+	.solve-card.complete .solve-status { color: #00cc96; }
+	.solve-card.active .solve-status { color: #4a96f8; }
+	.engine-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 12px; }
+	.engine-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+	.engine-card.primary { border-color: rgba(0,204,150,0.15); }
+	.e-icon { font-size: 1.25rem; }
+	.e-name { font-size: 0.75rem; font-weight: 600; color: #dde4ef; }
+	.engine-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+	.e-chip { padding: 4px 10px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; font-size: 0.625rem; font-weight: 600; color: #6b7e96; }
+	.e-chip.t { color: #00cc96; border-color: rgba(0,204,150,0.2); }
+	.e-chip.bl { color: #4a96f8; border-color: rgba(74,150,248,0.2); }
+	.engine-count { font-size: 0.75rem; font-weight: 700; color: #00cc96; text-align: center; }
+	.alignment-visual { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+	.align-score-ring { position: relative; width: 120px; height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+	.align-score-ring svg { position: absolute; inset: 0; }
+	.align-score-val { font-size: 2rem; font-weight: 800; color: #00cc96; z-index: 1; line-height: 1; }
+	.align-score-label { font-size: 0.625rem; font-weight: 600; color: #6b7e96; z-index: 1; text-transform: uppercase; letter-spacing: 0.04em; }
+	.align-roles { width: 100%; max-width: 300px; display: flex; flex-direction: column; gap: 8px; }
+	.role-row { display: flex; align-items: center; gap: 10px; }
+	.role-name { font-size: 0.75rem; color: #6b7e96; width: 80px; flex-shrink: 0; }
+	.role-bar { flex: 1; height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px; overflow: hidden; }
+	.role-fill { height: 100%; border-radius: 2px; background: #00cc96; }
+	.role-fill.bl { background: #4a96f8; }
+	.role-val { font-size: 0.75rem; font-weight: 700; color: #dde4ef; width: 24px; text-align: right; }
+	.align-gap { display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: rgba(240,160,52,0.08); border: 1px solid rgba(240,160,52,0.2); border-radius: 8px; width: 100%; max-width: 300px; }
+	.gap-icon { font-size: 0.875rem; }
+	.gap-text { font-size: 0.6875rem; color: #f0a034; font-weight: 600; }
+	.exec-visual { display: flex; flex-direction: column; gap: 16px; }
+	.exec-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+	.exec-metric { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 12px; text-align: center; display: flex; flex-direction: column; gap: 2px; }
+	.em-val { font-size: 1.25rem; font-weight: 800; color: #fff; }
+	.em-val.t { color: #00cc96; } .em-val.bl { color: #4a96f8; } .em-val.rd { color: #f05050; }
+	.em-label { font-size: 0.5625rem; color: #6b7e96; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+	.exec-briefing { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 8px; }
+	.brief-header { display: flex; justify-content: space-between; }
+	.brief-type { font-size: 0.5625rem; font-weight: 700; color: #4a96f8; text-transform: uppercase; letter-spacing: 0.06em; padding: 2px 8px; background: rgba(74,150,248,0.1); border-radius: 9999px; }
+	.brief-status { font-size: 0.5625rem; font-weight: 700; color: #f0a034; text-transform: uppercase; letter-spacing: 0.06em; }
+	.brief-title { font-size: 0.875rem; font-weight: 700; color: #dde4ef; }
+	.brief-summary { font-size: 0.75rem; color: #6b7e96; line-height: 1.5; }
+	.brief-actions { display: flex; gap: 8px; margin-top: 4px; }
+	.brief-btn { padding: 6px 14px; background: #00cc96; color: #061510; border-radius: 6px; font-size: 0.6875rem; font-weight: 700; }
+	.library-visual { display: flex; flex-direction: column; gap: 12px; }
+	.lib-categories { display: flex; flex-wrap: wrap; gap: 6px; }
+	.lib-cat { padding: 4px 12px; border-radius: 6px; font-size: 0.6875rem; font-weight: 600; color: #6b7e96; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); }
+	.lib-cat.active { color: #00cc96; border-color: rgba(0,204,150,0.3); background: rgba(0,204,150,0.06); }
+	.lib-vendors { display: flex; flex-direction: column; gap: 6px; }
+	.lib-row { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; }
+	.lib-av { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.5625rem; font-weight: 700; flex-shrink: 0; }
+	.t-bg { background: rgba(0,204,150,0.14); color: #00cc96; }
+	.bl-bg { background: rgba(74,150,248,0.14); color: #4a96f8; }
+	.pu-bg { background: rgba(160,108,240,0.14); color: #a06cf0; }
+	.am-bg { background: rgba(240,160,52,0.14); color: #f0a034; }
+	.lib-name { font-size: 0.8125rem; font-weight: 600; color: #dde4ef; flex: 1; }
+	.lib-cat-tag { font-size: 0.5625rem; color: #3a4a5c; font-weight: 500; }
+	.lib-fit { font-size: 0.75rem; font-weight: 700; color: #6b7e96; }
+	.lib-fit.t { color: #00cc96; } .lib-fit.bl { color: #4a96f8; } .lib-fit.pu { color: #a06cf0; }
+	.lib-count { font-size: 0.75rem; color: #3a4a5c; font-weight: 600; text-align: center; }
+	.scoring-visual { display: flex; flex-direction: column; gap: 14px; }
+	.score-row { display: flex; align-items: center; gap: 12px; }
+	.sc-label { font-size: 0.75rem; color: #6b7e96; width: 72px; flex-shrink: 0; font-weight: 500; }
+	.sc-track { flex: 1; height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; }
+	.sc-fill { height: 100%; border-radius: 3px; }
+	.sc-fill.t { background: #00cc96; } .sc-fill.bl { background: #4a96f8; }
+	.sc-val { font-size: 0.8125rem; font-weight: 700; color: #dde4ef; width: 28px; text-align: right; }
+	.web-visual { display: flex; flex-direction: column; align-items: center; gap: 20px; padding: 24px; }
+	.web-node.center { padding: 14px 28px; background: rgba(0,204,150,0.08); border: 1px solid rgba(0,204,150,0.2); border-radius: 12px; font-size: 0.875rem; font-weight: 700; color: #00cc96; }
+	.web-connections { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 100%; }
+	.web-node-sm { padding: 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; font-size: 0.6875rem; font-weight: 600; color: #6b7e96; text-align: center; }
+	.web-node-sm.t { color: #00cc96; border-color: rgba(0,204,150,0.2); }
+	.web-node-sm.bl { color: #4a96f8; border-color: rgba(74,150,248,0.2); }
+	.web-node-sm.pu { color: #a06cf0; border-color: rgba(160,108,240,0.2); }
+	.web-flow { font-size: 0.75rem; color: #6b7e96; text-align: center; }
+	.web-arrow { color: #00cc96; font-weight: 700; }
+	.final-cta { text-align: center; padding: 5rem 2rem 6rem; border-top: 1px solid rgba(255,255,255,0.04); }
+	.final-cta h2 { margin-bottom: 0.75rem; }
 	.final-cta p { font-size: 1.125rem; color: #6b7e96; margin-bottom: 2rem; }
-	.cta-group { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
-	.btn-primary {
-		display: inline-flex;
-		align-items: center;
-		gap: 8px;
-		padding: 14px 32px;
-		background: #00cc96;
-		color: #061510;
-		border-radius: 10px;
-		font-weight: 700;
-		font-size: 1rem;
-		text-decoration: none;
-		transition: all 0.17s;
-		font-family: 'Figtree', sans-serif;
-	}
-	.btn-primary:hover {
-		background: #009e74;
-		transform: translateY(-1px);
-		box-shadow: 0 8px 22px rgba(0, 204, 150, 0.22);
-		text-decoration: none;
-	}
-	.btn-ghost {
-		display: inline-flex;
-		align-items: center;
-		padding: 14px 32px;
-		background: transparent;
-		color: #dde4ef;
-		border: 1px solid rgba(255, 255, 255, 0.12);
-		border-radius: 10px;
-		font-weight: 600;
-		font-size: 1rem;
-		text-decoration: none;
-		transition: all 0.17s;
-		font-family: 'Figtree', sans-serif;
-	}
-	.btn-ghost:hover { border-color: rgba(255, 255, 255, 0.28); text-decoration: none; }
-
-	/* ═══════ RESPONSIVE ═══════ */
+	.cta-group { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
+	.btn-primary { display: inline-flex; align-items: center; gap: 8px; padding: 14px 32px; background: #00cc96; color: #061510; border-radius: 10px; font-weight: 700; font-size: 1rem; text-decoration: none; transition: all 0.17s; }
+	.btn-primary:hover { background: #009e74; transform: translateY(-1px); box-shadow: 0 8px 22px rgba(0,204,150,0.22); text-decoration: none; }
+	.btn-ghost { display: inline-flex; align-items: center; padding: 14px 32px; background: transparent; color: #dde4ef; border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; font-weight: 600; font-size: 1rem; text-decoration: none; transition: all 0.17s; }
+	.btn-ghost:hover { border-color: rgba(255,255,255,0.28); text-decoration: none; }
 	@media (max-width: 768px) {
-		.hero h1 { font-size: 2.25rem; }
-		.feature-block,
-		.feature-block.reverse {
-			grid-template-columns: 1fr;
-			gap: 32px;
-			direction: ltr;
-		}
-		.feature-content h2 { font-size: 1.625rem; }
-		.engine-row { grid-template-columns: 1fr; }
-		.tool-card-row { grid-template-columns: 1fr; }
-	}
-
-	@media (max-width: 480px) {
-		.hero h1 { font-size: 1.875rem; }
-		.final-cta h2 { font-size: 1.75rem; }
+		h1 { font-size: 2.25rem; }
+		h2 { font-size: 1.75rem; }
+		.feature-inner, .feature-inner.reverse { grid-template-columns: 1fr; gap: 2rem; direction: ltr; }
+		.exec-metrics { grid-template-columns: repeat(2, 1fr); }
+		.engine-grid { grid-template-columns: repeat(2, 1fr); }
+		.web-connections { grid-template-columns: repeat(2, 1fr); }
 	}
 </style>

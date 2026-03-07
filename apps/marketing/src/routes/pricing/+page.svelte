@@ -1,6 +1,6 @@
 <svelte:head>
 	<title>Pricing — Shortlist</title>
-	<meta name="description" content="Simple, transparent pricing for B2B procurement intelligence." />
+	<meta name="description" content="Simple, transparent pricing for purchase intelligence teams." />
 </svelte:head>
 
 <div class="pricing-page">
@@ -21,7 +21,7 @@
 					<span class="price">$0</span>
 					<span class="period">/month</span>
 				</div>
-				<p class="plan-desc">For individuals evaluating vendors.</p>
+				<p class="plan-desc">For individuals making purchase decisions.</p>
 			</div>
 			<ul class="plan-features">
 				<li>3 active projects</li>
@@ -41,16 +41,17 @@
 					<span class="price">$49</span>
 					<span class="period">/month</span>
 				</div>
-				<p class="plan-desc">For teams running multiple evaluations.</p>
+				<p class="plan-desc">For teams running purchase evaluations.</p>
 			</div>
 			<ul class="plan-features">
 				<li>Unlimited projects</li>
 				<li>Unlimited vendors</li>
 				<li>500 AI credits/month</li>
-				<li>All 21 AI engines</li>
+				<li>All 25 AI engines</li>
 				<li>Team collaboration (up to 10)</li>
-				<li>Vendor discovery & SOLVE workflow</li>
-				<li>File uploads & storage</li>
+				<li>SOLVE workflow & vendor discovery</li>
+				<li>Team alignment engine</li>
+				<li>100+ pre-loaded vendor library</li>
 				<li>Priority support</li>
 			</ul>
 			<a href="https://app.tryshortlist.app/auth/signup" class="plan-cta featured-cta">Start Pro Trial</a>
@@ -62,14 +63,15 @@
 				<div class="plan-price">
 					<span class="price">Custom</span>
 				</div>
-				<p class="plan-desc">For organizations with advanced needs.</p>
+				<p class="plan-desc">For organizations with enterprise purchase intelligence needs.</p>
 			</div>
 			<ul class="plan-features">
 				<li>Everything in Pro</li>
 				<li>Unlimited AI credits</li>
 				<li>Unlimited team members</li>
 				<li>SSO / SAML authentication</li>
-				<li>Org-level vendor intelligence</li>
+				<li>Executive dashboard & briefings</li>
+				<li>Intelligence Web analytics</li>
 				<li>Custom integrations</li>
 				<li>Audit log & compliance</li>
 				<li>Dedicated account manager</li>

@@ -9,6 +9,7 @@
 		</a>
 		<div class="nav-links">
 			<a href="/features">Features</a>
+			<a href="/demo">Demo</a>
 			<a href="/pricing">Pricing</a>
 			<a href="https://app.tryshortlist.app/auth/login" class="nav-login">Log in</a>
 			<a href="https://app.tryshortlist.app/auth/signup" class="nav-cta">Get Started</a>
@@ -24,6 +25,7 @@
 			</div>
 			<div class="footer-links">
 				<a href="/features">Features</a>
+				<a href="/demo">Demo</a>
 				<a href="/pricing">Pricing</a>
 				<a href="mailto:hello@tryshortlist.app">Contact</a>
 			</div>
