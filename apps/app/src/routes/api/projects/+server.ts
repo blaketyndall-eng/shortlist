@@ -74,20 +74,6 @@ export const POST: RequestHandler = async ({ request, locals, cookies }) => {
 		error(500, dbError.message);
 	}
 
-	// Add creator as admin member
-	await supabase.from('project_members').insert({
-		project_id: project.id,
-		user_id: locals.user.id,
-		role: 'admin'
-	});
-
-	// Log activity
-	await supabase.from('activity_log').insert({
-		project_id: project.id,
-		user_id: locals.user.id,
-		verb: 'created',
-		detail: `Created project "${body.name.trim()}"`
-	});
-
+	// Member + activity log are handled by the DB trigger (handle_new_project)
 	return json({ project }, { status: 201 });
 };

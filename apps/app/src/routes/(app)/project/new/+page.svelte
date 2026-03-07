@@ -65,21 +65,7 @@
 			return;
 		}
 
-		// Also add the creator as a project member (admin role)
-		await supabase.from('project_members').insert({
-			project_id: project.id,
-			user_id: user.user.id,
-			role: 'admin'
-		});
-
-		// Log activity
-		await supabase.from('activity_log').insert({
-			project_id: project.id,
-			user_id: user.user.id,
-			verb: 'created',
-			detail: `Created project "${name.trim()}"`
-		});
-
+		// Member + activity log are handled by the DB trigger (handle_new_project)
 		goto(`/project/${project.id}/setup`);
 	}
 </script>
@@ -170,8 +156,8 @@
 	}
 
 	.error-banner {
-		background: #fef2f2;
-		color: #dc2626;
+		background: rgba(240, 80, 80, 0.1);
+		color: #f05050;
 		padding: var(--space-3);
 		border-radius: var(--radius-md);
 		margin-bottom: var(--space-4);

@@ -6,6 +6,9 @@ export const load: LayoutServerLoad = async ({ params, locals }) => {
 		redirect(303, '/auth/login');
 	}
 
+	const userId = locals.user!.id;
+
+	// Fetch project — RLS project_owner_all policy allows owner access
 	const { data: project, error: dbError } = await locals.supabase
 		.from('projects')
 		.select('*')
@@ -16,13 +19,21 @@ export const load: LayoutServerLoad = async ({ params, locals }) => {
 		error(404, 'Project not found');
 	}
 
-	// Check membership
-	const { data: membership } = await locals.supabase
-		.from('project_members')
-		.select('role')
-		.eq('project_id', params.id)
-		.eq('user_id', locals.user!.id)
-		.single();
+	// Determine membership: owner gets admin role automatically,
+	// otherwise check the project_members table
+	let membership: { role: string } | null = null;
+
+	if (project.owner_id === userId) {
+		membership = { role: 'admin' };
+	} else {
+		const { data: memberRow } = await locals.supabase
+			.from('project_members')
+			.select('role')
+			.eq('project_id', params.id)
+			.eq('user_id', userId)
+			.single();
+		membership = memberRow;
+	}
 
 	if (!membership) {
 		error(403, 'You are not a member of this project');
