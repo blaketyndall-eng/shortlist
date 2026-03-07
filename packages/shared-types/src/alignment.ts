@@ -7,6 +7,8 @@ export type AlignmentContext =
 	| 'priority_alignment'
 	| 'challenge_alignment'
 	| 'budget_alignment'
+	| 'scope_cause'
+	| 'scope_options'
 	| 'general';
 
 export type PollStatus = 'active' | 'closed' | 'archived';

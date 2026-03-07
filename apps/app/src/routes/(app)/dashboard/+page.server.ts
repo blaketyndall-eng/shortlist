@@ -105,8 +105,18 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	const hasProject = (projects?.length ?? 0) > 0;
 
+	// Fetch active SCOPEs
+	const { data: scopes } = await locals.supabase
+		.from('scopes')
+		.select('id, name, status, current_step, created_at, updated_at')
+		.eq('user_id', userId)
+		.eq('status', 'active')
+		.order('updated_at', { ascending: false })
+		.limit(10);
+
 	return {
 		projects: projects ?? [],
+		scopes: scopes ?? [],
 		activities,
 		stats: {
 			activeProjects: projects?.length ?? 0,

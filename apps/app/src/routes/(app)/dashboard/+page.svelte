@@ -17,6 +17,14 @@
 		(!data.onboarding.hasCompanyProfile || !data.onboarding.hasTeamInvites || !data.onboarding.hasProject)
 	);
 
+	const scopeStepLabels: Record<string, string> = {
+		signal: 'Signal',
+		cause: 'Cause',
+		options: 'Options',
+		prepare: 'Prepare',
+		endorse: 'Endorse',
+	};
+
 	const stepLabels: Record<string, string> = {
 		discovery: 'Discovery',
 		setup: 'Setup',
@@ -49,7 +57,7 @@
 			<h1>Welcome back{data.profile?.full_name ? `, ${data.profile.full_name}` : ''}</h1>
 			<p>Here's an overview of your purchase intelligence projects.</p>
 		</div>
-		<a href="/project/new" class="btn-primary">+ New Project</a>
+		<a href="/project/new" class="btn-primary">+ New</a>
 	</header>
 
 	{#if showChecklist && data.profile?.id}
@@ -82,6 +90,23 @@
 			<span class="stat-value">{data.stats.teamMembers}</span>
 		</div>
 	</section>
+
+	{#if data.scopes && data.scopes.length > 0}
+		<section class="active-scopes">
+			<h2>Active SCOPEs</h2>
+			<div class="scope-list">
+				{#each data.scopes as scope (scope.id)}
+					<a href="/scope/{scope.id}/{scope.current_step ?? 'signal'}" class="scope-row">
+						<div class="scope-info">
+							<span class="scope-name">{scope.name}</span>
+							<span class="scope-meta">{timeAgo(scope.updated_at)}</span>
+						</div>
+						<span class="step-badge scope-badge">{scopeStepLabels[scope.current_step] ?? 'Signal'}</span>
+					</a>
+				{/each}
+			</div>
+		</section>
+	{/if}
 
 	<section class="recent-projects">
 		<h2>Recent Projects</h2>
@@ -364,4 +389,63 @@
 	.gs-explore { text-align: center; margin-top: var(--space-4); }
 	.explore-link { color: var(--primary-600); text-decoration: none; font-size: 0.875rem; }
 	.explore-link:hover { text-decoration: underline; }
+
+	.active-scopes {
+		background: var(--color-bg-secondary);
+		border: 1px solid var(--neutral-200);
+		border-radius: var(--radius-lg);
+		padding: var(--space-6);
+		margin-bottom: var(--space-4);
+	}
+
+	.active-scopes h2 {
+		margin-bottom: var(--space-4);
+	}
+
+	.scope-list {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.scope-row {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: var(--space-3) var(--space-2);
+		border-bottom: 1px solid var(--neutral-100);
+		text-decoration: none;
+		color: inherit;
+		transition: background var(--transition-fast);
+		border-radius: var(--radius-md);
+	}
+
+	.scope-row:hover {
+		background: var(--neutral-50);
+		text-decoration: none;
+	}
+
+	.scope-row:last-child {
+		border-bottom: none;
+	}
+
+	.scope-info {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+
+	.scope-name {
+		font-weight: 600;
+		color: var(--neutral-800);
+	}
+
+	.scope-meta {
+		font-size: 0.75rem;
+		color: var(--neutral-400);
+	}
+
+	.scope-badge {
+		background: rgba(245, 158, 11, 0.1);
+		color: rgb(180, 115, 10);
+	}
 </style>

@@ -8,3 +8,4 @@ export * from './demos.js';
 export * from './vendor-analysis.js';
 export * from './alignment.js';
 export * from './executive.js';
+export * from './scope.js';

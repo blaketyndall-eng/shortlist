@@ -58,6 +58,12 @@ const TOKEN_LIMITS: Partial<Record<string, number>> = {
 	vendor_change_analyzer: 300,
 	negotiation_extract: 400,
 	deal_debrief: 600,
+	// SCOPE engines
+	scope_cause_analyze: 800,
+	scope_options_recommend: 1200,
+	scope_readiness_assess: 900,
+	scope_brief_generate: 1500,
+	scope_import: 600,
 };
 
 // Model overrides for specific engines (prototype uses specific model per engine)
@@ -90,6 +96,12 @@ const ENGINE_MODEL_OVERRIDE: Partial<Record<string, string>> = {
 	vendor_change_analyzer: 'claude-haiku-4-5-20251001',
 	negotiation_extract: 'claude-haiku-4-5-20251001',
 	deal_debrief: 'claude-sonnet-4-6',
+	// SCOPE engines
+	scope_cause_analyze: 'claude-haiku-4-5-20251001',
+	scope_options_recommend: 'claude-sonnet-4-6',
+	scope_readiness_assess: 'claude-haiku-4-5-20251001',
+	scope_brief_generate: 'claude-sonnet-4-6',
+	scope_import: 'claude-haiku-4-5-20251001',
 };
 
 interface EngineRequest {
@@ -133,6 +145,12 @@ const ENGINE_SCHEMAS: Record<string, { required: string[]; type: 'object' | 'arr
 	vendor_change_analyzer: { required: ['changeType', 'severity', 'summary'], type: 'object' },
 	negotiation_extract: { required: [], type: 'object' },
 	deal_debrief: { required: ['lessonsSummary'], type: 'object' },
+	// SCOPE engines
+	scope_cause_analyze: { required: ['causes'], type: 'object' },
+	scope_options_recommend: { required: ['options'], type: 'object' },
+	scope_readiness_assess: { required: ['readinessScore', 'gaps'], type: 'object' },
+	scope_brief_generate: { required: ['title', 'executiveSummary'], type: 'object' },
+	scope_import: { required: ['triggers'], type: 'object' },
 };
 
 // Max retry attempts for validation failures
@@ -175,6 +193,9 @@ export const POST: RequestHandler = async ({ request, locals, cookies }) => {
 	const SKIP_PROJECT_INTELLIGENCE = new Set([
 		'company_autofill', 'compliance_suggest', 'priorities_suggest',
 		'stack_suggest', 'context_notes', 'profile_interview',
+		// SCOPE engines run pre-project — no project intelligence available
+		'scope_cause_analyze', 'scope_options_recommend', 'scope_readiness_assess',
+		'scope_brief_generate', 'scope_import',
 	]);
 	if (
 		body.projectId &&
@@ -345,6 +366,13 @@ function buildSystemPrompt(engine: string, context: Record<string, unknown>): st
 		stack_suggest: 'You are a solutions architect. Return ONLY a comma-separated list of tool names, no markdown or explanation.',
 		context_notes: 'You are a purchase intelligence assistant writing buyer context notes. Write in second person, clear and direct. 3–5 sentences max.',
 		profile_interview: 'You are a purchase intelligence assistant extracting structured company profile data from conversational answers. Return ONLY valid JSON with the fields you can extract. Use null for fields that cannot be determined. Match values to the allowed option lists exactly.',
+
+		// --- SCOPE Engines ---
+		scope_cause_analyze: 'You are a root cause analysis expert for B2B operational problems. Given a business trigger and context, identify 3-5 likely root causes. Distinguish symptoms from underlying issues. Be specific and actionable. Return ONLY valid JSON, no markdown.',
+		scope_options_recommend: 'You are a strategic technology advisor evaluating whether to buy, build, fix, partner, or do nothing. Provide balanced analysis with realistic trade-offs. Consider timeline, cost, risk, and organizational readiness. Return ONLY valid JSON, no markdown.',
+		scope_readiness_assess: 'You are an organizational readiness assessor for B2B technology decisions. Evaluate budget, timeline, stakeholder alignment, and risk posture. Be honest about gaps and blockers. Return ONLY valid JSON, no markdown.',
+		scope_brief_generate: 'You are a management consultant writing a decision brief for executive leadership. Write in clear, confident prose. Focus on business impact, cost of inaction, and recommended path forward. Return ONLY valid JSON, no markdown.',
+		scope_import: 'You are a purchase intelligence data mapper. Given SCOPE diagnostic data, extract and structure the information that would be relevant for a SOLVE vendor evaluation workflow. Return ONLY valid JSON, no markdown.',
 
 		// --- Phase 10: Intelligence Web ---
 		project_health_check: 'You are a purchase intelligence advisor monitoring project health. Analyze project state and identify 2-3 actionable nudges: stalled progress, unresolved risks, missing steps, or opportunities. Return ONLY valid JSON.',
@@ -826,6 +854,89 @@ Provide specific, actionable intelligence covering:
 
 Return JSON:
 {"trends":[{"trend":"specific trend","impact":"how it affects this buyer","timeframe":"when relevant"}],"insights":[{"type":"opportunity|risk|trend","title":"short title","detail":"2-sentence detail","actionable":"what the buyer should do"}],"negotiationLeverage":["timing or competitive dynamics that help the buyer"],"categoryOutlook":"2-sentence forward-looking assessment"}`;
+
+		// --- SCOPE Engines ---
+		case 'scope_cause_analyze':
+			return `Analyze this business trigger and identify 3-5 likely root causes.
+
+Trigger: ${str(ctx.trigger)}
+Urgency: ${str(ctx.urgency)}/5
+Who's affected: ${str(ctx.impactedUsers)}
+Business impact: ${str(ctx.businessImpact)}
+
+Return JSON:
+{"causes":[{"hypothesis":"specific root cause hypothesis","likelihood":"high|medium|low","rationale":"why this is likely","questionsToValidate":["question to confirm or rule out this cause"]}]}
+
+Be specific to this situation. Don't suggest generic causes.`;
+
+		case 'scope_options_recommend':
+			return `Given this business problem diagnosis, recommend approaches (buy, build, fix, partner, or do nothing) with detailed analysis.
+
+Trigger: ${str(ctx.trigger)}
+Root cause: ${str(ctx.hypothesis)}
+Urgency: ${str(ctx.urgency)}/5
+Business impact: ${str(ctx.businessImpact)}
+Who's affected: ${str(ctx.impactedUsers)}
+
+Return JSON:
+{"options":[{"approach":"buy|build|fix|partner|do_nothing","label":"human-readable label","description":"2-3 sentence description","pros":["pro1","pro2","pro3"],"cons":["con1","con2"],"estimatedTimeline":"realistic timeline","estimatedCost":"cost range","riskLevel":"high|medium|low","recommendedIf":"when this option makes sense"}],"recommendedApproach":"the approach you'd recommend first","reasoning":"2-sentence explanation of recommendation"}
+
+Provide all 5 options. Be honest about trade-offs. Consider the buyer's company context.`;
+
+		case 'scope_readiness_assess':
+			return `Assess organizational readiness for this technology decision.
+
+Trigger: ${str(ctx.trigger)}
+Root cause: ${str(ctx.hypothesis)}
+Selected approach: ${str(ctx.selectedApproach)}
+Budget estimate: ${str(ctx.budgetEstimate)}
+Timeline: ${str(ctx.timeline)}
+Stakeholders: ${str(ctx.stakeholders)}
+Risk assessment: ${str(ctx.riskAssessment)}
+Business impact: ${str(ctx.businessImpact)}
+
+Return JSON:
+{"readinessScore":0-100,"gaps":[{"area":"budget|timeline|stakeholders|risk|technical|organizational","severity":"high|medium|low","description":"specific gap description","recommendation":"how to address it"}],"goNoGo":"go|conditional|no-go","blockers":["critical blocker if any"],"strengths":["readiness strength"]}
+
+Be honest. A low readiness score is valuable information.`;
+
+		case 'scope_brief_generate':
+			return `Generate an executive decision brief for leadership approval.
+
+Problem signal: ${str(ctx.trigger)}
+Root cause: ${str(ctx.hypothesis)}
+Selected approach: ${str(ctx.selectedApproach)}
+Budget estimate: ${str(ctx.budgetEstimate)}
+Timeline: ${str(ctx.timeline)}
+Stakeholders: ${str(ctx.stakeholders)}
+Risk assessment: ${str(ctx.riskAssessment)}
+Urgency: ${str(ctx.urgency)}/5
+Business impact: ${str(ctx.businessImpact)}
+Readiness score: ${str(ctx.readinessScore)}/100
+${ctx.teamPollSummary ? `Team poll results: ${str(ctx.teamPollSummary)}` : ''}
+
+Return JSON:
+{"title":"brief title","executiveSummary":"3-4 sentence executive summary","sections":[{"heading":"section title","body":"section content","keyPoints":["key point"]}],"recommendation":"clear 2-sentence recommendation","costOfInaction":"what happens if we do nothing","nextSteps":["immediate next step"]}
+
+Write for a VP or C-suite audience. Be concise, specific, and decisive.`;
+
+		case 'scope_import':
+			return `Map this SCOPE diagnostic data into SOLVE evaluation fields.
+
+Signal trigger: ${str(ctx.trigger)}
+Urgency: ${str(ctx.urgency)}
+Business impact: ${str(ctx.businessImpact)}
+Who's affected: ${str(ctx.impactedUsers)}
+Root cause: ${str(ctx.hypothesis)}
+Budget estimate: ${str(ctx.budgetEstimate)}
+Timeline: ${str(ctx.timeline)}
+Stakeholders: ${str(ctx.stakeholders)}
+Risk assessment: ${str(ctx.riskAssessment)}
+
+Return JSON:
+{"triggers":[{"label":"trigger label","selected":true,"detail":"detail from SCOPE signal"}],"stakeholders":[{"name":"stakeholder name or role","role":"role","influence":"decision_maker|influencer|user|approver"}],"constraints":[{"type":"budget|timeline|technical|compliance|integration|other","description":"constraint text","hardLimit":true|false}],"budgetRange":"mapped budget range","timeline":"mapped timeline","urgency":"low|medium|high|critical","problemDescription":"synthesized problem statement from SCOPE data"}
+
+Map as much SCOPE data as possible into SOLVE-compatible fields.`;
 
 		// --- Phase 10 Engines ---
 		case 'project_health_check':

@@ -79,6 +79,7 @@
 		approvalWorkflow: '',
 		painPoints: '',
 		successMetrics: '',
+		sponsorApprovalThreshold: '',
 	});
 
 	let aiDescription = $state('');
@@ -116,6 +117,7 @@
 		typicalTimeline:   { weight: 4,  label: 'Typical Timeline', section: 'process' },
 		stakeholders:      { weight: 5,  label: 'Stakeholders', section: 'process' },
 		approvalWorkflow:  { weight: 4,  label: 'Approval Workflow', section: 'process' },
+		sponsorApprovalThreshold: { weight: 3, label: 'Approval Threshold', section: 'process' },
 		painPoints:        { weight: 5,  label: 'Pain Points', section: 'intelligence' },
 		successMetrics:    { weight: 4,  label: 'Success Metrics', section: 'intelligence' },
 		pastVendorLessons: { weight: 4,  label: 'Past Lessons', section: 'intelligence' },
@@ -816,6 +818,24 @@
 		</div>
 	</div>
 
+	<div class="multi-section">
+		<div class="multi-header">
+			<label>Leadership Approval Threshold</label>
+		</div>
+		<div class="threshold-input">
+			<span class="threshold-prefix">$</span>
+			<input
+				type="number"
+				bind:value={profile.sponsorApprovalThreshold}
+				oninput={markDirty}
+				placeholder="e.g., 50000"
+				min="0"
+				step="1000"
+			/>
+		</div>
+		<p class="field-hint">SCOPE decisions above this amount require executive sign-off before proceeding. Leave blank to skip approval gate.</p>
+	</div>
+
 	<!-- SECTION: Purchase Intelligence -->
 	<div class="section-divider">
 		<span class="section-label">Purchase Intelligence</span>
@@ -1274,6 +1294,25 @@
 		font-size: 0.7rem;
 		color: var(--text-muted, #64748b);
 		font-style: italic;
+	}
+	.threshold-input {
+		display: flex;
+		align-items: center;
+		gap: 0;
+	}
+	.threshold-prefix {
+		padding: 0.6rem 0.65rem;
+		background: rgba(255, 255, 255, 0.06);
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		border-right: none;
+		border-radius: 8px 0 0 8px;
+		color: var(--text-muted, #94a3b8);
+		font-size: 0.85rem;
+		font-weight: 500;
+	}
+	.threshold-input input {
+		border-radius: 0 8px 8px 0;
+		flex: 1;
 	}
 	.profile-footer {
 		margin-top: 1.5rem;

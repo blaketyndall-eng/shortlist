@@ -4,6 +4,7 @@
 	import Button from '$components/ui/Button.svelte';
 	import Card from '$components/ui/Card.svelte';
 
+	let showForm = $state(false);
 	let name = $state('');
 	let description = $state('');
 	let category = $state('');
@@ -77,9 +78,25 @@
 
 <div class="new-project">
 	<header class="page-header">
-		<h1>Create a new project</h1>
-		<p>Start evaluating vendors for your purchase decision.</p>
+		<h1>Start something new</h1>
+		<p>Choose how you'd like to begin your purchase decision journey.</p>
 	</header>
+
+	{#if !showForm}
+		<div class="choice-cards">
+			<a href="/scope/new" class="choice-card recommended">
+				<span class="choice-badge">Recommended</span>
+				<h3>Start with SCOPE</h3>
+				<p>Uncertain if you should buy? Diagnose the problem first. SCOPE walks you through Signal → Cause → Options → Prepare → Endorse before committing to a vendor evaluation.</p>
+				<span class="choice-action">Begin diagnostic →</span>
+			</a>
+			<button class="choice-card" onclick={() => (showForm = true)}>
+				<h3>Jump to SOLVE</h3>
+				<p>Already decided to buy? Go straight to defining requirements and evaluating vendors with the full SOLVE workflow.</p>
+				<span class="choice-action">Create project →</span>
+			</button>
+		</div>
+	{:else}
 
 	<Card>
 		{#if error}
@@ -134,6 +151,7 @@
 			</div>
 		</form>
 	</Card>
+	{/if}
 </div>
 
 <style>
@@ -241,5 +259,74 @@
 		gap: var(--space-3);
 		padding-top: var(--space-4);
 		border-top: 1px solid var(--neutral-100);
+	}
+
+	.choice-cards {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: var(--space-4);
+		margin-bottom: var(--space-6);
+	}
+
+	.choice-card {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		padding: var(--space-6);
+		background: var(--color-bg-secondary);
+		border: 2px solid var(--neutral-200);
+		border-radius: var(--radius-lg);
+		text-decoration: none;
+		color: inherit;
+		cursor: pointer;
+		transition: all var(--transition-fast);
+		text-align: left;
+		font-family: inherit;
+	}
+
+	.choice-card:hover {
+		border-color: var(--primary-400);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+		text-decoration: none;
+	}
+
+	.choice-card.recommended {
+		border-color: var(--primary-500);
+	}
+
+	.choice-badge {
+		position: absolute;
+		top: var(--space-3);
+		right: var(--space-3);
+		background: var(--primary-500);
+		color: white;
+		font-size: 0.6875rem;
+		font-weight: 600;
+		padding: 2px 8px;
+		border-radius: 999px;
+	}
+
+	.choice-card h3 {
+		font-size: 1.125rem;
+		font-weight: 700;
+		margin-bottom: var(--space-2);
+	}
+
+	.choice-card p {
+		font-size: 0.875rem;
+		color: var(--neutral-500);
+		line-height: 1.5;
+		flex: 1;
+		margin-bottom: var(--space-3);
+	}
+
+	.choice-action {
+		font-size: 0.875rem;
+		font-weight: 600;
+		color: var(--primary-600);
+	}
+
+	@media (max-width: 640px) {
+		.choice-cards { grid-template-columns: 1fr; }
 	}
 </style>
