@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
 	import VendorCompare from '$lib/components/vendor/VendorCompare.svelte';
 	import Button from '$components/ui/Button.svelte';
 	import { createSupabaseBrowserClient } from '$lib/supabase';
@@ -12,6 +11,7 @@
 	let searchQuery = $state('');
 	let searchResults = $state<any[]>([]);
 	let searching = $state(false);
+	let searchError = $state('');
 
 	function removeVendor(id: string) {
 		vendors = vendors.filter((v: any) => v.id !== id);
@@ -28,18 +28,31 @@
 	async function searchVendors() {
 		if (!searchQuery.trim()) return;
 		searching = true;
+		searchError = '';
 		try {
-			const q = searchQuery.trim().toLowerCase();
-			const { data: results } = await supabase
+			// Sanitize input for PostgREST .or() filter
+			const q = searchQuery.trim().replace(/['"\\%_(),.]/g, '');
+			if (!q) { searching = false; return; }
+
+			const { data: results, error: err } = await supabase
 				.from('vendor_library')
 				.select('id, name, slug, tagline, category_id, tier')
 				.or(`name.ilike.%${q}%,tagline.ilike.%${q}%,category_id.ilike.%${q}%`)
 				.limit(10);
 
-			searchResults = (results ?? []).filter(
-				(r: any) => !vendors.some((v: any) => v.id === r.id)
-			);
-		} catch { /* ignore */ }
+			if (err) {
+				searchError = 'Search failed. Try a different query.';
+			} else {
+				searchResults = (results ?? []).filter(
+					(r: any) => !vendors.some((v: any) => v.id === r.id)
+				);
+				if (searchResults.length === 0) {
+					searchError = 'No vendors found. Try a different search term.';
+				}
+			}
+		} catch {
+			searchError = 'Search failed. Please try again.';
+		}
 		searching = false;
 	}
 
@@ -101,6 +114,10 @@
 						</button>
 					{/each}
 				</div>
+			{/if}
+
+			{#if searchError}
+				<p class="search-error">{searchError}</p>
 			{/if}
 		</div>
 	{/if}
@@ -212,4 +229,10 @@
 		background: none; border: none; cursor: pointer;
 	}
 	.remove-btn:hover { text-decoration: underline; }
+
+	.search-error {
+		font-size: 0.8125rem;
+		color: var(--neutral-400);
+		margin-top: var(--space-2);
+	}
 </style>
