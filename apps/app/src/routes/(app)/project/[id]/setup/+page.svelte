@@ -15,6 +15,8 @@
 	let librarySearch = $state('');
 	let libraryResults = $state<any[]>([]);
 	let searching = $state(false);
+	let searchError = $state('');
+	let searchAttempted = $state(false);
 
 	function addVendor() {
 		if (!newVendorName.trim()) return;
@@ -40,15 +42,24 @@
 	}
 
 	async function searchLibrary() {
-		if (librarySearch.trim().length < 2) { libraryResults = []; return; }
+		if (librarySearch.trim().length < 2) { libraryResults = []; searchAttempted = false; searchError = ''; return; }
 		searching = true;
+		searchError = '';
 		try {
 			const res = await fetch(`/api/vendors?q=${encodeURIComponent(librarySearch.trim())}&limit=5`);
 			if (res.ok) {
 				const data = await res.json();
 				libraryResults = data.vendors ?? [];
+			} else {
+				searchError = 'Search unavailable. Try adding vendors manually below.';
+				libraryResults = [];
 			}
-		} catch { /* ignore */ }
+		} catch (err) {
+			console.error('Vendor search failed:', err);
+			searchError = 'Unable to search vendors. Please try again or add manually.';
+			libraryResults = [];
+		}
+		searchAttempted = true;
 		searching = false;
 	}
 
@@ -106,7 +117,7 @@
 
 	<Card>
 		<h3 class="library-title">Search vendor library</h3>
-		<p class="library-hint">Find vendors from our library of 86+ verified profiles with AI intelligence.</p>
+		<p class="library-hint">Find vendors from our library of 100+ verified profiles with AI intelligence.</p>
 		<div class="library-search">
 			<input
 				type="text"
@@ -118,7 +129,9 @@
 				<span class="search-spinner">Searching...</span>
 			{/if}
 		</div>
-		{#if libraryResults.length > 0}
+		{#if searchError}
+			<p class="search-error">{searchError}</p>
+		{:else if libraryResults.length > 0}
 			<div class="library-results">
 				{#each libraryResults as lib}
 					<button class="lib-result" onclick={() => addFromLibrary(lib)}>
@@ -132,6 +145,8 @@
 					</button>
 				{/each}
 			</div>
+		{:else if searchAttempted && !searching && librarySearch.trim().length >= 2}
+			<p class="search-empty">No vendors found for "{librarySearch}". Try different keywords or add manually below.</p>
 		{/if}
 	</Card>
 
@@ -309,6 +324,19 @@
 	.lib-name { font-weight: 500; display: block; }
 	.lib-tagline { font-size: 0.75rem; color: var(--neutral-400); display: block; }
 	.lib-add { color: var(--primary-600); font-weight: 600; font-size: 0.8125rem; flex-shrink: 0; }
+	.search-error {
+		font-size: 0.8125rem;
+		color: #dc2626;
+		padding: var(--space-2) 0;
+		margin: 0;
+	}
+	.search-empty {
+		font-size: 0.8125rem;
+		color: var(--neutral-400);
+		padding: var(--space-2) 0;
+		margin: 0;
+		font-style: italic;
+	}
 	.divider-or {
 		display: flex; align-items: center; gap: var(--space-3);
 		margin: var(--space-4) 0; color: var(--neutral-400); font-size: 0.8125rem;

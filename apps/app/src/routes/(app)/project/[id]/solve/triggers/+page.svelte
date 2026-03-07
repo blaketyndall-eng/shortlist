@@ -164,7 +164,7 @@
 </script>
 
 <svelte:head>
-	<title>Diagnose — {data.project.name} — Shortlist</title>
+	<title>Scope — {data.project.name} — Shortlist</title>
 </svelte:head>
 
 <div class="step-triggers">

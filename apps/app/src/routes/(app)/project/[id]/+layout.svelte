@@ -19,7 +19,7 @@
 			phase: 'define' as const,
 			label: 'Scope & Observe',
 			steps: [
-				{ key: 'triggers', label: 'Diagnose', href: `/project/${projectId}/solve/triggers` },
+				{ key: 'triggers', label: 'Scope', href: `/project/${projectId}/solve/triggers` },
 				{ key: 'category', label: 'Category', href: `/project/${projectId}/solve/category` },
 				{ key: 'vendor_discovery', label: 'Discover', href: `/project/${projectId}/solve/discovery` },
 				{ key: 'constraints', label: 'Constraints', href: `/project/${projectId}/solve/constraints` },

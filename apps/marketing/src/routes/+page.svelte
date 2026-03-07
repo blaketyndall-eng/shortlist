@@ -1,6 +1,6 @@
 <svelte:head>
 	<title>Shortlist — Purchase Intelligence for Modern Teams</title>
-	<meta name="description" content="Turn every purchase into a strategic advantage. Shortlist uses 25 AI engines to help teams discover, evaluate, and select the right vendors — 10x faster." />
+	<meta name="description" content="Turn every purchase into a strategic advantage. Shortlist uses 25 AI engines to help teams discover, evaluate, and select the right vendors — 5–10x faster." />
 </svelte:head>
 
 <!-- ═══════ HERO ═══════ -->
@@ -26,7 +26,7 @@
 				<span class="proof-logo-pill">Apex Digital</span>
 				<span class="proof-logo-pill">Vantage Systems</span>
 			</div>
-			<p class="proof-metric">Teams make purchase decisions <strong>10x faster</strong> with Shortlist</p>
+			<p class="proof-metric">Teams make purchase decisions <strong>5–10x faster</strong> with Shortlist</p>
 		</div>
 	</div>
 
