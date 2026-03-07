@@ -21,13 +21,14 @@
 					<span class="price">$0</span>
 					<span class="period">/month</span>
 				</div>
-				<p class="plan-desc">For individuals making purchase decisions.</p>
+				<p class="plan-desc">For individuals exploring purchase decisions.</p>
 			</div>
 			<ul class="plan-features">
-				<li>3 active projects</li>
-				<li>5 vendors per project</li>
-				<li>50 AI credits/month</li>
+				<li>5 active projects</li>
+				<li>10 vendors per project</li>
+				<li>100 AI credits/month</li>
 				<li>Basic scoring & comparison</li>
+				<li>SOLVE workflow (all 5 steps)</li>
 				<li>Export to PDF</li>
 			</ul>
 			<a href="https://app.tryshortlist.app/auth/signup" class="plan-cta">Get Started Free</a>
@@ -39,7 +40,7 @@
 				<h2>Pro</h2>
 				<div class="plan-price">
 					<span class="price">$49</span>
-					<span class="period">/month</span>
+					<span class="period">/user/month</span>
 				</div>
 				<p class="plan-desc">For teams running purchase evaluations.</p>
 			</div>
@@ -85,7 +86,7 @@
 		<div class="faq-grid">
 			<div class="faq-item">
 				<h3>What are AI credits?</h3>
-				<p>Each AI engine call uses credits based on complexity. Quick analysis uses 1 credit, standard uses 5, and deep analysis uses 20. Credits reset monthly.</p>
+				<p>AI credits power all 25 engines. A quick vendor lookup costs 1 credit; a full fit analysis costs 5; deep executive briefings cost 20. Most teams use 200–300 credits/month. Credits reset monthly.</p>
 			</div>
 			<div class="faq-item">
 				<h3>Can I change plans anytime?</h3>
@@ -98,6 +99,16 @@
 			<div class="faq-item">
 				<h3>What happens to my data if I downgrade?</h3>
 				<p>Your data is never deleted. If you exceed Starter limits, existing projects become read-only until you upgrade or archive projects.</p>
+			</div>
+		</div>
+		<div class="faq-grid" style="margin-top: 32px">
+			<div class="faq-item">
+				<h3>Can I use the SOLVE workflow on Starter?</h3>
+				<p>Yes — all 5 SOLVE steps are available on every plan. Starter limits the number of active projects and vendors, but the workflow itself is fully functional.</p>
+			</div>
+			<div class="faq-item">
+				<h3>How does per-user pricing work on Pro?</h3>
+				<p>Each team member who needs access to projects, voting, and AI engines is one seat. Stakeholders who only view executive briefings don't count as seats.</p>
 			</div>
 		</div>
 	</section>

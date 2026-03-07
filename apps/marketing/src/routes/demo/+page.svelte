@@ -2,8 +2,9 @@
 	let currentStep = $state(0);
 	let animating = $state(false);
 	let showInsight = $state(false);
-	let pollVoted = $state(false);
+	let pollVoted = $state(-1);
 	let briefingOpen = $state(false);
+	let briefingApproved = $state(false);
 
 	const STEPS = [
 		{ id: 'scope', letter: 'S', label: 'Scope', color: '#00cc96' },
@@ -38,12 +39,12 @@
 	];
 
 	const CRITERIA = [
-		{ name: 'Ease of Use', weight: 25 },
-		{ name: 'Integration Depth', weight: 20 },
-		{ name: 'Scalability', weight: 20 },
-		{ name: 'Total Cost of Ownership', weight: 15 },
-		{ name: 'Analytics & Reporting', weight: 10 },
-		{ name: 'Support & SLA', weight: 10 },
+		{ name: 'Ease of Use', weight: 25, scores: [82, 92, 74] },
+		{ name: 'Integration Depth', weight: 20, scores: [95, 84, 88] },
+		{ name: 'Scalability', weight: 20, scores: [96, 78, 86] },
+		{ name: 'Total Cost of Ownership', weight: 15, scores: [68, 85, 72] },
+		{ name: 'Analytics & Reporting', weight: 10, scores: [90, 80, 84] },
+		{ name: 'Support & SLA', weight: 10, scores: [88, 86, 78] },
 	];
 
 	function nextStep() {
@@ -53,8 +54,8 @@
 				currentStep++;
 				animating = false;
 				showInsight = false;
-				pollVoted = false;
-				briefingOpen = false;
+				pollVoted = -1;
+				briefingOpen = false; briefingApproved = false;
 			}, 300);
 		}
 	}
@@ -66,8 +67,8 @@
 				currentStep--;
 				animating = false;
 				showInsight = false;
-				pollVoted = false;
-				briefingOpen = false;
+				pollVoted = -1;
+				briefingOpen = false; briefingApproved = false;
 			}, 300);
 		}
 	}
@@ -76,8 +77,8 @@
 		showInsight = true;
 	}
 
-	function votePoll() {
-		pollVoted = true;
+	function votePoll(idx: number) {
+		pollVoted = idx;
 	}
 
 	function toggleBriefing() {
@@ -98,7 +99,7 @@
 			Interactive Demo
 		</div>
 		<h1>See Shortlist in <span class="highlight">action</span></h1>
-		<p class="hero-sub">Walk through a real CRM evaluation at <strong>{ORG.name}</strong> — from defining requirements to executive decision. Every AI engine, alignment tool, and insight is live.</p>
+		<p class="hero-sub">Follow <strong>{ORG.teamLead}</strong> ({ORG.teamRole}) as her team evaluates CRM platforms for <strong>{ORG.name}</strong>. This demo uses the same SOLVE workflow, AI engines, and alignment tools you'll have access to — with realistic data at every step.</p>
 	</header>
 
 	<!-- Org Context Bar -->
@@ -128,7 +129,7 @@
 				class="progress-step"
 				class:active={i === currentStep}
 				class:completed={i < currentStep}
-				onclick={() => { if (!animating) { currentStep = i; showInsight = false; pollVoted = false; briefingOpen = false; } }}
+				onclick={() => { if (!animating) { currentStep = i; showInsight = false; pollVoted = -1; briefingOpen = false; briefingApproved = false; } }}
 				style="--step-color: {step.color}"
 			>
 				<span class="step-dot" style="background: {i <= currentStep ? step.color : 'rgba(255,255,255,0.08)'}">
@@ -198,7 +199,7 @@
 					</div>
 					<div class="scope-ai-card">
 						<div class="ai-card-header">
-							<span class="ai-icon">&#9671;</span>
+							<span class="ai-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1l2.5 5L7 13 4.5 6z" fill="#00cc96" opacity="0.7"/><path d="M7 1l2.5 5L7 13 4.5 6z" stroke="#00cc96" stroke-width="1" stroke-linejoin="round"/></svg></span>
 							<span>AI Scope Analysis</span>
 						</div>
 						<div class="ai-card-body">
@@ -263,13 +264,13 @@
 						</div>
 						{#if !showInsight}
 							<button class="ai-trigger-btn" onclick={triggerInsight}>
-								<span class="ai-icon">&#9671;</span>
+								<span class="ai-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1l2.5 5L7 13 4.5 6z" fill="#00cc96" opacity="0.7"/><path d="M7 1l2.5 5L7 13 4.5 6z" stroke="#00cc96" stroke-width="1" stroke-linejoin="round"/></svg></span>
 								Generate AI Insight
 							</button>
 						{:else}
 							<div class="ai-insight-box fade-in">
 								<div class="ai-insight-header">
-									<span class="ai-icon">&#9671;</span>
+									<span class="ai-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1l2.5 5L7 13 4.5 6z" fill="#00cc96" opacity="0.7"/><path d="M7 1l2.5 5L7 13 4.5 6z" stroke="#00cc96" stroke-width="1" stroke-linejoin="round"/></svg></span>
 									<span>AI Vendor Intelligence</span>
 								</div>
 								<p>Salesforce leads on fit score (94) due to deep customization and AppExchange — but watch for <strong>TCO 40% higher</strong> than HubSpot when factoring implementation and admin costs. HubSpot's marketing-native integration could save $18K/yr on a separate MAP tool.</p>
@@ -316,16 +317,16 @@
 								<div class="comp-row">
 									<span class="comp-criteria">{c.name}</span>
 									<div class="comp-cell">
-										<div class="comp-bar" style="width: {85 + Math.sin(ci) * 12}%; background: #00cc96"></div>
-										<span class="comp-score">{Math.round(85 + Math.sin(ci) * 12)}</span>
+										<div class="comp-bar" style="width: {c.scores[0]}%; background: #00cc96"></div>
+										<span class="comp-score">{c.scores[0]}</span>
 									</div>
 									<div class="comp-cell">
-										<div class="comp-bar" style="width: {82 + Math.cos(ci) * 10}%; background: #4a96f8"></div>
-										<span class="comp-score">{Math.round(82 + Math.cos(ci) * 10)}</span>
+										<div class="comp-bar" style="width: {c.scores[1]}%; background: #4a96f8"></div>
+										<span class="comp-score">{c.scores[1]}</span>
 									</div>
 									<div class="comp-cell">
-										<div class="comp-bar" style="width: {74 + Math.sin(ci + 1) * 11}%; background: #a06cf0"></div>
-										<span class="comp-score">{Math.round(74 + Math.sin(ci + 1) * 11)}</span>
+										<div class="comp-bar" style="width: {c.scores[2]}%; background: #a06cf0"></div>
+										<span class="comp-score">{c.scores[2]}</span>
 									</div>
 								</div>
 							{/each}
@@ -382,23 +383,19 @@
 							</div>
 							<h4>"Which CRM best fits our growth trajectory?"</h4>
 							<div class="poll-options">
-								<button class="poll-option" class:selected={pollVoted} onclick={votePoll}>
-									<span class="po-radio" class:filled={pollVoted}></span>
-									<span class="po-label">Salesforce — strongest long-term scalability</span>
-									{#if pollVoted}<span class="po-pct">52%</span>{/if}
-								</button>
-								<button class="poll-option" onclick={votePoll}>
-									<span class="po-radio"></span>
-									<span class="po-label">HubSpot — best UX and time-to-value</span>
-									{#if pollVoted}<span class="po-pct">35%</span>{/if}
-								</button>
-								<button class="poll-option" onclick={votePoll}>
-									<span class="po-radio"></span>
-									<span class="po-label">Dynamics 365 — Microsoft ecosystem synergy</span>
-									{#if pollVoted}<span class="po-pct">13%</span>{/if}
-								</button>
+								{#each [
+									{ label: 'Salesforce — strongest long-term scalability', pct: 52 },
+									{ label: 'HubSpot — best UX and time-to-value', pct: 35 },
+									{ label: 'Dynamics 365 — Microsoft ecosystem synergy', pct: 13 },
+								] as opt, oi}
+									<button class="poll-option" class:selected={pollVoted === oi} onclick={() => votePoll(oi)}>
+										<span class="po-radio" class:filled={pollVoted === oi}></span>
+										<span class="po-label">{opt.label}</span>
+										{#if pollVoted >= 0}<span class="po-pct">{opt.pct}%</span>{/if}
+									</button>
+								{/each}
 							</div>
-							{#if pollVoted}
+							{#if pollVoted >= 0}
 								<div class="poll-result fade-in">
 									<span class="poll-voters">4 of 4 stakeholders responded</span>
 								</div>
@@ -445,7 +442,7 @@
 						</div>
 						<div class="exec-recommendation">
 							<div class="rec-header">
-								<span class="ai-icon">&#9671;</span>
+								<span class="ai-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1l2.5 5L7 13 4.5 6z" fill="#00cc96" opacity="0.7"/><path d="M7 1l2.5 5L7 13 4.5 6z" stroke="#00cc96" stroke-width="1" stroke-linejoin="round"/></svg></span>
 								<span>AI Recommendation</span>
 							</div>
 							<p><strong>Salesforce Sales Cloud</strong> is the recommended vendor based on weighted scoring (94/100), team alignment (87%), and long-term scalability. HubSpot remains a strong alternative with 22% lower TCO if budget becomes the primary constraint.</p>
@@ -475,7 +472,11 @@
 									</div>
 								</div>
 								<div class="bc-approve-row">
-									<button class="btn-approve">Approve & Publish</button>
+									{#if briefingApproved}
+										<span class="approve-success fade-in">✓ Briefing Published</span>
+									{:else}
+										<button class="btn-approve" onclick={() => briefingApproved = true}>Approve & Publish</button>
+									{/if}
 								</div>
 							</div>
 						{/if}
@@ -813,6 +814,7 @@
 		transition: opacity 0.15s;
 	}
 	.btn-approve:hover { opacity: 0.9; }
+	.approve-success { font-size: 0.8125rem; font-weight: 700; color: #00cc96; padding: 10px 24px; background: rgba(0,204,150,0.08); border: 1px solid rgba(0,204,150,0.2); border-radius: 8px; }
 
 	/* ═══════ DEMO NAV ═══════ */
 	.demo-nav {

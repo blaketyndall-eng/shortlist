@@ -17,13 +17,14 @@
 		<div class="feature-text">
 			<div class="f-tag teal">Define Phase</div>
 			<h2>SOLVE Discovery Workflow</h2>
-			<p>Before you evaluate, get crystal-clear on what you need. The 7-step SOLVE workflow guides your team from initial purchase trigger through vendor discovery, constraints mapping, stakeholder alignment, and problem brief generation.</p>
+			<p>Before you evaluate, get crystal-clear on what you need. The 5-step SOLVE workflow guides your team from initial purchase trigger through vendor discovery, weighted comparison, team validation, and confident execution.</p>
 			<ul class="feature-list">
 				<li>AI classifies your purchase category automatically</li>
 				<li>Generates knockout criteria and challenge questions</li>
 				<li>Team alignment polls embedded at every stage</li>
 				<li>Executive briefings auto-generated at milestones</li>
 			</ul>
+			<a href="/demo" class="inline-demo-link">Walk through the SOLVE workflow →</a>
 		</div>
 		<div class="feature-visual">
 			<div class="solve-visual">
@@ -92,7 +93,7 @@
 <section class="feature-row">
 	<div class="feature-inner">
 		<div class="feature-text">
-			<div class="f-tag teal">New: Alignment Engine</div>
+			<div class="f-tag teal">Alignment Engine</div>
 			<h2>AI Team Alignment</h2>
 			<p>Know whether your team is aligned before you commit. AI-powered polls with role-based scoring detect misalignment across dimensions — and recommend how to close the gaps.</p>
 			<ul class="feature-list">
@@ -102,6 +103,7 @@
 				<li>AI recommendations to resolve alignment gaps</li>
 				<li>Embedded in SOLVE stages + standalone dashboard</li>
 			</ul>
+			<a href="/demo" class="inline-demo-link">See alignment scoring in action →</a>
 		</div>
 		<div class="feature-visual">
 			<div class="alignment-visual">
@@ -131,7 +133,7 @@
 <section class="feature-row alt">
 	<div class="feature-inner reverse">
 		<div class="feature-text">
-			<div class="f-tag">New: Executive Engine</div>
+			<div class="f-tag">Executive Engine</div>
 			<h2>Executive Dashboard & Briefings</h2>
 			<p>Leadership gets real-time visibility without attending meetings. AI auto-generates milestone briefings, risk alerts surface automatically, and the dashboard shows health across every active purchase.</p>
 			<ul class="feature-list">
@@ -141,6 +143,7 @@
 				<li>Briefing approval workflow for leadership sign-off</li>
 				<li>Role-gated: only leadership and admin roles see it</li>
 			</ul>
+			<a href="/demo" class="inline-demo-link">Preview executive briefings →</a>
 		</div>
 		<div class="feature-visual">
 			<div class="exec-visual">
@@ -253,11 +256,11 @@
 <!-- ═══════ CTA ═══════ -->
 <section class="final-cta">
 	<div class="section-inner">
-		<h2>Ready to transform your purchase decisions?</h2>
-		<p>Start evaluating vendors with AI-powered purchase intelligence — no credit card required.</p>
+		<h2>See these features in action</h2>
+		<p>Walk through a live CRM evaluation using every feature on this page — or start your own project today.</p>
 		<div class="cta-group">
-			<a href="https://app.tryshortlist.app/auth/signup" class="btn-primary">Get Started Free <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10m0 0L9 4m4 4L9 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
-			<a href="/demo" class="btn-ghost">See Live Demo</a>
+			<a href="/demo" class="btn-primary">Try the Interactive Demo <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10m0 0L9 4m4 4L9 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+			<a href="https://app.tryshortlist.app/auth/signup" class="btn-ghost">Start Free Trial</a>
 		</div>
 	</div>
 </section>
@@ -377,6 +380,8 @@
 	.btn-primary:hover { background: #009e74; transform: translateY(-1px); box-shadow: 0 8px 22px rgba(0,204,150,0.22); text-decoration: none; }
 	.btn-ghost { display: inline-flex; align-items: center; padding: 14px 32px; background: transparent; color: #dde4ef; border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; font-weight: 600; font-size: 1rem; text-decoration: none; transition: all 0.17s; }
 	.btn-ghost:hover { border-color: rgba(255,255,255,0.28); text-decoration: none; }
+	.inline-demo-link { display: inline-block; margin-top: 1rem; font-size: 0.875rem; font-weight: 600; color: #00cc96; text-decoration: none; transition: color 0.15s; }
+	.inline-demo-link:hover { color: #4a96f8; text-decoration: none; }
 	@media (max-width: 768px) {
 		h1 { font-size: 2.25rem; }
 		h2 { font-size: 1.75rem; }

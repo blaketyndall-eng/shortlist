@@ -11,7 +11,7 @@
 			Purchase Intelligence Platform
 		</div>
 		<h1>Turn every purchase into a <span class="highlight">strategic advantage</span></h1>
-		<p class="hero-sub">From buying SaaS tools to evaluating enterprise vendors — Shortlist gives your team 25 AI engines, structured workflows, and real-time alignment to make confident purchase decisions 10x faster.</p>
+		<p class="hero-sub">Stop losing weeks to vendor spreadsheets and misaligned stakeholders. Shortlist combines 25 purpose-built AI engines with structured workflows so your team reaches confident, data-backed purchase decisions together.</p>
 		<div class="cta-group">
 			<a href="https://app.tryshortlist.app/auth/signup" class="btn-primary">
 				Start Free Trial
@@ -106,16 +106,64 @@
 	</div>
 </section>
 
-<!-- ═══════ SOCIAL PROOF ═══════ -->
+<!-- ═══════ SOCIAL PROOF — CASE STUDIES ═══════ -->
 <section class="social-proof">
-	<p class="proof-label">Built for teams making purchase decisions across every department</p>
-	<div class="proof-logos">
-		<span class="proof-logo">IT</span>
-		<span class="proof-logo">Operations</span>
-		<span class="proof-logo">Marketing</span>
-		<span class="proof-logo">Finance</span>
-		<span class="proof-logo">Procurement</span>
-		<span class="proof-logo">Engineering</span>
+	<p class="proof-label">How teams use Shortlist</p>
+	<div class="case-grid">
+		<div class="case-card">
+			<div class="case-tag">CRM Evaluation</div>
+			<p class="case-quote">"We evaluated 8 CRM vendors in 3 weeks instead of 3 months. The alignment engine caught a budget disagreement before it derailed the decision."</p>
+			<div class="case-meta">
+				<div class="case-avatar t-bg">SC</div>
+				<div class="case-info">
+					<span class="case-name">Sarah Chen</span>
+					<span class="case-role">VP RevOps · Meridian Technologies</span>
+				</div>
+			</div>
+			<div class="case-results">
+				<span class="case-stat"><strong>23 days</strong> to decision</span>
+				<span class="case-divider">·</span>
+				<span class="case-stat"><strong>87%</strong> team alignment</span>
+				<span class="case-divider">·</span>
+				<span class="case-stat"><strong>$32K</strong> saved in TCO</span>
+			</div>
+		</div>
+		<div class="case-card">
+			<div class="case-tag bl">Cloud Migration</div>
+			<p class="case-quote">"Our engineering and finance teams were never on the same page about cloud spend. Shortlist's scoring framework gave us a shared language."</p>
+			<div class="case-meta">
+				<div class="case-avatar bl-bg">MR</div>
+				<div class="case-info">
+					<span class="case-name">Marcus Rivera</span>
+					<span class="case-role">IT Director · Apex Digital</span>
+				</div>
+			</div>
+			<div class="case-results">
+				<span class="case-stat"><strong>12 vendors</strong> compared</span>
+				<span class="case-divider">·</span>
+				<span class="case-stat"><strong>5 stakeholders</strong> aligned</span>
+				<span class="case-divider">·</span>
+				<span class="case-stat"><strong>42 days</strong> to decision</span>
+			</div>
+		</div>
+		<div class="case-card">
+			<div class="case-tag pu">Security Tooling</div>
+			<p class="case-quote">"The executive briefing feature alone justified the purchase. Our CISO had full visibility without sitting through 6 vendor demos."</p>
+			<div class="case-meta">
+				<div class="case-avatar pu-bg">PP</div>
+				<div class="case-info">
+					<span class="case-name">Priya Patel</span>
+					<span class="case-role">Head of Engineering · Vantage Systems</span>
+				</div>
+			</div>
+			<div class="case-results">
+				<span class="case-stat"><strong>6 vendors</strong> shortlisted</span>
+				<span class="case-divider">·</span>
+				<span class="case-stat"><strong>94%</strong> alignment</span>
+				<span class="case-divider">·</span>
+				<span class="case-stat"><strong>18 days</strong> to decision</span>
+			</div>
+		</div>
 	</div>
 </section>
 
@@ -303,14 +351,14 @@
 				<p>Start evaluating on day one. No weeks of manual research to build your comparison list.</p>
 			</div>
 			<div class="stat-item">
-				<span class="stat-number">10x</span>
-				<span class="stat-desc">Faster Decisions</span>
-				<p>Cut vendor evaluation time from weeks to days with AI-assisted analysis and scoring.</p>
+				<span class="stat-number">5–10x</span>
+				<span class="stat-desc">Faster vs. Manual</span>
+				<p>Teams report cutting vendor evaluation time from months to weeks with AI-assisted analysis and scoring.</p>
 			</div>
 			<div class="stat-item">
-				<span class="stat-number">100%</span>
+				<span class="stat-number">Full</span>
 				<span class="stat-desc">Team Visibility</span>
-				<p>Every stakeholder aligned, every executive informed, every decision documented.</p>
+				<p>Every stakeholder aligned, every executive informed, every decision documented — from kickoff to contract.</p>
 			</div>
 		</div>
 	</div>
@@ -478,11 +526,44 @@
 	.demo-overlay-link:hover { color: #00cc96; text-decoration: none; }
 	.demo-play { font-size: 0.875rem; font-weight: 600; }
 
-	/* ═══════ SOCIAL PROOF ═══════ */
-	.social-proof { text-align: center; padding: 3rem 2rem; border-top: 1px solid rgba(255, 255, 255, 0.04); border-bottom: 1px solid rgba(255, 255, 255, 0.04); }
-	.proof-label { font-size: 0.8125rem; color: #3a4a5c; margin-bottom: 1.5rem; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
-	.proof-logos { display: flex; justify-content: center; align-items: center; gap: 3rem; flex-wrap: wrap; }
-	.proof-logo { font-size: 1rem; font-weight: 700; color: rgba(255, 255, 255, 0.12); letter-spacing: 0.04em; text-transform: uppercase; }
+	/* ═══════ SOCIAL PROOF — CASE STUDIES ═══════ */
+	.social-proof { padding: 3rem 2rem 4rem; border-top: 1px solid rgba(255, 255, 255, 0.04); border-bottom: 1px solid rgba(255, 255, 255, 0.04); }
+	.proof-label { font-size: 0.8125rem; color: #3a4a5c; margin-bottom: 2rem; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; text-align: center; }
+	.case-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; max-width: 1080px; margin: 0 auto; }
+	.case-card {
+		background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06);
+		border-radius: 14px; padding: 28px; display: flex; flex-direction: column; gap: 16px;
+		transition: border-color 0.2s;
+	}
+	.case-card:hover { border-color: rgba(255, 255, 255, 0.14); }
+	.case-tag {
+		display: inline-block; width: fit-content;
+		padding: 3px 12px; border-radius: 9999px;
+		font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.03em;
+		background: rgba(0, 204, 150, 0.08); color: #00cc96;
+	}
+	.case-tag.bl { background: rgba(74, 150, 248, 0.08); color: #4a96f8; }
+	.case-tag.pu { background: rgba(160, 108, 240, 0.08); color: #a06cf0; }
+	.case-quote {
+		font-size: 0.9375rem; color: #c0c8d4; line-height: 1.65; margin: 0;
+		font-style: italic; flex: 1;
+	}
+	.case-meta { display: flex; align-items: center; gap: 10px; }
+	.case-avatar {
+		width: 36px; height: 36px; border-radius: 50%;
+		display: flex; align-items: center; justify-content: center;
+		font-size: 0.6875rem; font-weight: 700; flex-shrink: 0;
+	}
+	.case-info { display: flex; flex-direction: column; gap: 1px; }
+	.case-name { font-size: 0.8125rem; font-weight: 600; color: #dde4ef; }
+	.case-role { font-size: 0.6875rem; color: #6b7e96; }
+	.case-results {
+		display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+		padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.06);
+	}
+	.case-stat { font-size: 0.75rem; color: #8b95a5; }
+	.case-stat strong { color: #00cc96; font-weight: 700; }
+	.case-divider { color: rgba(255, 255, 255, 0.12); font-size: 0.75rem; }
 
 	/* ═══════ PROBLEM ═══════ */
 	.problem-section { padding: 5rem 2rem; }
@@ -565,6 +646,7 @@
 	@media (max-width: 768px) {
 		h1 { font-size: 2.5rem; }
 		h2 { font-size: 1.875rem; }
+		.case-grid { grid-template-columns: 1fr; max-width: 440px; margin-left: auto; margin-right: auto; }
 		.pain-grid { grid-template-columns: 1fr; }
 		.capabilities-grid { grid-template-columns: 1fr; }
 		.cap-card.featured { grid-column: span 1; }

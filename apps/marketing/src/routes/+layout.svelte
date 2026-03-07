@@ -1,5 +1,6 @@
 <script lang="ts">
 	let { children } = $props();
+	let mobileOpen = $state(false);
 </script>
 
 <div class="marketing-layout">
@@ -7,12 +8,19 @@
 		<a href="/" class="nav-logo">
 			<span class="logo-text">Short<em>list</em></span>
 		</a>
-		<div class="nav-links">
-			<a href="/features">Features</a>
-			<a href="/demo">Demo</a>
-			<a href="/pricing">Pricing</a>
-			<a href="https://app.tryshortlist.app/auth/login" class="nav-login">Log in</a>
-			<a href="https://app.tryshortlist.app/auth/signup" class="nav-cta">Get Started</a>
+		<button class="mobile-toggle" onclick={() => mobileOpen = !mobileOpen} aria-label="Toggle menu">
+			{#if mobileOpen}
+				<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 4l12 12M16 4L4 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+			{:else}
+				<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+			{/if}
+		</button>
+		<div class="nav-links" class:mobile-open={mobileOpen}>
+			<a href="/features" onclick={() => mobileOpen = false}>Features</a>
+			<a href="/demo" onclick={() => mobileOpen = false}>Demo</a>
+			<a href="/pricing" onclick={() => mobileOpen = false}>Pricing</a>
+			<a href="https://app.tryshortlist.app/auth/login" class="nav-login" onclick={() => mobileOpen = false}>Log in</a>
+			<a href="https://app.tryshortlist.app/auth/signup" class="nav-cta" onclick={() => mobileOpen = false}>Get Started</a>
 		</div>
 	</nav>
 
@@ -123,6 +131,11 @@
 
 	.nav-cta:hover { opacity: 0.9; }
 
+	.mobile-toggle {
+		display: none; background: none; border: none; color: #8b95a5;
+		cursor: pointer; padding: 4px;
+	}
+
 	.site-footer {
 		margin-top: auto;
 		border-top: 1px solid rgba(255, 255, 255, 0.06);
@@ -171,7 +184,17 @@
 
 	@media (max-width: 640px) {
 		.top-nav { padding: 12px 16px; }
-		.nav-links { gap: 12px; }
-		.nav-links a { font-size: 0.8125rem; }
+		.mobile-toggle { display: block; }
+		.nav-links {
+			display: none; flex-direction: column; gap: 0;
+			position: absolute; top: 100%; left: 0; right: 0;
+			background: rgba(11, 16, 23, 0.97); backdrop-filter: blur(14px);
+			border-bottom: 1px solid rgba(255,255,255,0.06);
+			padding: 8px 0;
+		}
+		.nav-links.mobile-open { display: flex; }
+		.nav-links a { font-size: 0.9375rem; padding: 12px 24px; }
+		.nav-links a:hover { background: rgba(255,255,255,0.04); }
+		.nav-cta { margin: 8px 16px !important; text-align: center; border-radius: 8px; padding: 12px 20px !important; }
 	}
 </style>
