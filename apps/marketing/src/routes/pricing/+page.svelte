@@ -26,7 +26,7 @@
 			<ul class="plan-features">
 				<li>5 active projects</li>
 				<li>10 vendors per project</li>
-				<li>100 AI credits/month</li>
+				<li>100 AI credits/month <span class="credit-hint">(~20 full analyses)</span></li>
 				<li>Basic scoring & comparison</li>
 				<li>SOLVE workflow (all 5 steps)</li>
 				<li>Export to PDF</li>
@@ -47,7 +47,7 @@
 			<ul class="plan-features">
 				<li>Unlimited projects</li>
 				<li>Unlimited vendors</li>
-				<li>500 AI credits/month</li>
+				<li>500 AI credits/month <span class="credit-hint">(~100 full analyses)</span></li>
 				<li>All 25 AI engines</li>
 				<li>Team collaboration (up to 10)</li>
 				<li>SOLVE workflow & vendor discovery</li>
@@ -264,6 +264,12 @@
 		content: '✓ ';
 		color: #00cc96;
 		font-weight: 700;
+	}
+
+	:global(.credit-hint) {
+		color: #6b7e96;
+		font-size: 0.8125rem;
+		font-weight: 400;
 	}
 
 	.plan-cta {

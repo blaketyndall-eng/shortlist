@@ -11,7 +11,7 @@
 			Purchase Intelligence Platform
 		</div>
 		<h1>Turn every purchase into a <span class="highlight">strategic advantage</span></h1>
-		<p class="hero-sub">Stop losing weeks to vendor spreadsheets and misaligned stakeholders. Shortlist combines 25 purpose-built AI engines with structured workflows so your team reaches confident, data-backed purchase decisions together.</p>
+		<p class="hero-sub">Stop losing weeks to vendor spreadsheets. Make confident, data-backed purchase decisions with AI-guided workflows.</p>
 		<div class="cta-group">
 			<a href="https://app.tryshortlist.app/auth/signup" class="btn-primary">
 				Start Free Trial
@@ -114,10 +114,10 @@
 			<div class="case-tag">CRM Evaluation</div>
 			<p class="case-quote">"We evaluated 8 CRM vendors in 3 weeks instead of 3 months. The alignment engine caught a budget disagreement before it derailed the decision."</p>
 			<div class="case-meta">
-				<div class="case-avatar t-bg">SC</div>
+				<div class="case-avatar t-bg">KL</div>
 				<div class="case-info">
-					<span class="case-name">Sarah Chen</span>
-					<span class="case-role">VP RevOps · Meridian Technologies</span>
+					<span class="case-name">Karen Liu</span>
+					<span class="case-role">VP RevOps · Orion Software</span>
 				</div>
 			</div>
 			<div class="case-results">
@@ -132,9 +132,9 @@
 			<div class="case-tag bl">Cloud Migration</div>
 			<p class="case-quote">"Our engineering and finance teams were never on the same page about cloud spend. Shortlist's scoring framework gave us a shared language."</p>
 			<div class="case-meta">
-				<div class="case-avatar bl-bg">MR</div>
+				<div class="case-avatar bl-bg">DT</div>
 				<div class="case-info">
-					<span class="case-name">Marcus Rivera</span>
+					<span class="case-name">David Torres</span>
 					<span class="case-role">IT Director · Apex Digital</span>
 				</div>
 			</div>
@@ -150,9 +150,9 @@
 			<div class="case-tag pu">Security Tooling</div>
 			<p class="case-quote">"The executive briefing feature alone justified the purchase. Our CISO had full visibility without sitting through 6 vendor demos."</p>
 			<div class="case-meta">
-				<div class="case-avatar pu-bg">PP</div>
+				<div class="case-avatar pu-bg">AN</div>
 				<div class="case-info">
-					<span class="case-name">Priya Patel</span>
+					<span class="case-name">Anika Rao</span>
 					<span class="case-role">Head of Engineering · Vantage Systems</span>
 				</div>
 			</div>
@@ -167,28 +167,54 @@
 	</div>
 </section>
 
-<!-- ═══════ PROBLEM → SOLUTION ═══════ -->
+<!-- ═══════ PROBLEM → BUYING & SELLING BROKEN ═══════ -->
 <section class="problem-section">
 	<div class="section-inner">
 		<div class="section-tag">The Problem</div>
-		<h2>Purchasing decisions are broken</h2>
-		<p class="section-sub">Teams waste weeks on manual vendor research, disconnected spreadsheets, and gut-feel decisions that cost organizations millions in bad purchases.</p>
-		<div class="pain-grid">
-			<div class="pain-card">
-				<div class="pain-icon rd">✕</div>
-				<h3>Manual Research</h3>
-				<p>Hours spent Googling vendors, reading biased reviews, and building comparison spreadsheets that go stale overnight.</p>
+		<h2>Buying is broken. Selling is broken.</h2>
+		<div class="broken-grid">
+			<div class="broken-card buying">
+				<h3 class="broken-side">For buyers</h3>
+				<p class="broken-headline">Weeks lost to spreadsheets, gut-feel decisions, and teams that never align.</p>
+				<div class="pain-list">
+					<div class="pain-item">
+						<span class="pain-x rd">✕</span>
+						<span>Manual vendor research that goes stale overnight</span>
+					</div>
+					<div class="pain-item">
+						<span class="pain-x am">✕</span>
+						<span>Stakeholders disagree on priorities with no shared framework</span>
+					</div>
+					<div class="pain-item">
+						<span class="pain-x pu">✕</span>
+						<span>Leadership has zero visibility into purchase progress or risk</span>
+					</div>
+				</div>
 			</div>
-			<div class="pain-card">
-				<div class="pain-icon am">✕</div>
-				<h3>Team Misalignment</h3>
-				<p>Stakeholders disagree on priorities, can't share evaluations in real-time, and reach decisions no one fully supports.</p>
+			<div class="broken-card selling">
+				<h3 class="broken-side">For vendors</h3>
+				<p class="broken-headline">Deals stall because buyers can't articulate needs or align internally.</p>
+				<div class="pain-list">
+					<div class="pain-item">
+						<span class="pain-x rd">✕</span>
+						<span>Evaluations drag on for months with no clear decision criteria</span>
+					</div>
+					<div class="pain-item">
+						<span class="pain-x am">✕</span>
+						<span>Buyers can't explain what they actually need across roles</span>
+					</div>
+					<div class="pain-item">
+						<span class="pain-x pu">✕</span>
+						<span>Decisions happen behind closed doors — no transparency, no feedback</span>
+					</div>
+				</div>
 			</div>
-			<div class="pain-card">
-				<div class="pain-icon pu">✕</div>
-				<h3>No Executive Visibility</h3>
-				<p>Leadership has zero insight into purchase progress, risk levels, or whether the team is actually aligned on the decision.</p>
+		</div>
+		<div class="fixes-both">
+			<div class="fixes-icon">
+				<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="#00cc96" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
 			</div>
+			<p><strong>Shortlist fixes both sides</strong> — a structured, AI-guided process that produces clear decisions faster for buyers and better signals for vendors.</p>
 		</div>
 	</div>
 </section>
@@ -341,24 +367,24 @@
 		<h2 class="stats-title">Measurable outcomes, not marketing promises</h2>
 		<div class="stats-grid">
 			<div class="stat-item">
-				<span class="stat-number">25</span>
-				<span class="stat-desc">AI Engines</span>
-				<p>Purpose-built for every stage of the purchase lifecycle — from discovery to executive briefings.</p>
-			</div>
-			<div class="stat-item">
-				<span class="stat-number">100+</span>
-				<span class="stat-desc">Pre-Loaded Vendors</span>
-				<p>Start evaluating on day one. No weeks of manual research to build your comparison list.</p>
-			</div>
-			<div class="stat-item">
 				<span class="stat-number">5–10x</span>
-				<span class="stat-desc">Faster vs. Manual</span>
-				<p>Teams report cutting vendor evaluation time from months to weeks with AI-assisted analysis and scoring.</p>
+				<span class="stat-desc">Faster Evaluations</span>
+				<p>Teams cut vendor evaluation from months to weeks with AI-assisted research and structured scoring.</p>
 			</div>
 			<div class="stat-item">
-				<span class="stat-number">Full</span>
-				<span class="stat-desc">Team Visibility</span>
-				<p>Every stakeholder aligned, every executive informed, every decision documented — from kickoff to contract.</p>
+				<span class="stat-number">87%</span>
+				<span class="stat-desc">Avg. Alignment</span>
+				<p>Teams using alignment polls and role-based scoring reach decisions everyone supports.</p>
+			</div>
+			<div class="stat-item">
+				<span class="stat-number">$30K+</span>
+				<span class="stat-desc">Avg. TCO Savings</span>
+				<p>AI-powered TCO analysis and negotiation coaching surface costs buyers typically miss.</p>
+			</div>
+			<div class="stat-item">
+				<span class="stat-number">5 min</span>
+				<span class="stat-desc">Executive Briefings</span>
+				<p>AI-generated milestone briefings give leadership full visibility without attending a single meeting.</p>
 			</div>
 		</div>
 	</div>
@@ -565,16 +591,37 @@
 	.case-stat strong { color: #00cc96; font-weight: 700; }
 	.case-divider { color: rgba(255, 255, 255, 0.12); font-size: 0.75rem; }
 
-	/* ═══════ PROBLEM ═══════ */
+	/* ═══════ PROBLEM — BUYING / SELLING BROKEN ═══════ */
 	.problem-section { padding: 5rem 2rem; }
-	.pain-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
-	.pain-card { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 14px; padding: 28px; }
-	.pain-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; margin-bottom: 16px; }
-	.pain-icon.rd { background: rgba(240, 80, 80, 0.12); color: #f05050; }
-	.pain-icon.am { background: rgba(240, 160, 52, 0.12); color: #f0a034; }
-	.pain-icon.pu { background: rgba(160, 108, 240, 0.12); color: #a06cf0; }
-	.pain-card h3 { font-size: 1.0625rem; font-weight: 700; color: #fff; margin-bottom: 8px; font-family: 'Figtree', sans-serif; }
-	.pain-card p { font-size: 0.9375rem; color: #6b7e96; line-height: 1.65; margin: 0; }
+	.broken-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; margin-top: 2.5rem; }
+	.broken-card {
+		background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06);
+		border-radius: 14px; padding: 32px; display: flex; flex-direction: column; gap: 16px;
+	}
+	.broken-card.buying { border-top: 2px solid rgba(240, 80, 80, 0.4); }
+	.broken-card.selling { border-top: 2px solid rgba(240, 160, 52, 0.4); }
+	.broken-side {
+		font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+		color: #6b7e96; margin: 0; font-family: 'Figtree', sans-serif;
+	}
+	.broken-headline { font-size: 1.0625rem; font-weight: 600; color: #dde4ef; line-height: 1.5; margin: 0; }
+	.pain-list { display: flex; flex-direction: column; gap: 10px; }
+	.pain-item { display: flex; align-items: flex-start; gap: 10px; font-size: 0.9375rem; color: #6b7e96; line-height: 1.55; }
+	.pain-x { flex-shrink: 0; width: 20px; height: 20px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; margin-top: 2px; }
+	.pain-x.rd { background: rgba(240, 80, 80, 0.12); color: #f05050; }
+	.pain-x.am { background: rgba(240, 160, 52, 0.12); color: #f0a034; }
+	.pain-x.pu { background: rgba(160, 108, 240, 0.12); color: #a06cf0; }
+	.fixes-both {
+		display: flex; align-items: flex-start; gap: 14px; margin-top: 2rem;
+		background: rgba(0, 204, 150, 0.04); border: 1px solid rgba(0, 204, 150, 0.12);
+		border-radius: 12px; padding: 20px 24px;
+	}
+	.fixes-icon {
+		width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+		background: rgba(0, 204, 150, 0.12); display: flex; align-items: center; justify-content: center;
+	}
+	.fixes-both p { font-size: 1rem; color: #c0c8d4; line-height: 1.6; margin: 0; }
+	.fixes-both strong { color: #00cc96; }
 
 	/* ═══════ SOLVE WORKFLOW ═══════ */
 	.workflow-section { padding: 5rem 2rem; }
@@ -647,7 +694,7 @@
 		h1 { font-size: 2.5rem; }
 		h2 { font-size: 1.875rem; }
 		.case-grid { grid-template-columns: 1fr; max-width: 440px; margin-left: auto; margin-right: auto; }
-		.pain-grid { grid-template-columns: 1fr; }
+		.broken-grid { grid-template-columns: 1fr; }
 		.capabilities-grid { grid-template-columns: 1fr; }
 		.cap-card.featured { grid-column: span 1; }
 		.stats-grid { grid-template-columns: repeat(2, 1fr); }

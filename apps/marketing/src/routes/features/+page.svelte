@@ -7,7 +7,7 @@
 	<div class="hero-inner">
 		<div class="hero-badge"><span class="badge-dot"></span> Platform Features</div>
 		<h1>Everything you need to make <span class="highlight">confident purchases</span></h1>
-		<p class="hero-sub">From initial purchase trigger to final vendor selection — Shortlist guides every step with AI-powered intelligence, team alignment, and executive visibility.</p>
+		<p class="hero-sub">Most teams evaluate vendors with spreadsheets, email threads, and gut feel. Here's how Shortlist replaces all of that — from purchase trigger to vendor selection.</p>
 	</div>
 </section>
 
@@ -15,7 +15,7 @@
 <section class="feature-row">
 	<div class="feature-inner">
 		<div class="feature-text">
-			<div class="f-tag teal">Define Phase</div>
+			<div class="f-tag teal">Scope → Execute</div>
 			<h2>SOLVE Discovery Workflow</h2>
 			<p>Before you evaluate, get crystal-clear on what you need. The 5-step SOLVE workflow guides your team from initial purchase trigger through vendor discovery, weighted comparison, team validation, and confident execution.</p>
 			<ul class="feature-list">
@@ -53,7 +53,7 @@
 <section class="feature-row alt">
 	<div class="feature-inner reverse">
 		<div class="feature-text">
-			<div class="f-tag">AI-Powered</div>
+			<div class="f-tag">All Phases</div>
 			<h2>25 Specialized AI Engines</h2>
 			<p>Each engine is purpose-built for a specific purchase intelligence task — from vendor evaluation and discovery to contract risk analysis, negotiation coaching, alignment analysis, and executive briefings.</p>
 			<ul class="feature-list">
@@ -93,7 +93,7 @@
 <section class="feature-row">
 	<div class="feature-inner">
 		<div class="feature-text">
-			<div class="f-tag teal">Alignment Engine</div>
+			<div class="f-tag teal">Validate Phase</div>
 			<h2>AI Team Alignment</h2>
 			<p>Know whether your team is aligned before you commit. AI-powered polls with role-based scoring detect misalignment across dimensions — and recommend how to close the gaps.</p>
 			<ul class="feature-list">
@@ -133,7 +133,7 @@
 <section class="feature-row alt">
 	<div class="feature-inner reverse">
 		<div class="feature-text">
-			<div class="f-tag">Executive Engine</div>
+			<div class="f-tag">Execute Phase</div>
 			<h2>Executive Dashboard & Briefings</h2>
 			<p>Leadership gets real-time visibility without attending meetings. AI auto-generates milestone briefings, risk alerts surface automatically, and the dashboard shows health across every active purchase.</p>
 			<ul class="feature-list">
@@ -171,7 +171,7 @@
 <section class="feature-row">
 	<div class="feature-inner">
 		<div class="feature-text">
-			<div class="f-tag teal">100+ Vendors</div>
+			<div class="f-tag teal">Observe Phase</div>
 			<h2>Pre-Built Vendor Library</h2>
 			<p>Over 100 vendors across CRM, HR, Cloud, Analytics, Security, DevOps, and more — pre-enriched with pricing tiers, key features, company size, and industry focus. Start comparing on day one.</p>
 			<ul class="feature-list">
@@ -202,7 +202,7 @@
 <section class="feature-row alt">
 	<div class="feature-inner reverse">
 		<div class="feature-text">
-			<div class="f-tag">Evaluate Phase</div>
+			<div class="f-tag">Leverage Phase</div>
 			<h2>Weighted Scoring & Comparison</h2>
 			<p>Define custom criteria with configurable weights, get AI-assisted scores with confidence levels, and compare vendors side-by-side with automated reports and TCO analysis.</p>
 			<ul class="feature-list">
@@ -228,7 +228,7 @@
 <section class="feature-row">
 	<div class="feature-inner">
 		<div class="feature-text">
-			<div class="f-tag teal">Connected Intelligence</div>
+			<div class="f-tag teal">All Phases</div>
 			<h2>The Intelligence Web</h2>
 			<p>All AI features work together as one connected system. Vendor enrichment feeds into scoring, scoring feeds into alignment, alignment triggers executive briefings. Every action generates intelligence that makes the next decision smarter.</p>
 			<ul class="feature-list">

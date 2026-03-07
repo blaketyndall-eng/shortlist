@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	let { children } = $props();
 	let mobileOpen = $state(false);
 </script>
@@ -16,9 +17,9 @@
 			{/if}
 		</button>
 		<div class="nav-links" class:mobile-open={mobileOpen}>
-			<a href="/features" onclick={() => mobileOpen = false}>Features</a>
-			<a href="/demo" onclick={() => mobileOpen = false}>Demo</a>
-			<a href="/pricing" onclick={() => mobileOpen = false}>Pricing</a>
+			<a href="/features" class:nav-active={page.url.pathname === '/features'} onclick={() => mobileOpen = false}>Features</a>
+			<a href="/demo" class:nav-active={page.url.pathname === '/demo'} onclick={() => mobileOpen = false}>Demo</a>
+			<a href="/pricing" class:nav-active={page.url.pathname === '/pricing'} onclick={() => mobileOpen = false}>Pricing</a>
 			<a href="https://app.tryshortlist.app/auth/login" class="nav-login" onclick={() => mobileOpen = false}>Log in</a>
 			<a href="https://app.tryshortlist.app/auth/signup" class="nav-cta" onclick={() => mobileOpen = false}>Get Started</a>
 		</div>
@@ -36,6 +37,11 @@
 				<a href="/demo">Demo</a>
 				<a href="/pricing">Pricing</a>
 				<a href="mailto:hello@tryshortlist.app">Contact</a>
+			</div>
+			<div class="footer-legal">
+				<a href="/privacy">Privacy Policy</a>
+				<span class="footer-dot">·</span>
+				<a href="/terms">Terms of Service</a>
 			</div>
 			<p class="footer-copy">© {new Date().getFullYear()} Shortlist. All rights reserved.</p>
 		</div>
@@ -117,6 +123,7 @@
 	}
 
 	.nav-links a:hover { color: #ffffff; }
+	.nav-links a.nav-active { color: #00cc96; }
 
 	.nav-login { color: #c0c8d4 !important; }
 
@@ -174,12 +181,28 @@
 
 	.footer-links a:hover { color: #ffffff; }
 
+	.footer-legal {
+		width: 100%;
+		display: flex;
+		justify-content: center;
+		gap: 8px;
+		margin-top: 12px;
+	}
+	.footer-legal a {
+		font-size: 0.75rem;
+		color: #5a6472;
+		text-decoration: none;
+		transition: color 0.15s;
+	}
+	.footer-legal a:hover { color: #8b95a5; }
+	.footer-dot { font-size: 0.75rem; color: #3a4a5c; }
+
 	.footer-copy {
 		font-size: 0.8125rem;
 		color: #5a6472;
 		width: 100%;
 		text-align: center;
-		margin-top: 16px;
+		margin-top: 8px;
 	}
 
 	@media (max-width: 640px) {

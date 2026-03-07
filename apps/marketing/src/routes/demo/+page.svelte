@@ -155,6 +155,7 @@
 			<div class="step-panel">
 				<div class="panel-header">
 					<div class="panel-badge" style="background: {STEPS[0].color}14; color: {STEPS[0].color}; border-color: {STEPS[0].color}30">SCOPE</div>
+					<div class="time-badge">⏱ 15 min with Shortlist <span class="time-vs">vs. 1–2 weeks manually</span></div>
 					<h2>Define what you're buying</h2>
 					<p>Shortlist guides your team through a structured intake — budget, timeline, success criteria, and stakeholder requirements — so everyone starts aligned.</p>
 				</div>
@@ -218,6 +219,7 @@
 			<div class="step-panel">
 				<div class="panel-header">
 					<div class="panel-badge" style="background: {STEPS[1].color}14; color: {STEPS[1].color}; border-color: {STEPS[1].color}30">OBSERVE</div>
+					<div class="time-badge">⏱ 5 min with Shortlist <span class="time-vs">vs. 2–4 weeks manually</span></div>
 					<h2>AI discovers and scores vendors</h2>
 					<p>Shortlist surfaces vendors from a library of 100+ — enriched with pricing, capabilities, and fit scores personalized to Meridian's profile.</p>
 				</div>
@@ -285,6 +287,7 @@
 			<div class="step-panel">
 				<div class="panel-header">
 					<div class="panel-badge" style="background: {STEPS[2].color}14; color: {STEPS[2].color}; border-color: {STEPS[2].color}30">LEVERAGE</div>
+					<div class="time-badge">⏱ 10 min with Shortlist <span class="time-vs">vs. 1–2 weeks manually</span></div>
 					<h2>Compare with weighted scoring</h2>
 					<p>Define what matters most, assign weights, and let AI calculate personalized fit scores across every dimension.</p>
 				</div>
@@ -340,6 +343,7 @@
 			<div class="step-panel">
 				<div class="panel-header">
 					<div class="panel-badge" style="background: {STEPS[3].color}14; color: {STEPS[3].color}; border-color: {STEPS[3].color}30">VALIDATE</div>
+					<div class="time-badge">⏱ 20 min with Shortlist <span class="time-vs">vs. 2–3 weeks manually</span></div>
 					<h2>Align your team before you decide</h2>
 					<p>AI-powered polls detect alignment gaps between roles. Know exactly where your team agrees — and where they don't — before committing.</p>
 				</div>
@@ -417,6 +421,7 @@
 			<div class="step-panel">
 				<div class="panel-header">
 					<div class="panel-badge" style="background: {STEPS[4].color}14; color: {STEPS[4].color}; border-color: {STEPS[4].color}30">EXECUTE</div>
+					<div class="time-badge">⏱ 5 min with Shortlist <span class="time-vs">vs. 1–2 weeks manually</span></div>
 					<h2>Executive briefing, ready to approve</h2>
 					<p>AI generates a complete executive briefing — data-backed recommendation, risk analysis, and next steps — so leadership can approve with confidence.</p>
 				</div>
@@ -610,6 +615,13 @@
 		color: #fff; margin-bottom: 8px; line-height: 1.2;
 	}
 	.panel-header p { font-size: 0.9375rem; color: #6b7e96; line-height: 1.65; max-width: 640px; }
+	.time-badge {
+		display: inline-flex; align-items: center; gap: 6px;
+		padding: 5px 14px; margin-bottom: 12px;
+		background: rgba(0, 204, 150, 0.06); border: 1px solid rgba(0, 204, 150, 0.12);
+		border-radius: 8px; font-size: 0.75rem; font-weight: 600; color: #00cc96;
+	}
+	.time-vs { color: #6b7e96; font-weight: 400; }
 
 	/* ═══════ SCOPE ═══════ */
 	.scope-layout { display: grid; grid-template-columns: 1fr 340px; gap: 24px; }
