@@ -52,6 +52,12 @@ const TOKEN_LIMITS: Partial<Record<string, number>> = {
 	// Executive engines
 	executive_insight: 500,
 	executive_milestone_brief: 1000,
+	// Phase 10 engines
+	project_health_check: 500,
+	smart_defaults: 400,
+	vendor_change_analyzer: 300,
+	negotiation_extract: 400,
+	deal_debrief: 600,
 };
 
 // Model overrides for specific engines (prototype uses specific model per engine)
@@ -78,6 +84,12 @@ const ENGINE_MODEL_OVERRIDE: Partial<Record<string, string>> = {
 	// Executive engines
 	executive_insight: 'claude-sonnet-4-6',
 	executive_milestone_brief: 'claude-opus-4-6',
+	// Phase 10 engines
+	project_health_check: 'claude-haiku-4-5-20251001',
+	smart_defaults: 'claude-haiku-4-5-20251001',
+	vendor_change_analyzer: 'claude-haiku-4-5-20251001',
+	negotiation_extract: 'claude-haiku-4-5-20251001',
+	deal_debrief: 'claude-sonnet-4-6',
 };
 
 interface EngineRequest {
@@ -115,6 +127,12 @@ const ENGINE_SCHEMAS: Record<string, { required: string[]; type: 'object' | 'arr
 	vendor_comparison_narrative: { required: ['narrative', 'verdicts'], type: 'object' },
 	requirement_elicitation: { required: ['questions'], type: 'object' },
 	market_intelligence: { required: ['trends', 'insights'], type: 'object' },
+	// Phase 10 engines
+	project_health_check: { required: ['nudges'], type: 'object' },
+	smart_defaults: { required: ['criteria', 'constraints'], type: 'object' },
+	vendor_change_analyzer: { required: ['changeType', 'severity', 'summary'], type: 'object' },
+	negotiation_extract: { required: [], type: 'object' },
+	deal_debrief: { required: ['lessonsSummary'], type: 'object' },
 };
 
 // Max retry attempts for validation failures
@@ -136,10 +154,10 @@ export const POST: RequestHandler = async ({ request, locals, cookies }) => {
 	}
 
 	// Auto-inject company profile if not already provided in context
+	const supabaseClient = createServerSupabase(cookies);
 	if (!body.context.companyProfile && locals.user) {
 		try {
-			const supabase = createServerSupabase(cookies);
-			const { data: profileRow } = await supabase
+			const { data: profileRow } = await supabaseClient
 				.from('profiles')
 				.select('company_profile')
 				.eq('id', locals.user.id)
@@ -149,6 +167,28 @@ export const POST: RequestHandler = async ({ request, locals, cookies }) => {
 			}
 		} catch {
 			// Non-critical — proceed without company context
+		}
+	}
+
+	// Auto-inject project intelligence for project-scoped engines
+	// Skip for company-profile-only engines and non-project contexts
+	const SKIP_PROJECT_INTELLIGENCE = new Set([
+		'company_autofill', 'compliance_suggest', 'priorities_suggest',
+		'stack_suggest', 'context_notes', 'profile_interview',
+	]);
+	if (
+		body.projectId &&
+		body.projectId !== 'company-profile' &&
+		!SKIP_PROJECT_INTELLIGENCE.has(body.engine) &&
+		!body.context._projectIntelligence // avoid double-injection
+	) {
+		try {
+			const intelligence = await buildProjectIntelligence(body.projectId, supabaseClient);
+			if (intelligence) {
+				body.context._projectIntelligence = intelligence;
+			}
+		} catch {
+			// Non-critical — proceed without project intelligence
 		}
 	}
 
@@ -228,8 +268,7 @@ export const POST: RequestHandler = async ({ request, locals, cookies }) => {
 		const credits = CREDIT_MAP[model] ?? 5;
 
 		// Track usage (sum all retry attempts)
-		const supabase = createServerSupabase(cookies);
-		await supabase.from('ai_usage').insert({
+		await supabaseClient.from('ai_usage').insert({
 			user_id: locals.user.id,
 			project_id: body.projectId,
 			engine: body.engine,
@@ -307,6 +346,13 @@ function buildSystemPrompt(engine: string, context: Record<string, unknown>): st
 		context_notes: 'You are a purchase intelligence assistant writing buyer context notes. Write in second person, clear and direct. 3–5 sentences max.',
 		profile_interview: 'You are a purchase intelligence assistant extracting structured company profile data from conversational answers. Return ONLY valid JSON with the fields you can extract. Use null for fields that cannot be determined. Match values to the allowed option lists exactly.',
 
+		// --- Phase 10: Intelligence Web ---
+		project_health_check: 'You are a purchase intelligence advisor monitoring project health. Analyze project state and identify 2-3 actionable nudges: stalled progress, unresolved risks, missing steps, or opportunities. Return ONLY valid JSON.',
+		smart_defaults: 'You are a purchase intelligence advisor suggesting defaults for new projects based on past patterns. Return ONLY valid JSON.',
+		vendor_change_analyzer: 'You are a vendor intelligence monitor detecting material changes between enrichment cycles. Return ONLY valid JSON.',
+		negotiation_extract: 'You are a negotiation intelligence analyst extracting structured data from negotiation notes. Return ONLY valid JSON.',
+		deal_debrief: 'You are a senior purchase intelligence consultant synthesizing lessons learned from completed vendor evaluations. Be specific and actionable. Return ONLY valid JSON.',
+
 		// --- Comparison & Intelligence ---
 		vendor_comparison_narrative: 'You are a senior B2B purchase intelligence analyst writing comparative vendor narratives for executive decision-makers. Be specific, data-driven, and opinionated. Return ONLY valid JSON.',
 		requirement_elicitation: 'You are a purchase intelligence consultant who helps buyers uncover hidden requirements they haven\'t considered. Draw on deep domain expertise. Return ONLY valid JSON.',
@@ -329,7 +375,11 @@ function buildSystemPrompt(engine: string, context: Record<string, unknown>): st
 	};
 
 	const basePrompt = prompts[engine] ?? prompts.evaluate;
-	return companyContext ? `${basePrompt}\n\n${companyContext}` : basePrompt;
+
+	// Layer context: company context + project intelligence
+	const projectIntelligence = formatProjectIntelligence(context._projectIntelligence as string | undefined);
+	const contextBlocks = [basePrompt, companyContext, projectIntelligence].filter(Boolean).join('\n\n');
+	return contextBlocks;
 }
 
 // ============================================================
@@ -777,6 +827,71 @@ Provide specific, actionable intelligence covering:
 Return JSON:
 {"trends":[{"trend":"specific trend","impact":"how it affects this buyer","timeframe":"when relevant"}],"insights":[{"type":"opportunity|risk|trend","title":"short title","detail":"2-sentence detail","actionable":"what the buyer should do"}],"negotiationLeverage":["timing or competitive dynamics that help the buyer"],"categoryOutlook":"2-sentence forward-looking assessment"}`;
 
+		// --- Phase 10 Engines ---
+		case 'project_health_check':
+			return `Analyze this project and identify 2-3 actionable nudges for the project owner.
+
+Project intelligence is already in the system context. Additional signals:
+- Days since project created: ${str(ctx.daysSinceCreated)}
+- Days since last activity: ${str(ctx.daysSinceLastActivity)}
+- Current step: ${str(ctx.currentStep)}
+- Vendors scored: ${str(ctx.vendorsScored)} / ${str(ctx.totalVendors)}
+- Criteria defined: ${str(ctx.criteriaCount)}
+- Alignment polls active: ${str(ctx.activePolls)}
+
+Return JSON:
+{"nudges":[{"type":"warning|info|action|success","title":"short title","detail":"1-2 sentence detail with specific data","link":"suggested page to visit (e.g. /project/ID/evaluate/scoring)","priority":"high|medium|low"}],"overallHealth":"on-track|needs-attention|stalled|at-risk","healthScore":0-100}
+
+Focus on actionable, specific insights. Reference actual project data. Don't be generic.`;
+
+		case 'smart_defaults':
+			return `Based on past project patterns and this buyer's profile, suggest smart defaults for a new ${str(ctx.category)} evaluation.
+
+Past project data:
+${str(ctx.pastProjectSummary)}
+
+Buyer profile summary:
+${str(ctx.buyerSummary)}
+
+Return JSON:
+{"criteria":[{"name":"criterion name","category":"functional|technical|commercial|strategic|risk","weight":1-10,"reason":"why this matters based on past patterns"}],"constraints":[{"description":"constraint text","hardLimit":true|false,"reason":"based on pattern"}],"priorities":{"must_have":["priority"],"nice_to_have":["priority"]},"vendorCandidates":[{"name":"vendor","reason":"why suggested"}],"reasoning":"1-2 sentences on what past patterns informed these defaults"}`;
+
+		case 'vendor_change_analyzer':
+			return `Compare this vendor's previous and current enrichment data. Identify material changes that could affect an active evaluation.
+
+Vendor: ${str(ctx.vendorName)}
+Previous data: ${str(ctx.previousData)}
+Current data: ${str(ctx.currentData)}
+Project context: ${str(ctx.projectContext)}
+
+Return JSON:
+{"changeType":"pricing|features|market_position|leadership|stability|none","severity":"high|medium|low|none","summary":"1-2 sentence summary of what changed","recommendation":"what the evaluating team should do","details":[{"field":"what changed","before":"old value","after":"new value"}]}`;
+
+		case 'negotiation_extract':
+			return `Extract structured negotiation intelligence from this entry.
+
+Vendor: ${str(ctx.vendorName)}
+Category: ${str(ctx.category)}
+Entry text: ${str(ctx.entryText)}
+
+Return JSON:
+{"openingPosition":"what was proposed","concessionsWon":["concession"],"leverageUsed":["leverage point"],"nextSteps":["next step"],"riskSignals":["risk signal"],"counterpartySignals":"what the vendor's behavior suggests","estimatedDiscount":"estimated discount achieved so far, if any"}`;
+
+		case 'deal_debrief': {
+			return `Synthesize lessons learned from this completed vendor evaluation.
+
+Selected vendor: ${str(ctx.selectedVendor)}
+Rationale: ${str(ctx.rationale)}
+Actual cost vs quoted: ${str(ctx.costComparison)}
+Timeline: ${str(ctx.timeline)}
+Surprises: ${str(ctx.surprises)}
+
+Full project intelligence is in the system context.
+
+Return JSON:
+{"lessonsSummary":"3-4 sentence synthesis of key learnings","whatWorked":["specific thing that worked well"],"whatDidnt":["specific thing that didn't work"],"surprises":["unexpected finding"],"recommendationsForNext":["actionable recommendation for future evaluations"],"vendorInsights":{"strengths":"confirmed strengths","concerns":"confirmed or new concerns","negotiationLearning":"what worked in negotiation"},"processInsights":{"timelineAccuracy":"was the timeline realistic?","criteriaEffectiveness":"did criteria predict the right outcome?","teamAlignment":"was the team aligned at decision time?"}}`;
+		}
+
 		// Task-based routing for legacy evaluate engine
 		case 'evaluate': {
 			const task = str(ctx.task);
@@ -803,6 +918,254 @@ Return JSON:
 		default:
 			return JSON.stringify(ctx, null, 2);
 	}
+}
+
+// ============================================================
+// Cross-Phase Project Intelligence (Phase 10A)
+// ============================================================
+
+/**
+ * Loads full project data (SOLVE + Evaluate) and assembles a rich
+ * intelligence context string. Injected into all project-scoped
+ * engine calls so every AI response is aware of the full picture.
+ */
+async function buildProjectIntelligence(
+	projectId: string,
+	supabase: ReturnType<typeof createServerSupabase>
+): Promise<string | null> {
+	// Load the project with all state
+	const { data: project } = await supabase
+		.from('projects')
+		.select('*')
+		.eq('id', projectId)
+		.single();
+
+	if (!project) return null;
+
+	const parts: string[] = ['=== PROJECT INTELLIGENCE ==='];
+
+	// --- Core project info ---
+	parts.push(`Project: ${project.name || 'Untitled'}`);
+	if (project.category) parts.push(`Category: ${project.category}`);
+	parts.push(`Phase: ${project.phase || 'define'} | Step: ${project.current_step || 'unknown'}`);
+	parts.push(`Status: ${project.status || 'active'}`);
+
+	// --- SOLVE Phase Intelligence ---
+	const solve = project.solve_data as Record<string, unknown> | null;
+	if (solve) {
+		parts.push('\n--- DEFINE PHASE ---');
+
+		// Triggers
+		const triggers = arr(solve.triggers);
+		if (triggers.length > 0) {
+			const triggerLabels = triggers.map((t: any) => t.label || t.text || str(t)).filter(Boolean);
+			if (triggerLabels.length) parts.push(`Purchase triggers: ${triggerLabels.join(', ')}`);
+		}
+
+		// Budget & timeline
+		if (solve.budgetRange) parts.push(`Budget range: ${str(solve.budgetRange)}`);
+		if (solve.timeline) parts.push(`Timeline: ${str(solve.timeline)}`);
+		if (solve.urgency) parts.push(`Urgency: ${str(solve.urgency)}`);
+
+		// Category
+		if (solve.categoryDetected) {
+			parts.push(`Detected category: ${str(solve.categoryDetected)} (confidence: ${str(solve.categoryConfidence)}%)`);
+		}
+
+		// Constraints (critical for cross-phase awareness)
+		const constraints = arr(solve.constraints);
+		if (constraints.length > 0) {
+			const hardConstraints = constraints.filter((c: any) => c.hardLimit);
+			const softConstraints = constraints.filter((c: any) => !c.hardLimit);
+			if (hardConstraints.length > 0) {
+				parts.push(`DEAL-BREAKER constraints: ${hardConstraints.map((c: any) => str(c.description)).join('; ')}`);
+			}
+			if (softConstraints.length > 0) {
+				parts.push(`Soft constraints: ${softConstraints.map((c: any) => str(c.description)).join('; ')}`);
+			}
+		}
+
+		// Priorities
+		const priorities = solve.priorities as Record<string, unknown[]> | undefined;
+		if (priorities) {
+			const mustHave = arr(priorities.must_have).map((p: any) => str(p.label)).filter(Boolean);
+			const niceToHave = arr(priorities.nice_to_have).map((p: any) => str(p.label)).filter(Boolean);
+			if (mustHave.length) parts.push(`Must-have priorities: ${mustHave.join(', ')}`);
+			if (niceToHave.length) parts.push(`Nice-to-have priorities: ${niceToHave.join(', ')}`);
+		}
+
+		// Stakeholders
+		const stakeholders = arr(solve.stakeholders);
+		if (stakeholders.length > 0) {
+			const stakeStr = stakeholders.map((s: any) => `${s.name} (${s.role}, ${s.influence})`).join('; ');
+			parts.push(`Key stakeholders: ${stakeStr}`);
+		}
+
+		// Problem brief
+		if (solve.problemBrief) {
+			const brief = str(solve.problemBrief);
+			parts.push(`Problem brief: ${brief.slice(0, 500)}${brief.length > 500 ? '...' : ''}`);
+		}
+
+		// Discovered vendors & shortlist
+		const discovered = arr(solve.discoveredVendors);
+		const shortlisted = arr(solve.shortlistedVendorIds);
+		if (discovered.length > 0) {
+			parts.push(`Vendors discovered: ${discovered.length} | Shortlisted: ${shortlisted.length}`);
+			const shortlistedVendors = discovered.filter((v: any) => shortlisted.includes(v.id));
+			if (shortlistedVendors.length > 0) {
+				parts.push(`Shortlisted: ${shortlistedVendors.map((v: any) => str(v.name)).join(', ')}`);
+			}
+		}
+
+		// Knockout matrix violations
+		const knockout = arr(solve.knockoutMatrix);
+		const failures = knockout.filter((k: any) => k.pass === false);
+		if (failures.length > 0) {
+			parts.push(`⚠ Knockout failures: ${failures.map((k: any) => `${str(k.vendorId)} failed ${str(k.criterionId)}`).join('; ')}`);
+		}
+
+		// Challenge responses (validation signals)
+		const challengeResponses = arr(solve.challengeResponses);
+		if (challengeResponses.length > 0) {
+			parts.push(`Challenge responses: ${challengeResponses.length} devil's advocate questions addressed`);
+		}
+	}
+
+	// --- EVALUATE Phase Intelligence ---
+	const state = project.state as Record<string, unknown> | null;
+	if (state) {
+		const vendors = arr(state.vendors);
+		const criteria = arr(state.criteria);
+		const scores = (state.scores ?? {}) as Record<string, Record<string, number>>;
+		const weights = (state.weights ?? {}) as Record<string, number>;
+
+		if (vendors.length > 0 || criteria.length > 0) {
+			parts.push('\n--- EVALUATE PHASE ---');
+		}
+
+		// Criteria overview
+		if (criteria.length > 0) {
+			parts.push(`Evaluation criteria (${criteria.length}): ${criteria.map((c: any) => {
+				const w = weights[c.id] ? ` [weight: ${(weights[c.id] * 10).toFixed(0)}/10]` : '';
+				return `${str(c.name)}${w}`;
+			}).join(', ')}`);
+		}
+
+		// Vendor scores summary
+		if (vendors.length > 0) {
+			parts.push(`Vendors in evaluation: ${vendors.length}`);
+			for (const vendor of vendors) {
+				const v = vendor as Record<string, unknown>;
+				const vendorScores = scores[str(v.id)] ?? {};
+				const scoreValues = Object.values(vendorScores).filter((s: any) => typeof s === 'number');
+				const avgScore = scoreValues.length > 0
+					? (scoreValues.reduce((a: number, b: any) => a + Number(b), 0) / scoreValues.length).toFixed(1)
+					: 'not scored';
+				const scoredCount = scoreValues.length;
+				const totalCriteria = criteria.length;
+				parts.push(`  • ${str(v.name)}: avg ${avgScore}/10, ${scoredCount}/${totalCriteria} criteria scored`);
+
+				// Flag low scores on high-weight criteria
+				if (scoredCount > 0) {
+					for (const crit of criteria) {
+						const c = crit as Record<string, unknown>;
+						const critScore = vendorScores[str(c.id)];
+						const critWeight = weights[str(c.id)] ?? 0.5;
+						if (typeof critScore === 'number' && critScore <= 3 && critWeight >= 0.7) {
+							parts.push(`    ⚠ LOW SCORE on high-priority "${str(c.name)}": ${critScore}/10`);
+						}
+					}
+				}
+			}
+		}
+
+		// Demo feedback signals
+		if (state.demoFeedback || state.demos) {
+			const demos = arr(state.demoFeedback ?? state.demos);
+			if (demos.length > 0) {
+				parts.push(`Demo feedback collected: ${demos.length} demos`);
+				for (const demo of demos.slice(0, 3)) {
+					const d = demo as Record<string, unknown>;
+					if (d.vendorName && d.rating) {
+						parts.push(`  • ${str(d.vendorName)}: ${str(d.rating)}/5 — ${str(d.summary || d.notes || '').slice(0, 100)}`);
+					}
+				}
+			}
+		}
+
+		// Negotiation notes
+		if (state.negotiations) {
+			const negs = arr(state.negotiations);
+			if (negs.length > 0) {
+				parts.push(`Negotiation entries: ${negs.length}`);
+				for (const neg of negs.slice(0, 3)) {
+					const n = neg as Record<string, unknown>;
+					parts.push(`  • ${str(n.vendorName || n.vendor)}: ${str(n.summary || n.notes || '').slice(0, 100)}`);
+				}
+			}
+		}
+
+		// TCO data
+		if (state.tco) {
+			const tco = state.tco as Record<string, unknown>;
+			if (Object.keys(tco).length > 0) {
+				parts.push(`TCO data available for ${Object.keys(tco).length} vendor(s)`);
+			}
+		}
+	}
+
+	// --- Alignment intelligence ---
+	try {
+		const { data: polls } = await supabase
+			.from('alignment_polls')
+			.select('id, title, status, context_type, poll_type')
+			.eq('project_id', projectId)
+			.order('created_at', { ascending: false })
+			.limit(5);
+
+		if (polls && polls.length > 0) {
+			parts.push('\n--- TEAM ALIGNMENT ---');
+			const active = polls.filter((p: any) => p.status === 'active');
+			const closed = polls.filter((p: any) => p.status === 'closed');
+			parts.push(`Polls: ${active.length} active, ${closed.length} closed`);
+		}
+	} catch {
+		// alignment_polls table may not exist yet
+	}
+
+	// --- Activity signals ---
+	try {
+		const { data: activity } = await supabase
+			.from('activity_log')
+			.select('verb, detail, created_at')
+			.eq('project_id', projectId)
+			.order('created_at', { ascending: false })
+			.limit(5);
+
+		if (activity && activity.length > 0) {
+			parts.push('\n--- RECENT ACTIVITY ---');
+			for (const a of activity) {
+				const act = a as Record<string, unknown>;
+				parts.push(`  • ${str(act.verb)}: ${str(act.detail).slice(0, 80)} (${str(act.created_at).slice(0, 10)})`);
+			}
+		}
+	} catch {
+		// activity_log table may not exist yet
+	}
+
+	parts.push('=== END PROJECT INTELLIGENCE ===');
+	parts.push('Use the above project context to cross-reference findings. Flag constraint violations, score inconsistencies, and alignment gaps. Reference specific project data in your analysis.');
+
+	return parts.join('\n');
+}
+
+/**
+ * Format project intelligence for injection into system prompt.
+ */
+function formatProjectIntelligence(intelligence: string | undefined): string {
+	if (!intelligence) return '';
+	return intelligence;
 }
 
 // ============================================================
