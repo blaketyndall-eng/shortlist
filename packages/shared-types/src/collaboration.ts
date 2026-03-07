@@ -76,7 +76,11 @@ export type NotificationType =
 	| 'project_completed'
 	| 'portal_submitted'
 	| 'insight_high_priority'
-	| 'member_invited';
+	| 'member_invited'
+	| 'alignment_poll_created'
+	| 'alignment_gap_detected'
+	| 'briefing_ready'
+	| 'briefing_approved';
 
 export interface Notification {
 	id: string;

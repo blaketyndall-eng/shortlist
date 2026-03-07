@@ -4,6 +4,7 @@
 	import Button from '$components/ui/Button.svelte';
 	import Card from '$components/ui/Card.svelte';
 	import VendorCompare from '$lib/components/vendor/VendorCompare.svelte';
+	import AlignmentPoll from '$lib/components/alignment/AlignmentPoll.svelte';
 
 	let { data } = $props();
 	const supabase = createSupabaseBrowserClient();
@@ -639,6 +640,18 @@
 		</div>
 	{/if}
 
+	<!-- Team Alignment Poll -->
+	{#if shortlist.length > 0}
+		<div class="alignment-section">
+			<AlignmentPoll
+				{projectId}
+				stage="discovery"
+				contextType="vendor_alignment"
+				compact={true}
+			/>
+		</div>
+	{/if}
+
 	<div class="step-actions">
 		<Button variant="ghost" onclick={() => goto(`/project/${projectId}/solve/category`)}>← Back</Button>
 		<Button
@@ -775,6 +788,11 @@
 	.review-again {
 		background: none; border: none; color: #4a96f8;
 		text-decoration: underline; cursor: pointer; font-size: 0.8125rem;
+	}
+
+	/* Alignment Section */
+	.alignment-section {
+		margin-top: var(--space-5);
 	}
 
 	/* Compare Section */

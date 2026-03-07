@@ -10,7 +10,9 @@
     "./vendor": "./src/vendor.ts",
     "./ai": "./src/ai.ts",
     "./collaboration": "./src/collaboration.ts",
-    "./billing": "./src/billing.ts"
+    "./billing": "./src/billing.ts",
+    "./alignment": "./src/alignment.ts",
+    "./executive": "./src/executive.ts"
   },
   "devDependencies": {
     "typescript": "^5.7.0"

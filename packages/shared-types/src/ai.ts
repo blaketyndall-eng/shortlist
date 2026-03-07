@@ -12,7 +12,11 @@ export type EngineName =
 	| 'negotiate'
 	| 'risk'
 	| 'implement'
-	| 'vendor';
+	| 'vendor'
+	| 'alignment_analyze'
+	| 'alignment_summary'
+	| 'executive_insight'
+	| 'executive_milestone_brief';
 
 export type EngineDepth = 'quick' | 'standard' | 'deep';
 

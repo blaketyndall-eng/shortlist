@@ -1,6 +1,7 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { createServerSupabase } from '$services/supabase.server';
+import { createServerSupabase, createAdminSupabase } from '$services/supabase.server';
+import { generateBriefing } from '$lib/services/executive-engine';
 
 /**
  * GET /api/projects/[id]/solve
@@ -29,7 +30,7 @@ export const GET: RequestHandler = async ({ params, locals, cookies }) => {
  * PATCH /api/projects/[id]/solve
  * Update SOLVE phase data (partial merge into solve_data JSONB)
  */
-export const PATCH: RequestHandler = async ({ params, request, locals, cookies }) => {
+export const PATCH: RequestHandler = async ({ params, request, locals, cookies, url }) => {
 	if (!locals.session || !locals.user) {
 		error(401, 'Unauthorized');
 	}
@@ -68,11 +69,29 @@ export const PATCH: RequestHandler = async ({ params, request, locals, cookies }
 		.from('projects')
 		.update(updates)
 		.eq('id', params.id)
-		.select('id, solve_data, current_step, phase')
+		.select('id, solve_data, current_step, phase, org_id')
 		.single();
 
 	if (updateError) {
 		error(500, `Failed to update solve data: ${updateError.message}`);
+	}
+
+	// Intelligence Web: auto-generate executive briefing on stage transitions
+	if (body.currentStep && project?.org_id) {
+		try {
+			const adminSupabase = createAdminSupabase();
+			const origin = request.headers.get('origin') ?? url.origin ?? '';
+			const cookieHeader = request.headers.get('cookie') ?? '';
+			generateBriefing(supabase, adminSupabase, {
+				projectId: params.id,
+				orgId: project.org_id,
+				briefingType: 'stage_completion',
+				baseUrl: origin,
+				cookieHeader,
+			}).catch(() => { /* non-critical */ });
+		} catch {
+			// Non-critical: don't fail the solve update
+		}
 	}
 
 	return json({ project });
@@ -82,7 +101,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals, cookies }
  * POST /api/projects/[id]/solve
  * Complete SOLVE phase and transition to EVALUATE
  */
-export const POST: RequestHandler = async ({ params, request, locals, cookies }) => {
+export const POST: RequestHandler = async ({ params, request, locals, cookies, url }) => {
 	if (!locals.session || !locals.user) {
 		error(401, 'Unauthorized');
 	}
@@ -123,6 +142,31 @@ export const POST: RequestHandler = async ({ params, request, locals, cookies })
 		});
 	} catch {
 		// Non-critical, don't fail the request
+	}
+
+	// Intelligence Web: auto-generate milestone briefing on phase completion
+	try {
+		const adminSupabase = createAdminSupabase();
+		// Get org_id for briefing
+		const { data: proj } = await supabase
+			.from('projects')
+			.select('org_id')
+			.eq('id', params.id)
+			.single();
+
+		if (proj?.org_id) {
+			const origin = request.headers.get('origin') ?? url.origin ?? '';
+			const cookieHeader = request.headers.get('cookie') ?? '';
+			generateBriefing(supabase, adminSupabase, {
+				projectId: params.id,
+				orgId: proj.org_id,
+				briefingType: 'milestone',
+				baseUrl: origin,
+				cookieHeader,
+			}).catch(() => { /* non-critical */ });
+		}
+	} catch {
+		// Non-critical
 	}
 
 	return json({ success: true, phase: 'evaluate' });

@@ -1,5 +1,7 @@
 <script lang="ts">
 	import type { UserProfile } from '@shortlist/shared-types/auth';
+	import { hasPermission } from '@shortlist/shared-types/auth';
+	import type { TeamRole } from '@shortlist/shared-types/auth';
 	import { page } from '$app/stores';
 
 	interface Props {
@@ -9,7 +11,11 @@
 
 	let { profile, open = $bindable() }: Props = $props();
 
-	const navItems = [
+	const canViewExec = $derived(
+		profile?.role ? hasPermission(profile.role as TeamRole, 'canViewExecutiveDashboard') : false
+	);
+
+	const baseNavItems = [
 		{ label: 'Dashboard', href: '/dashboard', icon: 'dashboard' },
 		{ label: 'Projects', href: '/projects', icon: 'projects' },
 		{ label: 'Discover', href: '/discover', icon: 'discover' },
@@ -17,6 +23,12 @@
 		{ label: 'Teams', href: '/account/teams', icon: 'teams' },
 		{ label: 'Account', href: '/account', icon: 'account' }
 	];
+
+	const navItems = $derived(
+		canViewExec
+			? [...baseNavItems.slice(0, 4), { label: 'Executive', href: '/executive', icon: 'executive' }, ...baseNavItems.slice(4)]
+			: baseNavItems
+	);
 </script>
 
 <aside class="sidebar" class:open aria-label="Main navigation">
@@ -51,6 +63,9 @@
 					{:else if item.icon === 'teams'}
 						<circle cx="8" cy="5" r="3" stroke="currentColor" stroke-width="1.4"/>
 						<path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+					{:else if item.icon === 'executive'}
+						<path d="M2 13V5l6-3 6 3v8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+						<path d="M5 8h6M5 10.5h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
 					{:else if item.icon === 'account'}
 						<circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.4"/>
 						<path d="M10.5 6.5L7 10l-1.5-1.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>

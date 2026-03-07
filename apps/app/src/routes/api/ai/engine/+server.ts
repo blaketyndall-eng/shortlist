@@ -41,6 +41,12 @@ const TOKEN_LIMITS: Partial<Record<string, number>> = {
 	stack_suggest: 300,
 	context_notes: 500,
 	reference_questions: 500,
+	// Alignment engines
+	alignment_analyze: 600,
+	alignment_summary: 300,
+	// Executive engines
+	executive_insight: 500,
+	executive_milestone_brief: 1000,
 };
 
 // Model overrides for specific engines (prototype uses specific model per engine)
@@ -56,6 +62,12 @@ const ENGINE_MODEL_OVERRIDE: Partial<Record<string, string>> = {
 	reference_questions: 'claude-haiku-4-5-20251001',
 	score_explanation: 'claude-opus-4-6',
 	executive_brief: 'claude-opus-4-6',
+	// Alignment engines
+	alignment_analyze: 'claude-sonnet-4-6',
+	alignment_summary: 'claude-haiku-4-5-20251001',
+	// Executive engines
+	executive_insight: 'claude-sonnet-4-6',
+	executive_milestone_brief: 'claude-opus-4-6',
 };
 
 interface EngineRequest {
@@ -200,6 +212,14 @@ function buildSystemPrompt(engine: string, context: Record<string, unknown>): st
 
 		// --- Implementation ---
 		implement: 'You are Shortlist AI, specializing in implementation planning: timelines, change management, and vendor onboarding.',
+
+		// --- Alignment Engines ---
+		alignment_analyze: 'You are an organizational alignment analyst for B2B procurement teams. Given poll responses grouped by role (admin, member, leadership), calculate alignment scores (0-100), identify gaps between roles and dimensions, and provide actionable recommendations to improve team consensus. Return ONLY valid JSON, no markdown.',
+		alignment_summary: 'You are a team alignment summarizer. Generate a concise alignment snapshot. Return ONLY valid JSON, no markdown.',
+
+		// --- Executive Engines ---
+		executive_insight: 'You are a procurement intelligence analyst generating executive-level insights. Synthesize project activity, vendor evaluations, and team alignment data into concise, actionable insights for leadership. Return ONLY valid JSON, no markdown.',
+		executive_milestone_brief: 'You are a procurement intelligence briefing writer for C-suite executives. Given project data, vendor evaluations, alignment scores, and team activity, produce a structured briefing. Be concise, data-driven, highlight risks and decisions needed. Return ONLY valid JSON, no markdown.',
 	};
 
 	const basePrompt = prompts[engine] ?? prompts.evaluate;
@@ -440,6 +460,83 @@ Return only tool names separated by commas: Salesforce, Slack, Jira, AWS, ...`;
 ${str(ctx.fullProfile)}
 
 Write a concise context note (3-5 sentences) that an AI assistant should know when helping this company evaluate and buy software. Cover: key constraints, compliance sensitivities, procurement approach, what they optimise for, and any red flags. Start with "Your company…"`;
+
+		// --- Alignment Engines ---
+		case 'alignment_analyze':
+			return `Analyze these team alignment poll responses and identify gaps.
+
+Poll: "${str(ctx.pollTitle)}"
+Context: ${str(ctx.contextType)} (${str(ctx.solveStage) || 'standalone'})
+Project: ${str(ctx.projectName)}
+
+Responses grouped by role:
+${str(ctx.responsesByRole)}
+
+Total respondents: ${str(ctx.totalRespondents)}
+
+Return JSON:
+{"overall":0-100,"byRole":{"admin":0-100,"member":0-100,"leadership":0-100},"byDimension":{"${str(ctx.contextType)}":0-100},"gaps":[{"dimension":"area","spread":number,"highRole":"role","lowRole":"role","recommendation":"actionable recommendation"}],"insights":["3-5 key observations"],"recommendations":["2-3 actionable next steps"]}
+
+Score interpretation: 80-100 = strong alignment, 60-79 = moderate (needs attention), 40-59 = weak (action required), <40 = critical misalignment.
+Spread > 20 indicates a significant gap between roles.`;
+
+		case 'alignment_summary':
+			return `Generate a brief alignment snapshot for this project.
+
+Project: ${str(ctx.projectName)}
+Current stage: ${str(ctx.currentStage)}
+Active polls: ${str(ctx.activePolls)}
+Overall alignment: ${str(ctx.overallScore)}/100
+Role breakdown: ${str(ctx.roleBreakdown)}
+Top gaps: ${str(ctx.topGaps)}
+
+Return JSON:
+{"headline":"one-line alignment status","status":"strong|moderate|weak|critical","keyInsight":"most important observation","action":"recommended next action"}`;
+
+		case 'executive_insight':
+			return `Generate an executive insight for this project activity.
+
+Project: ${str(ctx.projectName)}
+Trigger: ${str(ctx.trigger)}
+Current stage: ${str(ctx.currentStage)}
+Vendors evaluated: ${str(ctx.vendorCount)}
+Alignment score: ${str(ctx.alignmentScore)}/100
+Recent activity: ${str(ctx.recentActivity)}
+Budget: ${str(ctx.budget)}
+
+Return JSON:
+{"title":"insight title","insight":"2-3 sentence executive insight","impact":"business impact statement","urgency":"low|medium|high","recommendedAction":"what leadership should do"}`;
+
+		case 'executive_milestone_brief': {
+			return `Generate an executive briefing for this procurement milestone.
+
+Project: ${str(ctx.projectName)}
+Milestone: ${str(ctx.milestoneType)}
+Category: ${str(ctx.category)}
+Problem: ${str(ctx.problem)}
+Budget: ${str(ctx.budget)}
+Team size: ${str(ctx.teamSize)}
+
+Current stage: ${str(ctx.currentStage)}
+Stages completed: ${str(ctx.stagesCompleted)}
+
+Vendor pipeline:
+${str(ctx.vendorSummary)}
+
+Alignment data:
+${str(ctx.alignmentSummary)}
+
+Key decisions pending:
+${str(ctx.pendingDecisions)}
+
+Recent activity:
+${str(ctx.recentActivity)}
+
+Return JSON:
+{"title":"briefing title","summary":"2-3 sentence executive summary","sections":[{"heading":"section title","content":"section content","type":"text|metric|list|alert"}],"keyMetrics":{"vendorsEvaluated":number,"alignmentScore":number,"budgetUtilization":number,"riskLevel":"low|medium|high","activePolls":number,"teamParticipation":number},"recommendedActions":["2-3 prioritized actions for leadership"]}
+
+Be concise, data-driven, and actionable. Highlight risks and decisions needed. Max 400 words for all sections combined.`;
+		}
 
 		// Task-based routing for legacy evaluate engine
 		case 'evaluate': {

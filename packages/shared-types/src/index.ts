@@ -6,3 +6,5 @@ export * from './collaboration.js';
 export * from './billing.js';
 export * from './demos.js';
 export * from './vendor-analysis.js';
+export * from './alignment.js';
+export * from './executive.js';
