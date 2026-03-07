@@ -28,6 +28,7 @@
 				<li>10 vendors per project</li>
 				<li>100 AI credits/month <span class="credit-hint">(~20 full analyses)</span></li>
 				<li>Basic scoring & comparison</li>
+				<li>SCOPE diagnostic workflow</li>
 				<li>SOLVE workflow (all 5 steps)</li>
 				<li>Export to PDF</li>
 			</ul>
@@ -48,9 +49,9 @@
 				<li>Unlimited projects</li>
 				<li>Unlimited vendors</li>
 				<li>500 AI credits/month <span class="credit-hint">(~100 full analyses)</span></li>
-				<li>All 25 AI engines</li>
+				<li>All 30 AI engines</li>
 				<li>Team collaboration (up to 10)</li>
-				<li>SOLVE workflow & vendor discovery</li>
+				<li>SCOPE + SOLVE workflows</li>
 				<li>Team alignment engine</li>
 				<li>100+ pre-loaded vendor library</li>
 				<li>Priority support</li>
@@ -96,6 +97,12 @@
 				</thead>
 				<tbody>
 					<tr>
+						<td>Pre-purchase diagnostic</td>
+						<td class="compare-no">No</td>
+						<td class="compare-no">No</td>
+						<td class="compare-yes">SCOPE (5 steps)</td>
+					</tr>
+					<tr>
 						<td>Structured evaluation workflow</td>
 						<td class="compare-no">Manual</td>
 						<td class="compare-partial">Partial</td>
@@ -105,7 +112,7 @@
 						<td>AI vendor enrichment</td>
 						<td class="compare-no">No</td>
 						<td class="compare-no">No</td>
-						<td class="compare-yes">25 AI engines</td>
+						<td class="compare-yes">30 AI engines</td>
 					</tr>
 					<tr>
 						<td>Fit scoring</td>
@@ -164,8 +171,8 @@
 		</div>
 		<div class="faq-grid" style="margin-top: 32px">
 			<div class="faq-item">
-				<h3>Can I use the SOLVE workflow on Starter?</h3>
-				<p>Yes — all 5 SOLVE steps are available on every plan. Starter limits the number of active projects and vendors, but the workflow itself is fully functional.</p>
+				<h3>Can I use SCOPE and SOLVE on Starter?</h3>
+				<p>Yes — the full SCOPE diagnostic and all 5 SOLVE steps are available on every plan. Starter limits the number of active projects and vendors, but both workflows are fully functional.</p>
 			</div>
 			<div class="faq-item">
 				<h3>How does per-user pricing work on Pro?</h3>

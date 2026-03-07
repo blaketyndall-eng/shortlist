@@ -79,7 +79,7 @@
 				error = 'Assessment failed — try again';
 			}
 		} catch {
-			error = 'Something went wrong';
+			error = 'Network error — check your connection and try again';
 		} finally {
 			assessing = false;
 		}
@@ -124,7 +124,7 @@
 
 			goto(`/scope/${scopeId}/endorse`);
 		} catch {
-			error = 'Something went wrong';
+			error = 'Network error — check your connection and try again';
 			saving = false;
 		}
 	}
@@ -201,6 +201,12 @@
 					{readinessScore !== null ? 'Re-assess' : 'Run Readiness Check'}
 				</Button>
 			</div>
+
+			{#if readinessScore === null && !assessing}
+				<div class="empty-hint">
+					<p>Fill in your budget, timeline, stakeholders, and risks above, then click "Run Readiness Check" for an AI assessment of how prepared your organization is to move forward.</p>
+				</div>
+			{/if}
 
 			{#if readinessScore !== null}
 				<div class="readiness-result">
@@ -339,6 +345,13 @@
 		font-size: 0.875rem; color: #f05050;
 		padding: var(--space-1) 0;
 	}
+
+	.empty-hint {
+		background: var(--neutral-50); border: 1px dashed var(--neutral-200);
+		border-radius: var(--radius-md); padding: var(--space-4);
+		text-align: center;
+	}
+	.empty-hint p { font-size: 0.875rem; color: var(--neutral-400); margin: 0; line-height: 1.5; }
 
 	.actions {
 		display: flex; justify-content: space-between; gap: var(--space-3);

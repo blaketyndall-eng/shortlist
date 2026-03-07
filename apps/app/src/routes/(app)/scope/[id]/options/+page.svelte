@@ -71,7 +71,7 @@
 				error = 'Failed to generate recommendations';
 			}
 		} catch {
-			error = 'Something went wrong';
+			error = 'Network error — check your connection and try again';
 		} finally {
 			generating = false;
 		}
@@ -117,7 +117,7 @@
 
 			goto(`/scope/${scopeId}/prepare`);
 		} catch {
-			error = 'Something went wrong';
+			error = 'Network error — check your connection and try again';
 			saving = false;
 		}
 	}
@@ -163,6 +163,12 @@
 					{recommendations.length ? 'Re-generate' : 'Get Recommendations'}
 				</Button>
 			</div>
+
+			{#if recommendations.length === 0 && !generating}
+				<div class="empty-hint">
+					<p>Click "Get Recommendations" to have AI analyze your signal and root cause data, then suggest the best path forward — buy, build, fix, partner, or do nothing.</p>
+				</div>
+			{/if}
 
 			{#if recommendations.length > 0}
 				<div class="option-cards">
@@ -334,6 +340,13 @@
 	}
 	.poll-wrapper h3 { font-size: 0.9375rem; font-weight: 600; margin: 0 0 var(--space-1); }
 	.poll-hint { font-size: 0.8125rem; color: var(--neutral-400); margin-bottom: var(--space-3); }
+
+	.empty-hint {
+		background: var(--neutral-50); border: 1px dashed var(--neutral-200);
+		border-radius: var(--radius-md); padding: var(--space-4);
+		text-align: center;
+	}
+	.empty-hint p { font-size: 0.875rem; color: var(--neutral-400); margin: 0; line-height: 1.5; }
 
 	.actions {
 		display: flex; justify-content: space-between; gap: var(--space-3);

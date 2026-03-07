@@ -28,6 +28,7 @@
 	let generating = $state(false);
 	let saving = $state(false);
 	let transitioning = $state(false);
+	let showConfirm = $state(false);
 	let error = $state('');
 
 	onMount(async () => {
@@ -94,7 +95,7 @@
 				error = 'Failed to generate brief';
 			}
 		} catch {
-			error = 'Something went wrong';
+			error = 'Network error — check your connection and try again';
 		} finally {
 			generating = false;
 		}
@@ -133,7 +134,7 @@
 				return;
 			}
 		} catch {
-			error = 'Something went wrong';
+			error = 'Network error — check your connection and try again';
 			saving = false;
 		}
 		saving = false;
@@ -183,7 +184,7 @@
 				}
 			}
 		} catch {
-			error = 'Something went wrong';
+			error = 'Network error — check your connection and try again';
 			transitioning = false;
 		}
 	}
@@ -210,7 +211,7 @@
 <Card>
 	<div class="step-content">
 		<h2>Get the green light</h2>
-		<p class="step-intro">Generate a decision brief and secure endorsement. This is your case for action.</p>
+		<p class="step-intro">Generate a decision brief and secure endorsement. This is your objective case — built from data, not persuasion.</p>
 
 		{#if error}
 			<div class="error-banner" role="alert">{error}</div>
@@ -268,7 +269,7 @@
 
 					{#if brief.costOfInaction}
 						<div class="brief-section warning">
-							<h4>Cost of Inaction</h4>
+							<h4>Risk of Delay</h4>
 							<p>{brief.costOfInaction}</p>
 						</div>
 					{/if}
@@ -293,7 +294,7 @@
 				<div class="approval-header">
 					<span class="approval-badge">Approval Required</span>
 					<span class="approval-reason">
-						Budget (${scopeData.prepare?.budgetEstimate?.toLocaleString() ?? '—'}) exceeds approval threshold (${sponsorThreshold?.toLocaleString() ?? '—'})
+						Budget (${scopeData.prepare?.budgetEstimate?.toLocaleString() ?? '—'}) exceeds your organization's approval threshold (${sponsorThreshold?.toLocaleString() ?? '—'})
 					</span>
 				</div>
 
@@ -303,15 +304,19 @@
 					{:else if approvalStatus === 'rejected'}
 						<span class="status-rejected">✗ Rejected</span>
 					{:else}
-						<span class="status-pending">⏳ Pending approval</span>
+						<span class="status-pending">⏳ Waiting for executive sign-off</span>
 					{/if}
 				</div>
 
+				<p class="approval-hint">
+					Share this page with your approving executive. They can review the brief above, then approve or reject below.
+				</p>
+
 				<label class="field">
-					<span>Approver notes</span>
+					<span>Executive notes</span>
 					<textarea
 						bind:value={approverNotes}
-						placeholder="Notes from the approving executive…"
+						placeholder="Approver enters notes here — questions, conditions, or rationale…"
 						rows="2"
 					></textarea>
 				</label>
@@ -349,7 +354,7 @@
 					variant="primary"
 					loading={transitioning}
 					disabled={!canFinalize}
-					onclick={finalizeScope}
+					onclick={() => (showConfirm = true)}
 				>
 					{actionLabel}
 				</Button>
@@ -357,6 +362,31 @@
 		</div>
 	</div>
 </Card>
+
+{#if showConfirm}
+	<div class="confirm-overlay" role="dialog" aria-modal="true">
+		<div class="confirm-dialog">
+			<h3>{decision === 'do_nothing' ? 'Complete this SCOPE?' : 'Finalize and create project?'}</h3>
+			<p>
+				{#if decision === 'do_nothing'}
+					This will mark the SCOPE as complete with a "Do Nothing" decision. No project will be created. This can't be undone.
+				{:else if decision === 'buy'}
+					This will finalize the SCOPE and create a new SOLVE project pre-filled with your diagnostic data. You'll move into vendor evaluation.
+				{:else}
+					This will finalize the SCOPE and create a "{DECISION_LABELS[decision] ?? decision}" project. The diagnostic data will carry forward.
+				{/if}
+			</p>
+			<div class="confirm-actions">
+				<Button variant="ghost" onclick={() => (showConfirm = false)} disabled={transitioning}>
+					Go back
+				</Button>
+				<Button variant="primary" loading={transitioning} onclick={() => { showConfirm = false; finalizeScope(); }}>
+					{decision === 'do_nothing' ? 'Yes, complete' : 'Yes, create project'}
+				</Button>
+			</div>
+		</div>
+	</div>
+{/if}
 
 <style>
 	.step-content h2 { margin-bottom: var(--space-1); }
@@ -462,4 +492,25 @@
 		padding-top: var(--space-4); border-top: 1px solid var(--neutral-100);
 	}
 	.action-group { display: flex; gap: var(--space-2); }
+
+	.approval-hint {
+		font-size: 0.8125rem; color: var(--neutral-500); line-height: 1.5;
+		margin-bottom: var(--space-3);
+	}
+
+	.confirm-overlay {
+		position: fixed; inset: 0;
+		background: rgba(0, 0, 0, 0.5);
+		display: flex; align-items: center; justify-content: center;
+		z-index: 100;
+	}
+	.confirm-dialog {
+		background: var(--color-bg-secondary, white);
+		border: 1px solid var(--neutral-200);
+		border-radius: var(--radius-lg);
+		padding: var(--space-6); max-width: 480px; width: 90%;
+	}
+	.confirm-dialog h3 { margin-bottom: var(--space-2); font-size: 1rem; }
+	.confirm-dialog p { color: var(--neutral-500); font-size: 0.875rem; line-height: 1.5; margin-bottom: var(--space-5); }
+	.confirm-actions { display: flex; gap: var(--space-3); justify-content: flex-end; }
 </style>

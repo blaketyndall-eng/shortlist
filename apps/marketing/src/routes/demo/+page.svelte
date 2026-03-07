@@ -1,10 +1,24 @@
 <script lang="ts">
+	let demoMode = $state<'scope' | 'solve'>('scope');
 	let currentStep = $state(0);
 	let animating = $state(false);
 	let showInsight = $state(false);
 	let pollVoted = $state(-1);
 	let briefingOpen = $state(false);
 	let briefingApproved = $state(false);
+	let scopeCausePoll = $state(-1);
+	let scopeOptionsPoll = $state(-1);
+	let scopeReadinessRun = $state(false);
+	let scopeBriefOpen = $state(false);
+	let scopeApproved = $state(false);
+
+	const SCOPE_STEPS = [
+		{ id: 'signal', letter: 'S', label: 'Signal', color: '#f0a034' },
+		{ id: 'cause', letter: 'C', label: 'Cause', color: '#f0a034' },
+		{ id: 'options', letter: 'O', label: 'Options', color: '#f0a034' },
+		{ id: 'prepare', letter: 'P', label: 'Prepare', color: '#f0a034' },
+		{ id: 'endorse', letter: 'E', label: 'Endorse', color: '#f0a034' },
+	];
 
 	const STEPS = [
 		{ id: 'scope', letter: 'S', label: 'Scope', color: '#00cc96' },
@@ -13,6 +27,28 @@
 		{ id: 'validate', letter: 'V', label: 'Validate', color: '#4a96f8' },
 		{ id: 'execute', letter: 'E', label: 'Execute', color: '#00cc96' },
 	];
+
+	const activeSteps = $derived(demoMode === 'scope' ? SCOPE_STEPS : STEPS);
+
+	function switchMode(mode: 'scope' | 'solve') {
+		if (mode !== demoMode) {
+			demoMode = mode;
+			currentStep = 0;
+			resetState();
+		}
+	}
+
+	function resetState() {
+		showInsight = false;
+		pollVoted = -1;
+		briefingOpen = false;
+		briefingApproved = false;
+		scopeCausePoll = -1;
+		scopeOptionsPoll = -1;
+		scopeReadinessRun = false;
+		scopeBriefOpen = false;
+		scopeApproved = false;
+	}
 
 	const ORG = {
 		name: 'Meridian Technologies',
@@ -48,7 +84,7 @@
 	];
 
 	function nextStep() {
-		if (currentStep < STEPS.length - 1 && !animating) {
+		if (currentStep < activeSteps.length - 1 && !animating) {
 			animating = true;
 			setTimeout(() => {
 				currentStep++;
@@ -99,8 +135,27 @@
 			Interactive Demo
 		</div>
 		<h1>See Shortlist in <span class="highlight">action</span></h1>
-		<p class="hero-sub">Follow <strong>{ORG.teamLead}</strong> ({ORG.teamRole}) as her team evaluates CRM platforms for <strong>{ORG.name}</strong>. This demo uses the same SOLVE workflow, AI engines, and alignment tools you'll have access to — with realistic data at every step.</p>
+		<p class="hero-sub">Follow <strong>{ORG.teamLead}</strong> ({ORG.teamRole}) at <strong>{ORG.name}</strong> — from diagnosing the purchase trigger through vendor selection. This demo uses the same workflows, AI engines, and alignment tools you'll have access to.</p>
 	</header>
+
+	<!-- Mode Selector -->
+	<div class="mode-selector">
+		<button class="mode-btn" class:active={demoMode === 'scope'} onclick={() => switchMode('scope')}>
+			<span class="mode-icon scope-icon">S</span>
+			<div class="mode-info">
+				<span class="mode-label">SCOPE</span>
+				<span class="mode-desc">Should we buy?</span>
+			</div>
+		</button>
+		<span class="mode-arrow">then</span>
+		<button class="mode-btn" class:active={demoMode === 'solve'} onclick={() => switchMode('solve')}>
+			<span class="mode-icon solve-icon">S</span>
+			<div class="mode-info">
+				<span class="mode-label">SOLVE</span>
+				<span class="mode-desc">What should we buy?</span>
+			</div>
+		</button>
+	</div>
 
 	<!-- Org Context Bar -->
 	<div class="org-bar">
@@ -112,8 +167,8 @@
 			</div>
 		</div>
 		<div class="org-project">
-			<span class="project-label">Active Project</span>
-			<span class="project-name">{ORG.project}</span>
+			<span class="project-label">{demoMode === 'scope' ? 'Active SCOPE' : 'Active Project'}</span>
+			<span class="project-name">{demoMode === 'scope' ? 'CRM Platform — Should We Buy?' : ORG.project}</span>
 		</div>
 		<div class="org-team">
 			{#each ORG.members as member}
@@ -122,9 +177,9 @@
 		</div>
 	</div>
 
-	<!-- SOLVE Progress -->
+	<!-- Progress -->
 	<div class="solve-progress">
-		{#each STEPS as step, i}
+		{#each activeSteps as step, i}
 			<button
 				class="progress-step"
 				class:active={i === currentStep}
@@ -141,14 +196,276 @@
 				</span>
 				<span class="step-label">{step.label}</span>
 			</button>
-			{#if i < STEPS.length - 1}
-				<div class="progress-line" style="background: {i < currentStep ? 'linear-gradient(90deg, ' + STEPS[i].color + ', ' + STEPS[i+1].color + ')' : 'rgba(255,255,255,0.06)'}"></div>
+			{#if i < activeSteps.length - 1}
+				<div class="progress-line" style="background: {i < currentStep ? 'linear-gradient(90deg, ' + activeSteps[i].color + ', ' + activeSteps[i+1].color + ')' : 'rgba(255,255,255,0.06)'}"></div>
 			{/if}
 		{/each}
 	</div>
 
 	<!-- Step Content -->
 	<div class="step-content" class:fade-out={animating}>
+
+	{#if demoMode === 'scope'}
+		<!-- ═══════ SCOPE DEMO ═══════ -->
+
+		<!-- ═══ SCOPE STEP 0: SIGNAL ═══ -->
+		{#if currentStep === 0}
+			<div class="step-panel">
+				<div class="panel-header">
+					<div class="panel-badge scope-badge-style">SIGNAL</div>
+					<div class="time-badge">⏱ 10 min with Shortlist <span class="time-vs">vs. scattered Slack threads</span></div>
+					<h2>What triggered this purchase idea?</h2>
+					<p>Before evaluating vendors, capture the signal — what happened, who's affected, and how urgent it is. This becomes the foundation for every decision that follows.</p>
+				</div>
+				<div class="scope-layout">
+					<div class="scope-form">
+						<div class="form-group filled">
+							<label>Purchase Trigger</label>
+							<div class="form-value">Sales team losing deals because our current CRM can't handle multi-touch attribution or complex pipeline stages. Three enterprise deals lost in Q4 where competitors had better tooling.</div>
+						</div>
+						<div class="form-group filled">
+							<label>Urgency Level</label>
+							<div class="form-value">
+								<div class="urgency-bar">
+									<div class="urgency-fill" style="width: 80%"></div>
+									<span class="urgency-label">4 / 5 — High</span>
+								</div>
+							</div>
+						</div>
+						<div class="form-group filled">
+							<label>Impacted Users</label>
+							<div class="form-tags">
+								<span class="tag">Sales Team (45 reps)</span>
+								<span class="tag">RevOps (8 people)</span>
+								<span class="tag">Marketing (12 people)</span>
+								<span class="tag">Leadership (4 execs)</span>
+							</div>
+						</div>
+						<div class="form-group filled">
+							<label>Business Impact</label>
+							<div class="form-value">Estimated $2.1M in pipeline leakage per quarter. Current CRM lacks the reporting depth for accurate forecasting, leading to missed targets 3 quarters in a row.</div>
+						</div>
+					</div>
+					<div class="scope-ai-card">
+						<div class="ai-card-header scope-ai-header">
+							<span class="ai-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1l2.5 5L7 13 4.5 6z" fill="#f0a034" opacity="0.7"/><path d="M7 1l2.5 5L7 13 4.5 6z" stroke="#f0a034" stroke-width="1" stroke-linejoin="round"/></svg></span>
+							<span>AI Signal Analysis</span>
+						</div>
+						<div class="ai-card-body">
+							<p class="ai-insight-text">High-urgency signal with quantified impact ($2.1M/quarter). The trigger is capability-driven (not just preference), affecting 69 people across 4 departments. This warrants a thorough diagnostic before committing to a purchase.</p>
+						</div>
+					</div>
+				</div>
+			</div>
+
+		<!-- ═══ SCOPE STEP 1: CAUSE ═══ -->
+		{:else if currentStep === 1}
+			<div class="step-panel">
+				<div class="panel-header">
+					<div class="panel-badge scope-badge-style">CAUSE</div>
+					<div class="time-badge">⏱ 15 min with Shortlist <span class="time-vs">vs. weeks of meetings</span></div>
+					<h2>Why is this happening?</h2>
+					<p>AI analyzes your signal data to surface potential root causes. Your team votes on which resonates most — so you fix the real problem, not the symptom.</p>
+				</div>
+				<div class="scope-cause-layout">
+					<div class="cause-cards-demo">
+						{#each [
+							{ num: 1, hypothesis: 'CRM platform capability gap', likelihood: 'High', rationale: 'Current system lacks multi-touch attribution, complex pipeline stages, and forecasting depth. These are foundational CRM features the sales team depends on daily.', questions: ['When were these features last evaluated?', 'Has the vendor been asked about upcoming roadmap?'] },
+							{ num: 2, hypothesis: 'Process and training gaps', likelihood: 'Medium', rationale: 'The sales team may not be utilizing all existing CRM features. Training completion is at 40% and process documentation is outdated.', questions: ['What % of existing features are actually used?', 'When was the last training session?'] },
+							{ num: 3, hypothesis: 'Data quality and integration issues', likelihood: 'Medium', rationale: 'Pipeline leakage could be amplified by incomplete data entry, missing integrations with marketing tools, and inconsistent deal stage definitions.', questions: ['What is the data completeness rate?', 'Are lead sources properly tracked?'] },
+						] as cause}
+							<div class="cause-card-demo">
+								<div class="cause-card-header">
+									<span class="cause-num">#{cause.num}</span>
+									<span class="cause-likelihood" style="color: {cause.likelihood === 'High' ? '#f05050' : '#f0a034'}">{cause.likelihood} likelihood</span>
+								</div>
+								<p class="cause-hyp">{cause.hypothesis}</p>
+								<p class="cause-rat">{cause.rationale}</p>
+								<div class="cause-questions">
+									<span class="cq-label">Validate:</span>
+									{#each cause.questions as q}
+										<span class="cq-item">→ {q}</span>
+									{/each}
+								</div>
+							</div>
+						{/each}
+					</div>
+					<div class="cause-sidebar">
+						<div class="sidebar-card">
+							<h4>Team Alignment Poll</h4>
+							<p class="poll-question-text">"What do you believe is the primary root cause?"</p>
+							<div class="poll-options-mini">
+								{#each ['CRM capability gap', 'Process & training', 'Data quality'] as opt, oi}
+									<button class="poll-opt-mini" class:selected={scopeCausePoll === oi} onclick={() => scopeCausePoll = oi}>
+										<span class="po-radio" class:filled={scopeCausePoll === oi}></span>
+										{opt}
+										{#if scopeCausePoll >= 0}<span class="po-pct">{oi === 0 ? '75%' : oi === 1 ? '15%' : '10%'}</span>{/if}
+									</button>
+								{/each}
+							</div>
+							{#if scopeCausePoll >= 0}
+								<div class="poll-result fade-in">
+									<span class="poll-voters">4 of 4 stakeholders responded</span>
+								</div>
+							{/if}
+						</div>
+					</div>
+				</div>
+			</div>
+
+		<!-- ═══ SCOPE STEP 2: OPTIONS ═══ -->
+		{:else if currentStep === 2}
+			<div class="step-panel">
+				<div class="panel-header">
+					<div class="panel-badge scope-badge-style">OPTIONS</div>
+					<div class="time-badge">⏱ 10 min with Shortlist <span class="time-vs">vs. assumption-driven decisions</span></div>
+					<h2>What are our options?</h2>
+					<p>AI recommends whether to buy, build, fix, partner, or do nothing — with data-driven pros, cons, costs, and timelines for each path.</p>
+				</div>
+				<div class="scope-options-layout">
+					{#each [
+						{ icon: '🛒', label: 'Buy', rec: true, desc: 'Purchase a new CRM platform', timeline: '3–6 months', cost: '$50K–120K/yr', risk: 'Medium', pros: ['Addresses all capability gaps', 'Enterprise-grade features', 'Vendor support & roadmap'], cons: ['Migration complexity', 'Change management needed', 'Higher ongoing cost'] },
+						{ icon: '🔧', label: 'Fix', rec: false, desc: 'Optimize current CRM setup', timeline: '1–2 months', cost: '$15K–30K', risk: 'Low', pros: ['Lower cost', 'No migration risk', 'Faster timeline'], cons: ['Doesn\'t address core limitations', 'Band-aid solution', 'Feature ceiling remains'] },
+						{ icon: '🏗️', label: 'Build', rec: false, desc: 'Custom CRM development', timeline: '12+ months', cost: '$200K–500K', risk: 'High', pros: ['Fully tailored', 'No vendor lock-in'], cons: ['Massive resource investment', 'Ongoing maintenance burden', 'Opportunity cost'] },
+						{ icon: '🤝', label: 'Partner', rec: false, desc: 'Add integration layer on top', timeline: '2–4 months', cost: '$30K–60K/yr', risk: 'Medium', pros: ['Keeps existing system', 'Modular approach'], cons: ['Integration complexity', 'Multiple vendor management'] },
+						{ icon: '⏸️', label: 'Do Nothing', rec: false, desc: 'Accept current limitations', timeline: 'N/A', cost: '$0', risk: 'High', pros: ['No disruption'], cons: ['$2.1M/quarter pipeline leakage continues', 'Competitive disadvantage grows'] },
+					] as opt}
+						<div class="option-card" class:recommended={opt.rec}>
+							{#if opt.rec}<span class="rec-tag">AI Recommended</span>{/if}
+							<div class="opt-header">
+								<span class="opt-icon">{opt.icon}</span>
+								<span class="opt-label">{opt.label}</span>
+							</div>
+							<p class="opt-desc">{opt.desc}</p>
+							<div class="opt-meta">
+								<span>⏱ {opt.timeline}</span>
+								<span>💰 {opt.cost}</span>
+								<span>⚠️ {opt.risk} risk</span>
+							</div>
+						</div>
+					{/each}
+				</div>
+			</div>
+
+		<!-- ═══ SCOPE STEP 3: PREPARE ═══ -->
+		{:else if currentStep === 3}
+			<div class="step-panel">
+				<div class="panel-header">
+					<div class="panel-badge scope-badge-style">PREPARE</div>
+					<div class="time-badge">⏱ 15 min with Shortlist <span class="time-vs">vs. guessing readiness</span></div>
+					<h2>Are we ready to proceed?</h2>
+					<p>Budget, timeline, stakeholders, risks — lay the groundwork. AI assesses organizational readiness and flags gaps before you seek endorsement.</p>
+				</div>
+				<div class="scope-prepare-layout">
+					<div class="scope-form">
+						<div class="form-group filled">
+							<label>Budget Estimate</label>
+							<div class="form-value">$85,000 / year</div>
+						</div>
+						<div class="form-group filled">
+							<label>Expected Timeline</label>
+							<div class="form-value">3–6 months (Q2–Q3 2026)</div>
+						</div>
+						<div class="form-group filled">
+							<label>Key Stakeholders</label>
+							<div class="form-value">Karen Liu (VP RevOps, owner), Marcus Rivera (Sales Dir), Priya Patel (CTO, technical sign-off), James Wright (CFO, budget approval)</div>
+						</div>
+						<div class="form-group filled">
+							<label>Risk Assessment</label>
+							<div class="form-value">Migration risk (data migration from legacy system), adoption risk (45 sales reps need training), timeline risk (Q3 is peak sales season)</div>
+						</div>
+					</div>
+					<div class="readiness-panel">
+						{#if !scopeReadinessRun}
+							<button class="ai-trigger-btn scope-trigger" onclick={() => scopeReadinessRun = true}>
+								<span class="ai-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1l2.5 5L7 13 4.5 6z" fill="#f0a034" opacity="0.7"/><path d="M7 1l2.5 5L7 13 4.5 6z" stroke="#f0a034" stroke-width="1" stroke-linejoin="round"/></svg></span>
+								Run Readiness Check
+							</button>
+						{:else}
+							<div class="readiness-result fade-in">
+								<div class="readiness-score-ring">
+									<span class="rs-value" style="color: #00cc96">78</span>
+									<span class="rs-label">/ 100</span>
+								</div>
+								<span class="rs-verdict" style="color: #f0a034">Needs Attention</span>
+								<div class="readiness-gaps">
+									<h5>Gaps Identified</h5>
+									<div class="rg-item">
+										<span class="rg-area">Change Management</span>
+										<span class="rg-sev" style="color: #f05050">High</span>
+										<p>No formal change management plan for 45 sales reps. Recommend assigning a change champion and creating a rollout calendar before proceeding.</p>
+									</div>
+									<div class="rg-item">
+										<span class="rg-area">Data Migration</span>
+										<span class="rg-sev" style="color: #f0a034">Medium</span>
+										<p>Legacy data hasn't been audited. Recommend a data quality assessment before vendor demos to set realistic migration expectations.</p>
+									</div>
+								</div>
+							</div>
+						{/if}
+					</div>
+				</div>
+			</div>
+
+		<!-- ═══ SCOPE STEP 4: ENDORSE ═══ -->
+		{:else if currentStep === 4}
+			<div class="step-panel">
+				<div class="panel-header">
+					<div class="panel-badge scope-badge-style">ENDORSE</div>
+					<div class="time-badge">⏱ 5 min with Shortlist <span class="time-vs">vs. building decks from scratch</span></div>
+					<h2>Get stakeholder buy-in</h2>
+					<p>AI generates a complete executive decision brief from all your SCOPE data — ready for leadership approval. One click to endorse and transition into vendor evaluation.</p>
+				</div>
+				<div class="scope-endorse-layout">
+					<div class="endorse-brief-panel">
+						<button class="briefing-trigger scope-brief-trigger" onclick={() => scopeBriefOpen = !scopeBriefOpen}>
+							<div class="bt-left">
+								<span class="bt-type scope-bt-type">Decision Brief</span>
+								<span class="bt-title">CRM Platform Purchase — Executive Summary</span>
+								<span class="bt-meta">Generated from SCOPE data · AI-powered</span>
+							</div>
+							<span class="bt-arrow" class:open={scopeBriefOpen}>&rsaquo;</span>
+						</button>
+						{#if scopeBriefOpen}
+							<div class="briefing-content fade-in">
+								<div class="bc-section">
+									<h5>Executive Summary</h5>
+									<p>Meridian Technologies' sales team has identified a capability gap in their current CRM that is contributing to an estimated $2.1M in quarterly pipeline leakage. After root cause analysis involving 4 stakeholders, the team has 75% consensus that the primary issue is a platform capability gap (not process or data quality). AI analysis recommends purchasing a new CRM platform. Organizational readiness is 78/100 with two gaps to address: change management planning and data migration assessment.</p>
+								</div>
+								<div class="bc-section">
+									<h5>Decision</h5>
+									<div class="endorse-decision">
+										<span class="ed-icon">🛒</span>
+										<span class="ed-label">Buy — Proceed to vendor evaluation</span>
+									</div>
+								</div>
+								<div class="bc-section">
+									<h5>Next Steps</h5>
+									<div class="bc-actions">
+										<div class="bc-action"><span class="bca-num">1</span>Address change management gap (assign champion)</div>
+										<div class="bc-action"><span class="bca-num">2</span>Run data quality assessment on legacy CRM</div>
+										<div class="bc-action"><span class="bca-num">3</span>Begin SOLVE evaluation workflow with $85K budget</div>
+									</div>
+								</div>
+								<div class="bc-approve-row">
+									{#if scopeApproved}
+										<div class="approve-success fade-in">
+											<span>✓ Endorsed — SOLVE evaluation started</span>
+											<button class="transition-btn" onclick={() => switchMode('solve')}>View SOLVE Demo →</button>
+										</div>
+									{:else}
+										<button class="btn-approve scope-approve" onclick={() => scopeApproved = true}>Endorse & Start SOLVE</button>
+									{/if}
+								</div>
+							</div>
+						{/if}
+					</div>
+				</div>
+			</div>
+		{/if}
+
+	{:else}
+		<!-- ═══════ SOLVE DEMO ═══════ -->
 
 		<!-- ═══ STEP 0: SCOPE ═══ -->
 		{#if currentStep === 0}
@@ -489,6 +806,7 @@
 				</div>
 			</div>
 		{/if}
+	{/if}
 	</div>
 
 	<!-- Nav Controls -->
@@ -496,11 +814,17 @@
 		<button class="nav-btn" onclick={prevStep} disabled={currentStep === 0}>
 			&larr; Previous
 		</button>
-		<span class="nav-indicator">Step {currentStep + 1} of {STEPS.length}</span>
-		{#if currentStep === STEPS.length - 1}
-			<a href="https://app.tryshortlist.app/auth/signup" class="nav-btn cta-btn">
-				Start Your Evaluation &rarr;
-			</a>
+		<span class="nav-indicator">Step {currentStep + 1} of {activeSteps.length}</span>
+		{#if currentStep === activeSteps.length - 1}
+			{#if demoMode === 'scope'}
+				<button class="nav-btn cta-btn" onclick={() => switchMode('solve')}>
+					Continue to SOLVE Demo &rarr;
+				</button>
+			{:else}
+				<a href="https://app.tryshortlist.app/auth/signup" class="nav-btn cta-btn">
+					Start Your Evaluation &rarr;
+				</a>
+			{/if}
 		{:else}
 			<button class="nav-btn next-btn" onclick={nextStep}>
 				Next Step &rarr;
@@ -870,10 +1194,169 @@
 	}
 	.btn-ghost:hover { border-color: rgba(255, 255, 255, 0.28); }
 
+	/* ═══════ MODE SELECTOR ═══════ */
+	.mode-selector {
+		display: flex; align-items: center; justify-content: center; gap: 12px;
+		margin-bottom: 24px;
+	}
+	.mode-btn {
+		display: flex; align-items: center; gap: 10px;
+		padding: 12px 20px; background: rgba(255,255,255,0.02);
+		border: 1px solid rgba(255,255,255,0.08); border-radius: 10px;
+		cursor: pointer; transition: all 0.2s; font-family: 'Figtree', sans-serif;
+	}
+	.mode-btn:hover { border-color: rgba(255,255,255,0.16); }
+	.mode-btn.active { border-color: rgba(240,160,52,0.35); background: rgba(240,160,52,0.04); }
+	.mode-btn.active:last-of-type { border-color: rgba(0,204,150,0.35); background: rgba(0,204,150,0.04); }
+	.mode-icon {
+		width: 32px; height: 32px; border-radius: 8px;
+		display: flex; align-items: center; justify-content: center;
+		font-size: 0.75rem; font-weight: 800;
+	}
+	.scope-icon { background: rgba(240,160,52,0.12); color: #f0a034; }
+	.solve-icon { background: rgba(0,204,150,0.12); color: #00cc96; }
+	.mode-info { display: flex; flex-direction: column; text-align: left; }
+	.mode-label { font-size: 0.875rem; font-weight: 700; color: #dde4ef; }
+	.mode-desc { font-size: 0.6875rem; color: #6b7e96; }
+	.mode-arrow { font-size: 0.6875rem; color: #6b7e96; font-weight: 600; }
+
+	/* ═══════ SCOPE BADGE ═══════ */
+	.scope-badge-style {
+		background: rgba(240,160,52,0.1); color: #f0a034;
+		border-color: rgba(240,160,52,0.25);
+	}
+	.scope-ai-header { color: #f0a034; background: rgba(240,160,52,0.06); }
+	.scope-trigger { color: #f0a034; background: rgba(240,160,52,0.08); border-color: rgba(240,160,52,0.2); }
+	.scope-trigger:hover { background: rgba(240,160,52,0.14); border-color: rgba(240,160,52,0.35); }
+	.scope-brief-trigger { border-color: rgba(240,160,52,0.12); }
+	.scope-bt-type { color: #f0a034; }
+	.scope-approve { background: #f0a034; color: #1a1208; }
+	.scope-approve:hover { background: #d9912e; }
+
+	/* ═══════ URGENCY BAR ═══════ */
+	.urgency-bar {
+		position: relative; height: 8px; background: rgba(255,255,255,0.06);
+		border-radius: 4px; overflow: visible; margin-top: 4px;
+	}
+	.urgency-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #f0a034, #f05050); }
+	.urgency-label {
+		position: absolute; right: 0; top: -18px;
+		font-size: 0.6875rem; font-weight: 600; color: #f0a034;
+	}
+
+	/* ═══════ SCOPE CAUSE ═══════ */
+	.scope-cause-layout { display: grid; grid-template-columns: 1fr 300px; gap: 24px; }
+	.cause-cards-demo { display: flex; flex-direction: column; gap: 12px; }
+	.cause-card-demo {
+		background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06);
+		border-radius: 10px; padding: 16px;
+	}
+	.cause-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+	.cause-num {
+		font-size: 0.6875rem; font-weight: 700; color: #f0a034;
+		background: rgba(240,160,52,0.1); padding: 2px 8px; border-radius: 6px;
+	}
+	.cause-likelihood { font-size: 0.6875rem; font-weight: 700; }
+	.cause-hyp { font-size: 0.875rem; font-weight: 700; color: #dde4ef; margin-bottom: 4px; }
+	.cause-rat { font-size: 0.8125rem; color: #8b95a5; line-height: 1.6; margin-bottom: 8px; }
+	.cause-questions { display: flex; flex-direction: column; gap: 2px; }
+	.cq-label { font-size: 0.625rem; font-weight: 700; color: #6b7e96; text-transform: uppercase; letter-spacing: 0.04em; }
+	.cq-item { font-size: 0.75rem; color: #6b7e96; }
+
+	.cause-sidebar { display: flex; flex-direction: column; gap: 12px; }
+	.poll-question-text { font-size: 0.8125rem; color: #8b95a5; font-style: italic; margin-bottom: 10px; }
+	.poll-options-mini { display: flex; flex-direction: column; gap: 6px; }
+	.poll-opt-mini {
+		display: flex; align-items: center; gap: 10px;
+		padding: 10px 12px; background: rgba(255,255,255,0.02);
+		border: 1px solid rgba(255,255,255,0.06); border-radius: 8px;
+		cursor: pointer; transition: all 0.15s; font-family: 'Figtree', sans-serif;
+		color: #8b95a5; font-size: 0.8125rem; width: 100%; text-align: left;
+	}
+	.poll-opt-mini:hover { border-color: rgba(255,255,255,0.14); }
+	.poll-opt-mini.selected { border-color: rgba(240,160,52,0.3); background: rgba(240,160,52,0.04); }
+
+	/* ═══════ SCOPE OPTIONS ═══════ */
+	.scope-options-layout {
+		display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;
+	}
+	.option-card {
+		background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06);
+		border-radius: 10px; padding: 16px; position: relative; transition: border-color 0.2s;
+	}
+	.option-card:hover { border-color: rgba(255,255,255,0.12); }
+	.option-card.recommended { border-color: rgba(240,160,52,0.3); background: rgba(240,160,52,0.03); }
+	.rec-tag {
+		position: absolute; top: -8px; left: 12px;
+		background: #f0a034; color: #1a1208; font-size: 0.5625rem;
+		font-weight: 700; padding: 2px 8px; border-radius: 9999px;
+		letter-spacing: 0.03em;
+	}
+	.opt-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+	.opt-icon { font-size: 1.25rem; }
+	.opt-label { font-size: 0.875rem; font-weight: 700; color: #dde4ef; }
+	.opt-desc { font-size: 0.75rem; color: #6b7e96; margin-bottom: 10px; line-height: 1.5; }
+	.opt-meta { display: flex; flex-direction: column; gap: 4px; font-size: 0.6875rem; color: #6b7e96; }
+
+	/* ═══════ SCOPE PREPARE ═══════ */
+	.scope-prepare-layout { display: grid; grid-template-columns: 1fr 340px; gap: 24px; }
+	.readiness-panel {
+		background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06);
+		border-radius: 12px; padding: 20px; align-self: start;
+	}
+	.readiness-result { text-align: center; }
+	.readiness-score-ring {
+		display: flex; align-items: baseline; justify-content: center; gap: 4px;
+		margin-bottom: 8px;
+	}
+	.rs-value { font-size: 3rem; font-weight: 800; line-height: 1; }
+	.rs-label { font-size: 1rem; color: #6b7e96; font-weight: 600; }
+	.rs-verdict { display: block; font-size: 0.875rem; font-weight: 700; margin-bottom: 20px; }
+	.readiness-gaps { text-align: left; }
+	.readiness-gaps h5 {
+		font-size: 0.6875rem; font-weight: 700; color: #fff;
+		text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px;
+		font-family: 'Figtree', sans-serif;
+	}
+	.rg-item {
+		padding: 12px; margin-bottom: 8px;
+		background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06);
+		border-radius: 8px;
+	}
+	.rg-area { display: block; font-size: 0.75rem; font-weight: 700; color: #dde4ef; margin-bottom: 2px; }
+	.rg-sev { font-size: 0.625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+	.rg-item p { font-size: 0.75rem; color: #8b95a5; line-height: 1.55; margin: 6px 0 0; }
+
+	/* ═══════ SCOPE ENDORSE ═══════ */
+	.scope-endorse-layout { max-width: 700px; }
+	.endorse-brief-panel {
+		background: rgba(255,255,255,0.02); border: 1px solid rgba(240,160,52,0.12);
+		border-radius: 10px; overflow: hidden;
+	}
+	.endorse-decision {
+		display: flex; align-items: center; gap: 10px;
+		padding: 12px; background: rgba(240,160,52,0.06);
+		border: 1px solid rgba(240,160,52,0.12); border-radius: 8px;
+	}
+	.ed-icon { font-size: 1.25rem; }
+	.ed-label { font-size: 0.875rem; font-weight: 700; color: #f0a034; }
+	.transition-btn {
+		display: inline-block; margin-left: 12px; padding: 6px 14px;
+		background: rgba(0,204,150,0.08); border: 1px solid rgba(0,204,150,0.2);
+		border-radius: 6px; color: #00cc96; font-size: 0.75rem; font-weight: 600;
+		cursor: pointer; transition: all 0.15s; font-family: 'Figtree', sans-serif;
+	}
+	.transition-btn:hover { background: rgba(0,204,150,0.14); }
+
 	/* ═══════ RESPONSIVE ═══════ */
 	@media (max-width: 768px) {
 		h1 { font-size: 2.25rem; }
+		.mode-selector { flex-direction: column; gap: 8px; }
+		.mode-arrow { display: none; }
 		.scope-layout { grid-template-columns: 1fr; }
+		.scope-cause-layout { grid-template-columns: 1fr; }
+		.scope-options-layout { grid-template-columns: repeat(2, 1fr); }
+		.scope-prepare-layout { grid-template-columns: 1fr; }
 		.discover-layout { grid-template-columns: 1fr; }
 		.leverage-layout { grid-template-columns: 1fr; }
 		.validate-layout { grid-template-columns: 1fr; }
@@ -886,6 +1369,7 @@
 	@media (max-width: 480px) {
 		h1 { font-size: 1.875rem; }
 		.exec-metrics { grid-template-columns: 1fr; }
+		.scope-options-layout { grid-template-columns: 1fr; }
 		.comp-header, .comp-row { grid-template-columns: 100px repeat(3, 1fr); }
 	}
 </style>

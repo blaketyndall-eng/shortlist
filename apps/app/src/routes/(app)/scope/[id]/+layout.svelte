@@ -10,6 +10,8 @@
 	let scope = $state<Scope | null>(null);
 	let loading = $state(true);
 	let error = $state('');
+	let showAbandon = $state(false);
+	let abandoning = $state(false);
 
 	const scopeId = $derived($page.params.id);
 	const currentStep = $derived<ScopeStep>(
@@ -31,6 +33,24 @@
 			error = 'Failed to load SCOPE session';
 		} finally {
 			loading = false;
+		}
+	}
+
+	async function abandonScope() {
+		abandoning = true;
+		try {
+			const res = await fetch(`/api/scopes/${scopeId}`, {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ status: 'abandoned' }),
+			});
+			if (res.ok) {
+				const { goto } = await import('$app/navigation');
+				goto('/dashboard');
+			}
+		} catch {
+			showAbandon = false;
+			abandoning = false;
 		}
 	}
 
@@ -57,7 +77,28 @@
 			</div>
 
 			<ScopeProgressBar {currentStep} {scopeId} />
+
+			<button class="abandon-trigger" onclick={() => (showAbandon = true)}>
+				Abandon SCOPE
+			</button>
 		</header>
+
+		{#if showAbandon}
+			<div class="abandon-overlay" role="dialog" aria-modal="true">
+				<div class="abandon-dialog">
+					<h3>Abandon this SCOPE?</h3>
+					<p>This will mark "{scope.name}" as abandoned. It won't appear on your dashboard and no project will be created. You can't undo this.</p>
+					<div class="abandon-actions">
+						<button class="abandon-cancel" onclick={() => (showAbandon = false)} disabled={abandoning}>
+							Keep working
+						</button>
+						<button class="abandon-confirm" onclick={abandonScope} disabled={abandoning}>
+							{abandoning ? 'Abandoning…' : 'Yes, abandon'}
+						</button>
+					</div>
+				</div>
+			</div>
+		{/if}
 
 		<div class="scope-content">
 			{@render children()}
@@ -142,4 +183,55 @@
 		width: auto;
 		height: auto;
 	}
+
+	.abandon-trigger {
+		display: block;
+		margin-top: var(--space-3);
+		margin-left: auto;
+		background: none;
+		border: none;
+		color: var(--neutral-400);
+		font-size: 0.75rem;
+		cursor: pointer;
+		padding: var(--space-1) var(--space-2);
+		border-radius: var(--radius-sm);
+		transition: color var(--transition-fast);
+	}
+	.abandon-trigger:hover { color: #f05050; }
+
+	.abandon-overlay {
+		position: fixed;
+		inset: 0;
+		background: rgba(0, 0, 0, 0.5);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		z-index: 100;
+	}
+	.abandon-dialog {
+		background: var(--color-bg-secondary, white);
+		border: 1px solid var(--neutral-200);
+		border-radius: var(--radius-lg);
+		padding: var(--space-6);
+		max-width: 420px;
+		width: 90%;
+	}
+	.abandon-dialog h3 { margin-bottom: var(--space-2); font-size: 1rem; }
+	.abandon-dialog p { color: var(--neutral-500); font-size: 0.875rem; line-height: 1.5; margin-bottom: var(--space-5); }
+	.abandon-actions { display: flex; gap: var(--space-3); justify-content: flex-end; }
+	.abandon-cancel {
+		padding: var(--space-2) var(--space-4);
+		background: none; border: 1px solid var(--neutral-200);
+		border-radius: var(--radius-md); font-size: 0.875rem;
+		cursor: pointer; color: var(--neutral-600);
+	}
+	.abandon-cancel:hover { background: var(--neutral-50); }
+	.abandon-confirm {
+		padding: var(--space-2) var(--space-4);
+		background: #f05050; border: none;
+		border-radius: var(--radius-md); font-size: 0.875rem;
+		color: white; font-weight: 500; cursor: pointer;
+	}
+	.abandon-confirm:hover { background: #e04040; }
+	.abandon-confirm:disabled, .abandon-cancel:disabled { opacity: 0.5; cursor: not-allowed; }
 </style>

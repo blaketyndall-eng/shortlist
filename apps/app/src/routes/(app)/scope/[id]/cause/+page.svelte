@@ -68,7 +68,7 @@
 				error = 'Analysis failed — try again';
 			}
 		} catch {
-			error = 'Something went wrong during analysis';
+			error = 'Network error — check your connection and try again';
 		} finally {
 			analyzing = false;
 		}
@@ -114,7 +114,7 @@
 
 			goto(`/scope/${scopeId}/options`);
 		} catch {
-			error = 'Something went wrong';
+			error = 'Failed to save — check your connection and try again';
 			saving = false;
 		}
 	}
@@ -159,10 +159,17 @@
 					size="sm"
 					loading={analyzing}
 					onclick={runAnalysis}
+					disabled={!signalSummary.trigger}
 				>
 					{aiCauses.length ? 'Re-analyze' : 'Analyze Root Causes'}
 				</Button>
 			</div>
+
+			{#if aiCauses.length === 0 && !analyzing}
+				<div class="empty-hint">
+					<p>Click "Analyze Root Causes" to have AI identify potential reasons behind the signal you described. You can also skip this and enter your own hypothesis below.</p>
+				</div>
+			{/if}
 
 			{#if aiCauses.length > 0}
 				<div class="cause-cards">
@@ -304,6 +311,13 @@
 	}
 	.poll-wrapper h3 { font-size: 0.9375rem; font-weight: 600; margin: 0 0 var(--space-1); }
 	.poll-hint { font-size: 0.8125rem; color: var(--neutral-400); margin-bottom: var(--space-3); }
+
+	.empty-hint {
+		background: var(--neutral-50); border: 1px dashed var(--neutral-200);
+		border-radius: var(--radius-md); padding: var(--space-4);
+		text-align: center;
+	}
+	.empty-hint p { font-size: 0.875rem; color: var(--neutral-400); margin: 0; line-height: 1.5; }
 
 	.actions {
 		display: flex; justify-content: space-between; gap: var(--space-3);

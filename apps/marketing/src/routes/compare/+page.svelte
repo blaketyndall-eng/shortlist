@@ -12,8 +12,8 @@
 		</div>
 		<h1>Your vendor spreadsheet is <span class="highlight">costing you</span></h1>
 		<p class="hero-sub">
-			Teams waste 20+ hours per purchase decision wrestling with tabs, formulas, and scattered notes.
-			Shortlist replaces all of that with a structured, AI-powered workflow.
+			Teams waste 20+ hours per purchase decision wrestling with tabs, formulas, and scattered notes — often evaluating software they didn't need to buy.
+			Shortlist replaces all of that with structured, AI-powered workflows that start with diagnosis and end with a confident decision.
 		</p>
 	</header>
 
@@ -118,6 +118,11 @@
 				</thead>
 				<tbody>
 					<tr>
+						<td>Pre-purchase diagnostic</td>
+						<td class="col-spreadsheet"><span class="val-no">No</span></td>
+						<td class="col-shortlist"><span class="val-yes">SCOPE workflow (5 steps)</span></td>
+					</tr>
+					<tr>
 						<td>Vendor discovery</td>
 						<td class="col-spreadsheet"><span class="val-no">Manual search</span></td>
 						<td class="col-shortlist"><span class="val-yes">AI-powered, 170+ library</span></td>
@@ -125,7 +130,7 @@
 					<tr>
 						<td>Vendor enrichment</td>
 						<td class="col-spreadsheet"><span class="val-no">Copy-paste from web</span></td>
-						<td class="col-shortlist"><span class="val-yes">25 AI engines, auto</span></td>
+						<td class="col-shortlist"><span class="val-yes">30 AI engines, auto</span></td>
 					</tr>
 					<tr>
 						<td>Scoring framework</td>
@@ -175,7 +180,7 @@
 	<!-- Workflow comparison -->
 	<section class="workflow-section">
 		<h2>Your evaluation workflow, transformed</h2>
-		<p class="section-sub">See how Shortlist's SOLVE framework replaces the spreadsheet scramble.</p>
+		<p class="section-sub">See how Shortlist's SCOPE + SOLVE frameworks replace the spreadsheet scramble.</p>
 
 		<div class="workflow-steps">
 			<div class="wf-step">

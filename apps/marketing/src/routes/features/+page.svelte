@@ -1,23 +1,62 @@
 <svelte:head>
 	<title>Features — Shortlist Purchase Intelligence Platform</title>
-	<meta name="description" content="25 AI engines, structured SOLVE workflow, team alignment, executive dashboards, and 100+ pre-loaded vendors. Everything you need to make confident purchase decisions." />
+	<meta name="description" content="SCOPE diagnostic workflow, SOLVE evaluation framework, 30 AI engines, team alignment, executive dashboards, and 100+ pre-loaded vendors. Everything you need to make confident purchase decisions." />
 </svelte:head>
 
 <section class="hero">
 	<div class="hero-inner">
 		<div class="hero-badge"><span class="badge-dot"></span> Platform Features</div>
 		<h1>Everything you need to make <span class="highlight">confident purchases</span></h1>
-		<p class="hero-sub">Most teams evaluate vendors with spreadsheets, email threads, and gut feel. Here's how Shortlist replaces all of that — from purchase trigger to vendor selection.</p>
+		<p class="hero-sub">Most teams jump to vendor evaluation before confirming whether a purchase is the right path. Shortlist starts earlier — with diagnosis — and carries you through to a confident decision.</p>
+	</div>
+</section>
+
+<!-- ═══════ FEATURE 0: SCOPE DIAGNOSTIC ═══════ -->
+<section class="feature-row">
+	<div class="feature-inner">
+		<div class="feature-text">
+			<div class="f-tag amber">Pre-Purchase Diagnostic</div>
+			<h2>SCOPE Diagnostic Workflow</h2>
+			<p>Before you evaluate vendors, confirm you're solving the right problem. SCOPE guides teams from purchase trigger through root cause analysis, approach selection, readiness assessment, and stakeholder endorsement — so you never spend months evaluating software you didn't need to buy.</p>
+			<ul class="feature-list">
+				<li>AI-powered root cause analysis from your signal data</li>
+				<li>Buy / Build / Fix / Partner / Do Nothing recommendations</li>
+				<li>Team alignment polls at Cause and Options stages</li>
+				<li>Readiness scoring with gap and blocker detection</li>
+				<li>Executive decision brief with approval workflow</li>
+			</ul>
+			<a href="/demo" class="inline-demo-link">Walk through the SCOPE workflow →</a>
+		</div>
+		<div class="feature-visual">
+			<div class="solve-visual">
+				{#each [
+					{ letter: 'S', label: 'Signal', desc: 'Capture the purchase trigger', status: 'complete' },
+					{ letter: 'C', label: 'Cause', desc: 'AI root cause analysis', status: 'complete' },
+					{ letter: 'O', label: 'Options', desc: 'Buy, build, fix, or do nothing', status: 'active' },
+					{ letter: 'P', label: 'Prepare', desc: 'Budget, timeline, readiness', status: 'pending' },
+					{ letter: 'E', label: 'Endorse', desc: 'Executive brief & approval', status: 'pending' }
+				] as step}
+					<div class="solve-card scope-accent {step.status}">
+						<span class="solve-letter scope-letter">{step.letter}</span>
+						<div class="solve-text">
+							<span class="solve-label">{step.label}</span>
+							<span class="solve-desc">{step.desc}</span>
+						</div>
+						<span class="solve-status">{step.status === 'complete' ? '✓' : step.status === 'active' ? '●' : '○'}</span>
+					</div>
+				{/each}
+			</div>
+		</div>
 	</div>
 </section>
 
 <!-- ═══════ FEATURE 1: SOLVE WORKFLOW ═══════ -->
-<section class="feature-row">
-	<div class="feature-inner">
+<section class="feature-row alt">
+	<div class="feature-inner reverse">
 		<div class="feature-text">
 			<div class="f-tag teal">Scope → Execute</div>
-			<h2>SOLVE Discovery Workflow</h2>
-			<p>Before you evaluate, get crystal-clear on what you need. The 5-step SOLVE workflow guides your team from initial purchase trigger through vendor discovery, weighted comparison, team validation, and confident execution.</p>
+			<h2>SOLVE Evaluation Workflow</h2>
+			<p>Once SCOPE confirms you should buy, SOLVE takes over. The 5-step workflow guides your team from requirements through vendor discovery, weighted comparison, team validation, and confident execution — with SCOPE data already imported.</p>
 			<ul class="feature-list">
 				<li>AI classifies your purchase category automatically</li>
 				<li>Generates knockout criteria and challenge questions</li>
@@ -49,13 +88,13 @@
 	</div>
 </section>
 
-<!-- ═══════ FEATURE 2: 25 AI ENGINES ═══════ -->
-<section class="feature-row alt">
-	<div class="feature-inner reverse">
+<!-- ═══════ FEATURE 2: 30 AI ENGINES ═══════ -->
+<section class="feature-row">
+	<div class="feature-inner">
 		<div class="feature-text">
 			<div class="f-tag">All Phases</div>
-			<h2>25 Specialized AI Engines</h2>
-			<p>Each engine is purpose-built for a specific purchase intelligence task — from vendor evaluation and discovery to contract risk analysis, negotiation coaching, alignment analysis, and executive briefings.</p>
+			<h2>30 Specialized AI Engines</h2>
+			<p>Each engine is purpose-built for a specific purchase intelligence task — from pre-purchase diagnostics and root cause analysis to vendor evaluation, contract risk, negotiation coaching, alignment analysis, and executive briefings.</p>
 			<ul class="feature-list">
 				<li>Three depth levels: quick, standard, deep analysis</li>
 				<li>Company-profile-aware context for every prompt</li>
@@ -84,14 +123,14 @@
 				<span class="e-chip t">Fit Score</span>
 				<span class="e-chip">Company Profile</span>
 			</div>
-			<div class="engine-count">25 Engine Types Available</div>
+			<div class="engine-count">30 Engine Types Available</div>
 		</div>
 	</div>
 </section>
 
 <!-- ═══════ FEATURE 3: TEAM ALIGNMENT ═══════ -->
-<section class="feature-row">
-	<div class="feature-inner">
+<section class="feature-row alt">
+	<div class="feature-inner reverse">
 		<div class="feature-text">
 			<div class="f-tag teal">Validate Phase</div>
 			<h2>AI Team Alignment</h2>
@@ -101,7 +140,7 @@
 				<li>Scores broken down by role (admin, member, leadership)</li>
 				<li>Gap detection: flags where stakeholders disagree</li>
 				<li>AI recommendations to resolve alignment gaps</li>
-				<li>Embedded in SOLVE stages + standalone dashboard</li>
+				<li>Embedded in SCOPE and SOLVE stages + standalone dashboard</li>
 			</ul>
 			<a href="/demo" class="inline-demo-link">See alignment scoring in action →</a>
 		</div>
@@ -130,8 +169,8 @@
 </section>
 
 <!-- ═══════ FEATURE 4: EXECUTIVE DASHBOARD ═══════ -->
-<section class="feature-row alt">
-	<div class="feature-inner reverse">
+<section class="feature-row">
+	<div class="feature-inner">
 		<div class="feature-text">
 			<div class="f-tag">Execute Phase</div>
 			<h2>Executive Dashboard & Briefings</h2>
@@ -168,8 +207,8 @@
 </section>
 
 <!-- ═══════ FEATURE 5: VENDOR LIBRARY ═══════ -->
-<section class="feature-row">
-	<div class="feature-inner">
+<section class="feature-row alt">
+	<div class="feature-inner reverse">
 		<div class="feature-text">
 			<div class="f-tag teal">Observe Phase</div>
 			<h2>Pre-Built Vendor Library</h2>
@@ -199,8 +238,8 @@
 </section>
 
 <!-- ═══════ FEATURE 6: SCORING ═══════ -->
-<section class="feature-row alt">
-	<div class="feature-inner reverse">
+<section class="feature-row">
+	<div class="feature-inner">
 		<div class="feature-text">
 			<div class="f-tag">Leverage Phase</div>
 			<h2>Weighted Scoring & Comparison</h2>
@@ -225,8 +264,8 @@
 </section>
 
 <!-- ═══════ FEATURE 7: INTELLIGENCE WEB ═══════ -->
-<section class="feature-row">
-	<div class="feature-inner">
+<section class="feature-row alt">
+	<div class="feature-inner reverse">
 		<div class="feature-text">
 			<div class="f-tag teal">All Phases</div>
 			<h2>The Intelligence Web</h2>
@@ -257,7 +296,7 @@
 <section class="final-cta">
 	<div class="section-inner">
 		<h2>See these features in action</h2>
-		<p>Walk through a live CRM evaluation using every feature on this page — or start your own project today.</p>
+		<p>Walk through a live SCOPE diagnostic and CRM evaluation using every feature on this page — or start your own project today.</p>
 		<div class="cta-group">
 			<a href="/demo" class="btn-primary">Try the Interactive Demo <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10m0 0L9 4m4 4L9 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
 			<a href="https://app.tryshortlist.app/auth/signup" class="btn-ghost">Start Free Trial</a>
@@ -284,6 +323,14 @@
 	.feature-inner.reverse > * { direction: ltr; }
 	.f-tag { display: inline-block; padding: 4px 14px; border-radius: 9999px; font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 1rem; background: rgba(240,80,80,0.08); border: 1px solid rgba(240,80,80,0.16); color: #f05050; }
 	.f-tag.teal { background: rgba(0,204,150,0.08); border-color: rgba(0,204,150,0.16); color: #00cc96; }
+	.f-tag.amber { background: rgba(240,160,52,0.08); border-color: rgba(240,160,52,0.16); color: #f0a034; }
+	.scope-accent.complete { border-color: rgba(240,160,52,0.2); }
+	.scope-accent.active { border-color: rgba(240,160,52,0.3); background: rgba(240,160,52,0.04); }
+	.scope-letter { background: rgba(240,160,52,0.12) !important; color: #f0a034 !important; }
+	.scope-accent.complete .solve-letter { background: rgba(240,160,52,0.12); color: #f0a034; }
+	.scope-accent.active .solve-letter { background: rgba(240,160,52,0.18); color: #f0a034; }
+	.scope-accent.complete .solve-status { color: #f0a034; }
+	.scope-accent.active .solve-status { color: #f0a034; }
 	.feature-text p { font-size: 1rem; color: #6b7e96; line-height: 1.7; margin: 0 0 1.25rem; }
 	.feature-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
 	.feature-list li { font-size: 0.875rem; color: #8b95a5; padding-left: 20px; position: relative; line-height: 1.6; }

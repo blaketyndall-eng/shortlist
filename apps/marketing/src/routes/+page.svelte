@@ -229,53 +229,72 @@
 	</div>
 </section>
 
-<!-- ═══════ HOW IT WORKS — SOLVE WORKFLOW ═══════ -->
+<!-- ═══════ TWO WORKFLOWS — SCOPE + SOLVE ═══════ -->
 <section class="workflow-section">
 	<div class="section-inner">
 		<div class="section-tag teal">The Solution</div>
-		<h2>The SOLVE workflow</h2>
-		<p class="section-sub">A structured, AI-guided process that takes you from purchase trigger to confident decision — with full team alignment and executive visibility at every step.</p>
+		<h2>Two workflows. One complete decision.</h2>
+		<p class="section-sub">Most tools assume you've already decided to buy. Shortlist starts earlier — with a diagnostic that ensures buying is even the right answer.</p>
 
-		<div class="solve-flow">
-			<div class="solve-step">
-				<div class="step-marker t">S</div>
-				<div class="step-content">
-					<h3>Scope</h3>
-					<p>Define what you're buying, who's involved, budget constraints, and success criteria in a guided questionnaire.</p>
+		<div class="dual-workflow">
+			<!-- SCOPE -->
+			<div class="workflow-card scope-card">
+				<div class="wf-header">
+					<span class="wf-badge scope-badge">SCOPE</span>
+					<span class="wf-label">Should we buy?</span>
+				</div>
+				<p class="wf-desc">Diagnose the problem before committing to a vendor evaluation. SCOPE walks your team through a structured pre-purchase diagnostic.</p>
+				<div class="wf-steps">
+					<div class="wf-step"><span class="wf-letter am">S</span><span class="wf-name">Signal</span></div>
+					<span class="wf-arrow">→</span>
+					<div class="wf-step"><span class="wf-letter am">C</span><span class="wf-name">Cause</span></div>
+					<span class="wf-arrow">→</span>
+					<div class="wf-step"><span class="wf-letter am">O</span><span class="wf-name">Options</span></div>
+					<span class="wf-arrow">→</span>
+					<div class="wf-step"><span class="wf-letter am">P</span><span class="wf-name">Prepare</span></div>
+					<span class="wf-arrow">→</span>
+					<div class="wf-step"><span class="wf-letter am">E</span><span class="wf-name">Endorse</span></div>
+				</div>
+				<div class="wf-outcomes">
+					<span class="wf-outcome-tag">Buy → flows into SOLVE</span>
+					<span class="wf-outcome-tag">Build / Fix / Partner</span>
+					<span class="wf-outcome-tag">Do Nothing (documented)</span>
 				</div>
 			</div>
-			<div class="solve-connector"></div>
-			<div class="solve-step">
-				<div class="step-marker bl">O</div>
-				<div class="step-content">
-					<h3>Observe</h3>
-					<p>AI discovers vendors from a library of 100+, classifies them by fit, and surfaces options you didn't know existed.</p>
+
+			<div class="workflow-bridge">
+				<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 12h14m0 0l-5-5m5 5l-5 5" stroke="#00cc96" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+				<span>If "Buy"</span>
+			</div>
+
+			<!-- SOLVE -->
+			<div class="workflow-card solve-card">
+				<div class="wf-header">
+					<span class="wf-badge solve-badge">SOLVE</span>
+					<span class="wf-label">What should we buy?</span>
+				</div>
+				<p class="wf-desc">Once buying is confirmed, SOLVE guides vendor discovery, weighted comparison, team validation, and confident execution.</p>
+				<div class="wf-steps">
+					<div class="wf-step"><span class="wf-letter t">S</span><span class="wf-name">Scope</span></div>
+					<span class="wf-arrow">→</span>
+					<div class="wf-step"><span class="wf-letter bl">O</span><span class="wf-name">Observe</span></div>
+					<span class="wf-arrow">→</span>
+					<div class="wf-step"><span class="wf-letter t">L</span><span class="wf-name">Leverage</span></div>
+					<span class="wf-arrow">→</span>
+					<div class="wf-step"><span class="wf-letter bl">V</span><span class="wf-name">Validate</span></div>
+					<span class="wf-arrow">→</span>
+					<div class="wf-step"><span class="wf-letter t">E</span><span class="wf-name">Execute</span></div>
+				</div>
+				<div class="wf-outcomes">
+					<span class="wf-outcome-tag">AI-scored vendor shortlist</span>
+					<span class="wf-outcome-tag">Team alignment at every stage</span>
+					<span class="wf-outcome-tag">Executive decision brief</span>
 				</div>
 			</div>
-			<div class="solve-connector"></div>
-			<div class="solve-step">
-				<div class="step-marker t">L</div>
-				<div class="step-content">
-					<h3>Leverage</h3>
-					<p>Compare vendors with weighted scoring, TCO analysis, and AI-generated fit reports tailored to your company profile.</p>
-				</div>
-			</div>
-			<div class="solve-connector"></div>
-			<div class="solve-step">
-				<div class="step-marker bl">V</div>
-				<div class="step-content">
-					<h3>Validate</h3>
-					<p>Run demos, track vendor claims against reality, and collect structured team feedback with alignment scoring.</p>
-				</div>
-			</div>
-			<div class="solve-connector"></div>
-			<div class="solve-step">
-				<div class="step-marker t">E</div>
-				<div class="step-content">
-					<h3>Execute</h3>
-					<p>Generate executive briefings, negotiate with AI-backed data, and track implementation with full audit trails.</p>
-				</div>
-			</div>
+		</div>
+
+		<div class="workflow-tagline">
+			<p><strong>SCOPE</strong> (should we buy?) → <strong>SOLVE</strong> (what should we buy?) — a complete purchase intelligence lifecycle.</p>
 		</div>
 	</div>
 </section>
@@ -645,17 +664,55 @@
 	.fixes-both p { font-size: 1rem; color: #c0c8d4; line-height: 1.6; margin: 0; }
 	.fixes-both strong { color: #00cc96; }
 
-	/* ═══════ SOLVE WORKFLOW ═══════ */
+	/* ═══════ DUAL WORKFLOW — SCOPE + SOLVE ═══════ */
 	.workflow-section { padding: 5rem 2rem; }
-	.solve-flow { display: flex; flex-direction: column; max-width: 640px; }
-	.solve-step { display: flex; gap: 20px; align-items: flex-start; }
-	.step-marker { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; flex-shrink: 0; }
-	.step-marker.t { background: rgba(0, 204, 150, 0.12); color: #00cc96; border: 1px solid rgba(0, 204, 150, 0.24); }
-	.step-marker.bl { background: rgba(74, 150, 248, 0.12); color: #4a96f8; border: 1px solid rgba(74, 150, 248, 0.24); }
-	.step-content { padding-top: 4px; }
-	.step-content h3 { font-size: 1.125rem; font-weight: 700; color: #fff; margin-bottom: 6px; font-family: 'Figtree', sans-serif; }
-	.step-content p { font-size: 0.9375rem; color: #6b7e96; line-height: 1.6; margin: 0; }
-	.solve-connector { width: 2px; height: 28px; background: rgba(255, 255, 255, 0.06); margin-left: 21px; }
+	.dual-workflow { display: flex; gap: 1.5rem; align-items: stretch; margin-top: 2.5rem; }
+	.workflow-card {
+		flex: 1; padding: 28px;
+		background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06);
+		border-radius: 14px; display: flex; flex-direction: column; gap: 16px;
+	}
+	.workflow-card.scope-card { border-top: 2px solid rgba(240, 160, 52, 0.5); }
+	.workflow-card.solve-card { border-top: 2px solid rgba(0, 204, 150, 0.5); }
+	.wf-header { display: flex; align-items: center; gap: 12px; }
+	.wf-badge {
+		padding: 4px 14px; border-radius: 9999px;
+		font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.06em;
+		text-transform: uppercase;
+	}
+	.scope-badge { background: rgba(240, 160, 52, 0.12); color: #f0a034; }
+	.solve-badge { background: rgba(0, 204, 150, 0.12); color: #00cc96; }
+	.wf-label { font-size: 1.0625rem; font-weight: 700; color: #dde4ef; }
+	.wf-desc { font-size: 0.9375rem; color: #6b7e96; line-height: 1.6; margin: 0; }
+	.wf-steps { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+	.wf-step { display: flex; align-items: center; gap: 6px; }
+	.wf-letter {
+		width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center;
+		font-family: 'Playfair Display', serif; font-size: 12px; font-weight: 700; flex-shrink: 0;
+	}
+	.wf-letter.t { background: rgba(0, 204, 150, 0.12); color: #00cc96; }
+	.wf-letter.bl { background: rgba(74, 150, 248, 0.12); color: #4a96f8; }
+	.wf-letter.am { background: rgba(240, 160, 52, 0.12); color: #f0a034; }
+	.wf-name { font-size: 0.75rem; font-weight: 600; color: #8b95a5; }
+	.wf-arrow { color: rgba(255, 255, 255, 0.12); font-size: 0.75rem; }
+	.wf-outcomes { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; }
+	.wf-outcome-tag {
+		padding: 3px 10px; border-radius: 6px;
+		font-size: 0.625rem; font-weight: 600; color: #6b7e96;
+		background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06);
+	}
+	.workflow-bridge {
+		display: flex; flex-direction: column; align-items: center; justify-content: center;
+		gap: 6px; flex-shrink: 0; padding: 0 4px;
+	}
+	.workflow-bridge span { font-size: 0.6875rem; font-weight: 600; color: #00cc96; }
+	.workflow-tagline {
+		text-align: center; margin-top: 2rem;
+		padding: 16px 24px; background: rgba(0, 204, 150, 0.04);
+		border: 1px solid rgba(0, 204, 150, 0.12); border-radius: 12px;
+	}
+	.workflow-tagline p { font-size: 1rem; color: #c0c8d4; margin: 0; line-height: 1.6; }
+	.workflow-tagline strong { color: #00cc96; }
 
 	/* ═══════ CAPABILITIES GRID ═══════ */
 	.features-section { padding: 5rem 2rem; text-align: center; }
@@ -717,6 +774,9 @@
 		h2 { font-size: 1.875rem; }
 		.case-grid { grid-template-columns: 1fr; max-width: 440px; margin-left: auto; margin-right: auto; }
 		.broken-grid { grid-template-columns: 1fr; }
+		.dual-workflow { flex-direction: column; }
+		.workflow-bridge { flex-direction: row; padding: 8px 0; }
+		.workflow-bridge svg { transform: rotate(90deg); }
 		.capabilities-grid { grid-template-columns: 1fr; }
 		.cap-card.featured { grid-column: span 1; }
 		.stats-grid { grid-template-columns: repeat(2, 1fr); }
