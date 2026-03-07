@@ -12,6 +12,25 @@
 	let activeCategory = $state(data.category);
 	let loading = $state(false);
 
+	// Compare mode
+	let compareIds = $state<Set<string>>(new Set());
+	let compareMode = $state(false);
+
+	function toggleCompare(id: string) {
+		const next = new Set(compareIds);
+		if (next.has(id)) {
+			next.delete(id);
+		} else if (next.size < 4) {
+			next.add(id);
+		}
+		compareIds = next;
+	}
+
+	function goToCompare() {
+		if (compareIds.size < 2) return;
+		goto(`/discover/compare?ids=${[...compareIds].join(',')}`);
+	}
+
 	// AI search state
 	let aiSearchQuery = $state('');
 	let aiLoading = $state(false);
@@ -128,21 +147,50 @@
 
 	<!-- Results -->
 	{#if data.vendors.length > 0}
-		<p class="results-meta">
-			Showing {(data.page - 1) * data.limit + 1}–{Math.min(data.page * data.limit, data.total)} of {data.total} vendors
-			{#if data.search}
-				for "{data.search}"
-			{/if}
-			{#if activeCategory}
-				in {catNames.get(activeCategory) ?? activeCategory}
-			{/if}
-		</p>
+		<div class="results-header">
+			<p class="results-meta">
+				Showing {(data.page - 1) * data.limit + 1}–{Math.min(data.page * data.limit, data.total)} of {data.total} vendors
+				{#if data.search}
+					for "{data.search}"
+				{/if}
+				{#if activeCategory}
+					in {catNames.get(activeCategory) ?? activeCategory}
+				{/if}
+			</p>
+			<button class="compare-toggle" class:active={compareMode} onclick={() => { compareMode = !compareMode; if (!compareMode) compareIds = new Set(); }} type="button">
+				{compareMode ? 'Cancel compare' : 'Compare vendors'}
+			</button>
+		</div>
 
 		<div class="vendor-grid">
 			{#each data.vendors as vendor (vendor.id)}
-				<VendorCard {vendor} categoryName={catNames.get(vendor.category_id)} />
+				<div class="vendor-grid-item" class:compare-selected={compareIds.has(vendor.id)}>
+					{#if compareMode}
+						<button
+							class="compare-check"
+							class:checked={compareIds.has(vendor.id)}
+							onclick={(e) => { e.stopPropagation(); toggleCompare(vendor.id); }}
+							type="button"
+							disabled={!compareIds.has(vendor.id) && compareIds.size >= 4}
+							aria-label="Select {vendor.name} for comparison"
+						>
+							{compareIds.has(vendor.id) ? '✓' : ''}
+						</button>
+					{/if}
+					<VendorCard {vendor} categoryName={catNames.get(vendor.category_id)} />
+				</div>
 			{/each}
 		</div>
+
+		<!-- Compare floating bar -->
+		{#if compareMode && compareIds.size >= 1}
+			<div class="compare-bar">
+				<span>{compareIds.size} vendor{compareIds.size === 1 ? '' : 's'} selected</span>
+				<Button variant="primary" size="sm" onclick={goToCompare} disabled={compareIds.size < 2}>
+					Compare now →
+				</Button>
+			</div>
+		{/if}
 
 		<!-- Pagination -->
 		{#if totalPages > 1}
@@ -306,16 +354,89 @@
 	}
 
 	/* Results */
+	.results-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: var(--space-4);
+	}
+
 	.results-meta {
 		font-size: 0.8125rem;
 		color: var(--neutral-500);
-		margin-bottom: var(--space-4);
+		margin: 0;
+	}
+
+	.compare-toggle {
+		padding: var(--space-1) var(--space-3);
+		font-size: 0.8125rem;
+		font-weight: 600;
+		border: 1px solid var(--neutral-200);
+		border-radius: var(--radius-md);
+		background: transparent;
+		color: var(--primary-600);
+		cursor: pointer;
+		transition: all 0.15s ease;
+	}
+	.compare-toggle:hover { border-color: var(--primary-400); }
+	.compare-toggle.active {
+		background: var(--primary-50);
+		border-color: var(--primary-300);
+		color: var(--primary-700);
 	}
 
 	.vendor-grid {
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
 		gap: var(--space-4);
+	}
+
+	.vendor-grid-item {
+		position: relative;
+	}
+	.vendor-grid-item.compare-selected {
+		outline: 2px solid var(--primary-400);
+		border-radius: var(--radius-lg);
+	}
+
+	.compare-check {
+		position: absolute;
+		top: 8px; right: 8px;
+		z-index: 2;
+		width: 24px; height: 24px;
+		border-radius: 50%;
+		border: 2px solid var(--neutral-300);
+		background: var(--color-bg-secondary);
+		color: transparent;
+		font-size: 0.75rem; font-weight: 700;
+		cursor: pointer;
+		display: flex; align-items: center; justify-content: center;
+		transition: all 0.15s ease;
+	}
+	.compare-check:hover { border-color: var(--primary-400); }
+	.compare-check.checked {
+		background: var(--primary-600);
+		border-color: var(--primary-600);
+		color: white;
+	}
+	.compare-check:disabled { opacity: 0.3; cursor: not-allowed; }
+
+	.compare-bar {
+		position: fixed;
+		bottom: 24px;
+		left: 50%;
+		transform: translateX(-50%);
+		background: var(--color-bg-secondary);
+		border: 1px solid var(--neutral-200);
+		border-radius: var(--radius-lg);
+		padding: var(--space-3) var(--space-5);
+		display: flex;
+		align-items: center;
+		gap: var(--space-4);
+		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+		z-index: 50;
+		font-size: 0.875rem;
+		color: var(--neutral-600);
 	}
 
 	/* Pagination */
