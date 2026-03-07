@@ -84,9 +84,45 @@
 				{/each}
 			</div>
 		{:else}
-			<div class="empty-state">
-				<p>No projects yet. Create your first procurement project to get started.</p>
-				<a href="/project/new" class="btn-primary">New Project</a>
+			<div class="getting-started">
+				<div class="gs-header">
+					<h3>Get started with Shortlist</h3>
+					<p>Follow these steps to run your first vendor evaluation.</p>
+				</div>
+				<div class="gs-steps">
+					<a href="/project/new" class="gs-step">
+						<span class="gs-number">1</span>
+						<div class="gs-info">
+							<span class="gs-title">Create a project</span>
+							<span class="gs-desc">Define what you're evaluating (e.g., "CRM Platform Selection")</span>
+						</div>
+						<span class="gs-arrow">→</span>
+					</a>
+					<div class="gs-step gs-disabled">
+						<span class="gs-number">2</span>
+						<div class="gs-info">
+							<span class="gs-title">Add vendors to compare</span>
+							<span class="gs-desc">Search our library or add vendors manually</span>
+						</div>
+					</div>
+					<div class="gs-step gs-disabled">
+						<span class="gs-number">3</span>
+						<div class="gs-info">
+							<span class="gs-title">Score and evaluate</span>
+							<span class="gs-desc">Rate vendors against your criteria with AI assistance</span>
+						</div>
+					</div>
+					<div class="gs-step gs-disabled">
+						<span class="gs-number">4</span>
+						<div class="gs-info">
+							<span class="gs-title">Get your recommendation</span>
+							<span class="gs-desc">See weighted rankings and export a decision report</span>
+						</div>
+					</div>
+				</div>
+				<div class="gs-explore">
+					<a href="/discover" class="explore-link">Or explore our vendor library first →</a>
+				</div>
 			</div>
 		{/if}
 	</section>
@@ -267,4 +303,32 @@
 	.activity-section h2 {
 		margin-bottom: var(--space-3);
 	}
+
+	.getting-started { padding: var(--space-4) 0; }
+	.gs-header { text-align: center; margin-bottom: var(--space-5); }
+	.gs-header h3 { font-size: 1.125rem; margin-bottom: var(--space-1); }
+	.gs-header p { color: var(--neutral-400); font-size: 0.875rem; }
+	.gs-steps { display: flex; flex-direction: column; gap: var(--space-2); }
+	.gs-step {
+		display: flex; align-items: center; gap: var(--space-3);
+		padding: var(--space-3) var(--space-4);
+		border: 1px solid var(--neutral-200); border-radius: var(--radius-md);
+		text-decoration: none; color: inherit; transition: all var(--transition-fast);
+	}
+	a.gs-step:hover { border-color: var(--primary-500); background: rgba(74, 150, 248, 0.05); text-decoration: none; }
+	.gs-disabled { opacity: 0.5; }
+	.gs-number {
+		width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+		display: flex; align-items: center; justify-content: center;
+		font-size: 0.8125rem; font-weight: 700;
+		background: var(--primary-50); color: var(--primary-700);
+	}
+	a.gs-step .gs-number { background: var(--primary-600); color: white; }
+	.gs-info { flex: 1; }
+	.gs-title { display: block; font-weight: 500; font-size: 0.9375rem; }
+	.gs-desc { display: block; font-size: 0.8125rem; color: var(--neutral-400); margin-top: 2px; }
+	.gs-arrow { color: var(--primary-600); font-size: 1.25rem; flex-shrink: 0; }
+	.gs-explore { text-align: center; margin-top: var(--space-4); }
+	.explore-link { color: var(--primary-600); text-decoration: none; font-size: 0.875rem; }
+	.explore-link:hover { text-decoration: underline; }
 </style>

@@ -10,7 +10,11 @@
 	let step = $state<'welcome' | 'profile' | 'team' | 'first_project'>('welcome');
 	let fullName = $state(data.profile?.full_name ?? '');
 	let company = $state(data.profile?.company ?? '');
+	let jobTitle = $state('');
 	let saving = $state(false);
+	let inviteEmail = $state('');
+	let inviteSending = $state(false);
+	let inviteSent = $state(false);
 
 	async function saveProfile() {
 		saving = true;
@@ -23,6 +27,7 @@
 			.update({
 				full_name: fullName.trim(),
 				company: company.trim() || null,
+				job_title: jobTitle.trim() || null,
 				updated_at: new Date().toISOString()
 			})
 			.eq('id', user.user.id);
@@ -36,6 +41,60 @@
 
 		step = 'team';
 		saving = false;
+	}
+
+	async function sendInvite() {
+		if (!inviteEmail.includes('@')) return;
+		inviteSending = true;
+
+		const { data: user } = await supabase.auth.getUser();
+		if (!user.user) {
+			inviteSending = false;
+			return;
+		}
+
+		// Check if user has a team, create one if not
+		const { data: memberOf } = await supabase
+			.from('team_members')
+			.select('team_id')
+			.eq('user_id', user.user.id)
+			.limit(1);
+
+		let teamId: string;
+
+		if (memberOf && memberOf.length > 0) {
+			teamId = memberOf[0].team_id;
+		} else {
+			// Create a default team
+			const teamName = company.trim() ? `${company.trim()} Team` : `${fullName.trim()}'s Team`;
+			const { data: newTeam } = await supabase
+				.from('teams')
+				.insert({ name: teamName, created_by: user.user.id })
+				.select('id')
+				.single();
+
+			if (!newTeam) { inviteSending = false; return; }
+			teamId = newTeam.id;
+
+			// Add self as admin
+			await supabase.from('team_members').insert({
+				team_id: teamId,
+				user_id: user.user.id,
+				role: 'admin'
+			});
+		}
+
+		// Create invite (even if user doesn't exist yet, record the invitation)
+		await supabase.from('team_invitations').insert({
+			team_id: teamId,
+			email: inviteEmail.trim(),
+			invited_by: user.user.id,
+			status: 'pending'
+		});
+
+		inviteSent = true;
+		inviteEmail = '';
+		inviteSending = false;
 	}
 
 	async function skipTeam() {
@@ -98,6 +157,10 @@
 						<span>Company</span>
 						<input type="text" bind:value={company} placeholder="Acme Corp" />
 					</label>
+					<label class="field">
+						<span>Job title</span>
+						<input type="text" bind:value={jobTitle} placeholder="VP of Procurement" />
+					</label>
 					<Button variant="primary" type="submit" loading={saving}>Continue</Button>
 				</form>
 			</Card>
@@ -106,9 +169,18 @@
 	{:else if step === 'team'}
 		<div class="step-content">
 			<h2>Invite your team</h2>
-			<p>Procurement decisions are better together. You can invite team members now or later.</p>
+			<p>Procurement decisions are better together. Invite colleagues to collaborate on evaluations.</p>
 			<Card>
-				<p class="team-placeholder">Team invitations coming soon. For now, you can collaborate by sharing project links.</p>
+				<div class="invite-form">
+					<input type="email" bind:value={inviteEmail} placeholder="colleague@company.com" />
+					<Button variant="secondary" size="sm" onclick={sendInvite} disabled={!inviteEmail.includes('@') || inviteSending}>
+						{inviteSending ? 'Sending...' : 'Invite'}
+					</Button>
+				</div>
+				{#if inviteSent}
+					<p class="invite-success">Invitation sent! They'll receive an email to join your team.</p>
+				{/if}
+				<p class="invite-hint">You can always invite more people later from Settings → Teams.</p>
 			</Card>
 			<div class="step-actions">
 				<Button variant="ghost" onclick={skipTeam}>Skip for now</Button>
@@ -205,6 +277,15 @@
 		color: var(--neutral-400);
 		font-size: 0.875rem;
 	}
+
+	.invite-form { display: flex; gap: var(--space-2); margin-bottom: var(--space-3); }
+	.invite-form input {
+		flex: 1; padding: var(--space-2) var(--space-3);
+		border: 1px solid var(--neutral-300); border-radius: var(--radius-md); font-size: 0.9375rem;
+	}
+	.invite-form input:focus { outline: var(--focus-ring); border-color: var(--primary-500); }
+	.invite-success { color: var(--success-600, #16a34a); font-size: 0.875rem; margin-bottom: var(--space-2); }
+	.invite-hint { font-size: 0.75rem; color: var(--neutral-400); }
 
 	.step-actions, .final-actions {
 		display: flex;

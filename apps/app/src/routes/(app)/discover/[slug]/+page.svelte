@@ -1,12 +1,19 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import Card from '$components/ui/Card.svelte';
 	import Button from '$components/ui/Button.svelte';
+	import { createSupabaseBrowserClient } from '$lib/supabase';
 
 	let { data } = $props();
 
 	const vendor = data.vendor;
 	const category = data.category;
 	let enriching = $state(false);
+	const supabase = createSupabaseBrowserClient();
+	let projects = $state<any[]>([]);
+	let showAddModal = $state(false);
+	let addingToProject = $state(false);
+	let addedToProject = $state<string | null>(null);
 
 	function nameToHue(name: string): number {
 		let hash = 0;
@@ -30,6 +37,53 @@
 			window.location.reload();
 		} catch { /* ignore */ }
 		enriching = false;
+	}
+
+	$effect(() => {
+		supabase.from('projects').select('id, name, state, current_step').order('updated_at', { ascending: false }).then(({ data: projectData }) => {
+			if (projectData) projects = projectData;
+		});
+	});
+
+	async function addToProject(projectId: string) {
+		addingToProject = true;
+		const project = projects.find(p => p.id === projectId);
+		if (!project) {
+			addingToProject = false;
+			return;
+		}
+
+		const existingVendors = project.state?.vendors ?? [];
+
+		// Check if vendor already added
+		if (existingVendors.some((v: any) => v.name.toLowerCase() === vendor.name.toLowerCase())) {
+			addedToProject = projectId;
+			addingToProject = false;
+			return;
+		}
+
+		const newVendor = {
+			id: crypto.randomUUID(),
+			name: vendor.name,
+			vendorProfileId: vendor.id,
+			website: vendor.website || null,
+			notes: null,
+			addedAt: new Date().toISOString()
+		};
+
+		const updatedState = {
+			...project.state,
+			vendors: [...existingVendors, newVendor]
+		};
+
+		await supabase
+			.from('projects')
+			.update({ state: updatedState, updated_at: new Date().toISOString() })
+			.eq('id', projectId);
+
+		addedToProject = projectId;
+		addingToProject = false;
+		showAddModal = false;
 	}
 
 	// Parse JSON arrays safely
@@ -326,13 +380,43 @@
 
 			<!-- Add to Project -->
 			<Card>
-				<Button variant="primary" onclick={() => alert('Add to Project — coming soon')}>
-					Add to Project
-				</Button>
+				{#if addedToProject}
+					<div class="added-success">
+						<span class="success-icon">✓</span>
+						<span>Added to project</span>
+						<a href="/project/{addedToProject}/setup" class="project-link">View Project →</a>
+					</div>
+				{:else}
+					<Button variant="primary" onclick={() => showAddModal = true}>
+						Add to Project
+					</Button>
+				{/if}
 			</Card>
 		</div>
 	</div>
 </div>
+
+{#if showAddModal}
+	<div class="modal-overlay" onclick={() => showAddModal = false} role="dialog" tabindex="-1" onkeydown={(e) => e.key === 'Escape' && (showAddModal = false)}>
+		<div class="modal-panel" onclick={(e) => e.stopPropagation()} role="document">
+			<h3>Add {vendor.name} to a project</h3>
+			{#if projects.length === 0}
+				<p class="modal-empty">No projects yet.</p>
+				<Button variant="primary" onclick={() => goto('/project/new')}>Create a Project</Button>
+			{:else}
+				<div class="project-picker">
+					{#each projects as p}
+						<button class="picker-item" onclick={() => addToProject(p.id)} disabled={addingToProject}>
+							<span class="picker-name">{p.name}</span>
+							<span class="picker-step">{p.current_step ?? 'setup'}</span>
+						</button>
+					{/each}
+				</div>
+			{/if}
+			<button class="modal-close" onclick={() => showAddModal = false}>Cancel</button>
+		</div>
+	</div>
+{/if}
 
 <style>
 	.profile-page { max-width: 1200px; margin: 0 auto; padding: var(--space-6); }
@@ -462,6 +546,42 @@
 		font-size: 0.75rem; color: var(--neutral-400);
 		padding: var(--space-2) 0;
 	}
+
+	/* Add to Project modal */
+	.added-success {
+		display: flex; align-items: center; gap: var(--space-2);
+		font-size: 0.875rem; color: var(--success-600, #16a34a);
+	}
+	.success-icon { font-size: 1.125rem; }
+	.project-link { color: var(--primary-600); text-decoration: none; margin-left: auto; }
+	.project-link:hover { text-decoration: underline; }
+
+	.modal-overlay {
+		position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6);
+		display: flex; align-items: center; justify-content: center; z-index: 100;
+	}
+	.modal-panel {
+		background: var(--color-bg-secondary, #131920); border: 1px solid var(--neutral-200);
+		border-radius: var(--radius-lg); padding: var(--space-6); width: 400px; max-width: 90vw;
+	}
+	.modal-panel h3 { margin-bottom: var(--space-4); font-size: 1.125rem; }
+	.modal-empty { color: var(--neutral-400); margin-bottom: var(--space-3); }
+	.project-picker { display: flex; flex-direction: column; gap: var(--space-2); margin-bottom: var(--space-4); }
+	.picker-item {
+		display: flex; justify-content: space-between; align-items: center;
+		padding: var(--space-3); background: rgba(255,255,255,0.04);
+		border: 1px solid var(--neutral-200); border-radius: var(--radius-md);
+		cursor: pointer; color: inherit; font-size: 0.9375rem; text-align: left;
+	}
+	.picker-item:hover { background: rgba(74, 150, 248, 0.08); border-color: var(--primary-500); }
+	.picker-name { font-weight: 500; }
+	.picker-step { font-size: 0.75rem; color: var(--neutral-400); text-transform: capitalize; }
+	.modal-close {
+		display: block; margin: 0 auto; background: none; border: none;
+		color: var(--neutral-400); cursor: pointer; font-size: 0.875rem;
+		padding: var(--space-2) var(--space-4);
+	}
+	.modal-close:hover { color: var(--neutral-600); }
 
 	@media (max-width: 768px) {
 		.profile-grid { grid-template-columns: 1fr; }
