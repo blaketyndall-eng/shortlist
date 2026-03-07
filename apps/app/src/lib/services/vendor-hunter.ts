@@ -1,5 +1,5 @@
 import { createAdminSupabase } from '$services/supabase.server';
-import { ANTHROPIC_API_KEY } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 
 /**
  * Vendor Hunter Service
@@ -60,7 +60,7 @@ const CONFIDENCE_BASE: Record<string, Record<string, number>> = {
 
 /**
  * Enrich a single vendor — main entry point
- * Uses platform ANTHROPIC_API_KEY exclusively (no user keys).
+ * Uses platform env.ANTHROPIC_API_KEY exclusively (no user keys).
  * @param vendorId - UUID of the vendor to enrich
  */
 export async function enrichVendor(vendorId: string): Promise<{
@@ -68,7 +68,7 @@ export async function enrichVendor(vendorId: string): Promise<{
 	errors: string[];
 }> {
 	const supabase = createAdminSupabase();
-	const apiKey = ANTHROPIC_API_KEY || null;
+	const apiKey = env.ANTHROPIC_API_KEY || null;
 
 	// Load vendor
 	const { data: vendor, error: vErr } = await supabase
@@ -321,7 +321,7 @@ export async function enrichBatch(
 
 /**
  * Auto-enrich all vendors with 'pending' or 'failed' status.
- * Designed for cron/scheduled jobs — uses platform ANTHROPIC_API_KEY only.
+ * Designed for cron/scheduled jobs — uses platform env.ANTHROPIC_API_KEY only.
  * Processes in batches to stay within API rate limits.
  *
  * @param limit - Max vendors to process per run (default: 20)

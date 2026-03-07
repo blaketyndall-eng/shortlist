@@ -1,6 +1,6 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { ANTHROPIC_API_KEY } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 import { createServerSupabase } from '$services/supabase.server';
 
 /**
@@ -41,7 +41,7 @@ export const POST: RequestHandler = async ({ request, locals, cookies }) => {
 
 	// 3. AI-powered vendor suggestions
 	let aiSuggestions: any[] = [];
-	if (ANTHROPIC_API_KEY) {
+	if (env.ANTHROPIC_API_KEY) {
 		try {
 			const systemPrompt = `You are a B2B procurement intelligence assistant. Suggest vendors for the given category or need. Return a JSON array of vendor objects with: name, description (1 sentence), website, category, strengths (array of 3), and estimatedSize (startup/mid-market/enterprise). Only suggest real, well-known vendors. Return 5-8 suggestions.`;
 
@@ -55,7 +55,7 @@ export const POST: RequestHandler = async ({ request, locals, cookies }) => {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
-					'x-api-key': ANTHROPIC_API_KEY,
+					'x-api-key': env.ANTHROPIC_API_KEY,
 					'anthropic-version': '2023-06-01'
 				},
 				body: JSON.stringify({

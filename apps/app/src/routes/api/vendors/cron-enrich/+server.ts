@@ -1,6 +1,6 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestEvent } from '@sveltejs/kit';
-import { CRON_SECRET } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 import { autoEnrichPending, markStaleForReenrich } from '$lib/services/vendor-hunter';
 import { processQueue } from '$lib/services/vendor-moderator';
 
@@ -23,6 +23,7 @@ export const GET = async ({ request }: RequestEvent) => {
 	const authHeader = request.headers.get('authorization');
 	const token = authHeader?.replace('Bearer ', '');
 
+	const CRON_SECRET = env.CRON_SECRET;
 	if (!CRON_SECRET || token !== CRON_SECRET) {
 		error(401, 'Unauthorized — invalid cron secret');
 	}

@@ -1,6 +1,6 @@
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { ANTHROPIC_API_KEY } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 
 /**
  * Streaming AI endpoint — returns Server-Sent Events.
@@ -11,7 +11,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		error(401, 'Unauthorized');
 	}
 
-	if (!ANTHROPIC_API_KEY) {
+	if (!env.ANTHROPIC_API_KEY) {
 		error(500, 'AI service not configured');
 	}
 
@@ -22,7 +22,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
-			'x-api-key': ANTHROPIC_API_KEY,
+			'x-api-key': env.ANTHROPIC_API_KEY,
 			'anthropic-version': '2023-06-01'
 		},
 		body: JSON.stringify({

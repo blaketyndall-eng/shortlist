@@ -1,6 +1,6 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { ANTHROPIC_API_KEY } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 import { createServerSupabase } from '$services/supabase.server';
 
 const MODEL = 'claude-haiku-4-5-20251001';
@@ -54,7 +54,7 @@ ${existingTool ? `Currently using: ${existingTool}` : ''}`;
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
-				'x-api-key': ANTHROPIC_API_KEY,
+				'x-api-key': env.ANTHROPIC_API_KEY,
 				'anthropic-version': '2023-06-01',
 			},
 			body: JSON.stringify({
