@@ -1,8 +1,12 @@
 <script lang="ts">
 	import Card from '$components/ui/Card.svelte';
 	import ActivityFeed from '$components/ActivityFeed.svelte';
+	import WelcomeModal from '$components/WelcomeModal.svelte';
 
 	let { data } = $props();
+
+	// Show welcome modal for users who haven't completed onboarding
+	let showWelcome = $state(!data.profile?.onboarding_completed);
 
 	const stepLabels: Record<string, string> = {
 		discovery: 'Discovery',
@@ -34,7 +38,7 @@
 	<header class="dashboard-header">
 		<div>
 			<h1>Welcome back{data.profile?.full_name ? `, ${data.profile.full_name}` : ''}</h1>
-			<p>Here's an overview of your procurement projects.</p>
+			<p>Here's an overview of your purchase intelligence projects.</p>
 		</div>
 		<a href="/project/new" class="btn-primary">+ New Project</a>
 	</header>
@@ -134,6 +138,10 @@
 		</Card>
 	</section>
 </div>
+
+{#if showWelcome && data.profile?.id}
+	<WelcomeModal bind:open={showWelcome} profileId={data.profile.id} />
+{/if}
 
 <style>
 	.dashboard {

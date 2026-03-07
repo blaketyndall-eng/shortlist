@@ -153,7 +153,7 @@
 	<div class="risks-header">
 		<div>
 			<h1>Risk Register</h1>
-			<p class="subtitle">Track and mitigate procurement risks across vendors.</p>
+			<p class="subtitle">Track and mitigate purchase risks across vendors.</p>
 		</div>
 		<div class="header-actions">
 			<button class="ai-btn" disabled={aiLoading} onclick={aiGenerateRisks}>

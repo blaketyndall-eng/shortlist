@@ -30,7 +30,7 @@ export const POST: RequestHandler = async ({ request, locals, cookies }) => {
 
 	const supabase = createServerSupabase(cookies);
 
-	const prompt = `You are a B2B software procurement expert. Based on the user's problem description and context, detect what category of software they need.
+	const prompt = `You are a B2B software purchase intelligence expert. Based on the user's problem description and context, detect what category of software they need.
 
 Return ONLY a JSON object with this structure:
 {

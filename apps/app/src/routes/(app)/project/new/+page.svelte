@@ -78,7 +78,7 @@
 <div class="new-project">
 	<header class="page-header">
 		<h1>Create a new project</h1>
-		<p>Start evaluating vendors for your procurement decision.</p>
+		<p>Start evaluating vendors for your purchase decision.</p>
 	</header>
 
 	<Card>

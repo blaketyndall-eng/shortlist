@@ -23,7 +23,7 @@ export const POST: RequestHandler = async ({ request, locals, cookies }) => {
 
 	const supabase = createServerSupabase(cookies);
 
-	const prompt = `You are a B2B procurement expert helping prepare for a vendor demo.
+	const prompt = `You are a B2B purchase intelligence expert helping prepare for a vendor demo.
 
 Generate 6 targeted demo questions for evaluating "${vendorName}".
 

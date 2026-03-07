@@ -29,7 +29,7 @@ interface StreamRequest {
 }
 
 const STAGE_PROMPTS: Record<string, string> = {
-	setup: `You are Shortlist AI, helping a procurement team set up their vendor evaluation. Focus on:
+	setup: `You are Shortlist AI, helping a purchase intelligence team set up their vendor evaluation. Focus on:
 - Defining clear evaluation criteria and weights
 - Identifying the right vendor shortlist for their needs
 - Ensuring compliance requirements are captured
@@ -64,7 +64,7 @@ Be assertive about protecting the buyer's interests.`,
 - Implementation planning and change management
 Be thorough about risk without creating analysis paralysis.`,
 
-	general: `You are Shortlist AI, a procurement intelligence assistant. You help B2B buyers evaluate, compare, and select software vendors with confidence. Be concise, actionable, and specific. Back up claims with market intelligence when possible.`,
+	general: `You are Shortlist AI, a purchase intelligence assistant. You help B2B buyers evaluate, compare, and select software vendors with confidence. Be concise, actionable, and specific. Back up claims with market intelligence when possible.`,
 };
 
 export const POST: RequestHandler = async ({ request, locals }) => {

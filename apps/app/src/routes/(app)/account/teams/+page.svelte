@@ -159,7 +159,7 @@
 		<form class="modal-form" onsubmit={(e) => { e.preventDefault(); createTeam(); }}>
 			<div class="form-group">
 				<label for="teamName">Team Name</label>
-				<input id="teamName" type="text" bind:value={newTeamName} placeholder="e.g., Procurement Team" autofocus />
+				<input id="teamName" type="text" bind:value={newTeamName} placeholder="e.g., Evaluation Team" autofocus />
 			</div>
 			<div class="modal-actions">
 				<Button variant="secondary" onclick={() => (showCreateModal = false)}>Cancel</Button>

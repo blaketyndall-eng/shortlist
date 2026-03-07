@@ -140,7 +140,7 @@
 	{#if step === 'welcome'}
 		<div class="step-content">
 			<h1>Welcome to Shortlist</h1>
-			<p>Let's get you set up in 2 minutes. Shortlist helps you evaluate vendors, score proposals, and make better procurement decisions with AI.</p>
+			<p>Let's get you set up in 2 minutes. Shortlist helps you evaluate vendors, score proposals, and make better purchase decisions with AI.</p>
 			<Button variant="primary" onclick={() => (step = 'profile')}>Get Started</Button>
 		</div>
 
@@ -159,7 +159,7 @@
 					</label>
 					<label class="field">
 						<span>Job title</span>
-						<input type="text" bind:value={jobTitle} placeholder="VP of Procurement" />
+						<input type="text" bind:value={jobTitle} placeholder="VP of Operations" />
 					</label>
 					<Button variant="primary" type="submit" loading={saving}>Continue</Button>
 				</form>
@@ -169,7 +169,7 @@
 	{:else if step === 'team'}
 		<div class="step-content">
 			<h2>Invite your team</h2>
-			<p>Procurement decisions are better together. Invite colleagues to collaborate on evaluations.</p>
+			<p>Purchase decisions are better together. Invite colleagues to collaborate on evaluations.</p>
 			<Card>
 				<div class="invite-form">
 					<input type="email" bind:value={inviteEmail} placeholder="colleague@company.com" />
@@ -191,7 +191,7 @@
 	{:else if step === 'first_project'}
 		<div class="step-content">
 			<h2>You're all set!</h2>
-			<p>Ready to create your first procurement evaluation?</p>
+			<p>Ready to create your first vendor evaluation?</p>
 			<div class="final-actions">
 				<Button variant="primary" onclick={() => goto('/project/new')}>
 					Create First Project

@@ -157,7 +157,7 @@
 				<div class="form-group">
 					<label for="userType">Account Type</label>
 					<select id="userType" bind:value={userType}>
-						<option value="b2b">B2B Procurement</option>
+						<option value="b2b">B2B Purchase Intelligence</option>
 						<option value="consumer">Consumer</option>
 						<option value="both">Both</option>
 					</select>

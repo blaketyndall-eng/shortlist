@@ -280,7 +280,7 @@
 			<!-- Extended Intelligence: Contract, Deployment, Support, Stability -->
 			{#if vendor.ai_contract_terms || vendor.ai_deployment_model || vendor.ai_support_model || vendor.ai_vendor_stability || vendor.ai_impl_timeline}
 				<Card>
-					<h2>Procurement Intelligence</h2>
+					<h2>Purchase Intelligence</h2>
 					<div class="intel-grid">
 						{#if vendor.ai_impl_timeline}
 							<div class="intel-item">

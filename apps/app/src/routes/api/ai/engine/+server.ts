@@ -176,35 +176,35 @@ function buildSystemPrompt(engine: string, context: Record<string, unknown>): st
 
 	const prompts: Record<string, string> = {
 		// --- SOLVE Phase ---
-		category_detect: 'You are a software procurement expert. Respond ONLY with valid JSON, no markdown.',
-		vendor_suggest: 'You are a B2B software procurement advisor. Return ONLY valid JSON, no markdown.',
-		challenges: 'You are a procurement consultant. Respond ONLY with a JSON array, no markdown.',
-		vendor_research: 'You are a senior B2B software procurement analyst with deep expertise in vendor evaluation, market positioning, and TCO analysis. Be specific with numbers, names, and facts. Avoid generic statements. Return ONLY valid JSON, no markdown.',
+		category_detect: 'You are a software purchase intelligence expert. Respond ONLY with valid JSON, no markdown.',
+		vendor_suggest: 'You are a B2B software purchase intelligence advisor. Return ONLY valid JSON, no markdown.',
+		challenges: 'You are a purchase intelligence consultant. Respond ONLY with a JSON array, no markdown.',
+		vendor_research: 'You are a senior B2B software purchase intelligence analyst with deep expertise in vendor evaluation, market positioning, and TCO analysis. Be specific with numbers, names, and facts. Avoid generic statements. Return ONLY valid JSON, no markdown.',
 
 		// --- Evaluate Phase ---
-		evaluate: 'You are Shortlist AI, a procurement intelligence assistant specializing in vendor evaluation: scoring, comparison, and analysis. Always respond with structured, actionable insights.',
+		evaluate: 'You are Shortlist AI, a purchase intelligence assistant specializing in vendor evaluation: scoring, comparison, and analysis. Always respond with structured, actionable insights.',
 		score_prefill: 'You are a B2B software analyst. Return ONLY valid JSON, no markdown.',
-		score_anomaly: 'You are a procurement analyst. Return ONLY valid JSON.',
-		score_explanation: 'You are a procurement analyst writing score justifications. Return ONLY valid JSON.',
+		score_anomaly: 'You are a purchase intelligence analyst. Return ONLY valid JSON.',
+		score_explanation: 'You are a purchase intelligence analyst writing score justifications. Return ONLY valid JSON.',
 		negotiation_coach: 'You are a seasoned B2B software negotiation expert. Return ONLY valid JSON.',
-		hidden_cost_spotter: 'You are a software procurement cost expert. Return ONLY valid JSON.',
-		risk_register: 'You are a procurement risk analyst. Return ONLY valid JSON.',
+		hidden_cost_spotter: 'You are a software purchase cost expert. Return ONLY valid JSON.',
+		risk_register: 'You are a purchase risk analyst. Return ONLY valid JSON.',
 		contract_risk: 'You are a software contract expert. Return ONLY valid JSON.',
 		executive_brief: 'You are a senior management consultant writing an executive decision memo. Write in clear, confident prose. No bullet points.',
 		decision_readiness: 'You are a decision quality facilitator using structured decision-making. Return ONLY valid JSON.',
 
 		// --- Demo Phase ---
-		demo_briefing: 'You are a B2B procurement expert helping prepare for a vendor demo. Return ONLY valid JSON.',
-		demo_debrief: 'You are a procurement facilitator synthesizing demo feedback. Return ONLY valid JSON.',
-		demo_questions: 'You are a B2B procurement expert. Generate targeted vendor-specific demo questions. Return ONLY valid JSON.',
-		reference_questions: 'You are an experienced procurement reference checker. Return ONLY valid JSON.',
+		demo_briefing: 'You are a B2B purchase intelligence expert helping prepare for a vendor demo. Return ONLY valid JSON.',
+		demo_debrief: 'You are a purchase evaluation facilitator synthesizing demo feedback. Return ONLY valid JSON.',
+		demo_questions: 'You are a B2B purchase intelligence expert. Generate targeted vendor-specific demo questions. Return ONLY valid JSON.',
+		reference_questions: 'You are an experienced purchase reference checker. Return ONLY valid JSON.',
 
 		// --- Company Profile ---
-		company_autofill: 'You are a procurement intelligence assistant. Analyse a company description and return a structured JSON profile. Only choose values from the provided option lists. Return ONLY valid JSON, no markdown.',
+		company_autofill: 'You are a purchase intelligence assistant. Analyse a company description and return a structured JSON profile. Only choose values from the provided option lists. Return ONLY valid JSON, no markdown.',
 		compliance_suggest: 'You are a compliance expert. Return ONLY a JSON array of strings, no markdown.',
-		priorities_suggest: 'You are a procurement strategist. Return ONLY a JSON array of strings, no markdown.',
+		priorities_suggest: 'You are a purchase intelligence strategist. Return ONLY a JSON array of strings, no markdown.',
 		stack_suggest: 'You are a solutions architect. Return ONLY a comma-separated list of tool names, no markdown or explanation.',
-		context_notes: 'You are a procurement intelligence assistant writing buyer context notes. Write in second person, clear and direct. 3–5 sentences max.',
+		context_notes: 'You are a purchase intelligence assistant writing buyer context notes. Write in second person, clear and direct. 3–5 sentences max.',
 
 		// --- Discovery & RFP ---
 		discovery: 'You are Shortlist AI, specializing in vendor discovery: identifying, researching, and recommending vendors for specific use cases.',
@@ -214,12 +214,12 @@ function buildSystemPrompt(engine: string, context: Record<string, unknown>): st
 		implement: 'You are Shortlist AI, specializing in implementation planning: timelines, change management, and vendor onboarding.',
 
 		// --- Alignment Engines ---
-		alignment_analyze: 'You are an organizational alignment analyst for B2B procurement teams. Given poll responses grouped by role (admin, member, leadership), calculate alignment scores (0-100), identify gaps between roles and dimensions, and provide actionable recommendations to improve team consensus. Return ONLY valid JSON, no markdown.',
+		alignment_analyze: 'You are an organizational alignment analyst for B2B purchase intelligence teams. Given poll responses grouped by role (admin, member, leadership), calculate alignment scores (0-100), identify gaps between roles and dimensions, and provide actionable recommendations to improve team consensus. Return ONLY valid JSON, no markdown.',
 		alignment_summary: 'You are a team alignment summarizer. Generate a concise alignment snapshot. Return ONLY valid JSON, no markdown.',
 
 		// --- Executive Engines ---
-		executive_insight: 'You are a procurement intelligence analyst generating executive-level insights. Synthesize project activity, vendor evaluations, and team alignment data into concise, actionable insights for leadership. Return ONLY valid JSON, no markdown.',
-		executive_milestone_brief: 'You are a procurement intelligence briefing writer for C-suite executives. Given project data, vendor evaluations, alignment scores, and team activity, produce a structured briefing. Be concise, data-driven, highlight risks and decisions needed. Return ONLY valid JSON, no markdown.',
+		executive_insight: 'You are a purchase intelligence analyst generating executive-level insights. Synthesize project activity, vendor evaluations, and team alignment data into concise, actionable insights for leadership. Return ONLY valid JSON, no markdown.',
+		executive_milestone_brief: 'You are a purchase intelligence briefing writer for C-suite executives. Given project data, vendor evaluations, alignment scores, and team activity, produce a structured briefing. Be concise, data-driven, highlight risks and decisions needed. Return ONLY valid JSON, no markdown.',
 	};
 
 	const basePrompt = prompts[engine] ?? prompts.evaluate;
@@ -390,7 +390,7 @@ Be direct, specific, and CFO-ready. If TCO data is present, cite 3-year figures.
 
 		case 'decision_readiness': {
 			const topVendors = arr(ctx.topVendors);
-			return `Generate a 5-question decision readiness interview to pressure-test this procurement decision before committing.
+			return `Generate a 5-question decision readiness interview to pressure-test this purchase decision before committing.
 
 Evaluation: ${str(ctx.evaluationName)}
 Leading vendor: ${str(topVendors[0]?.name)} (${str(topVendors[0]?.score)}/100)
@@ -432,7 +432,7 @@ Return JSON array:
 			return `Company description: "${str(ctx.description)}"
 
 Return JSON with these exact keys (use null for unknown):
-{"name":"company name or null","industry":"one of: Technology, Healthcare, Financial Services, Manufacturing, Retail, Education, Government, Non-profit, Professional Services, Media, Energy, Real Estate, Other","size":"one of: 1-10, 11-50, 51-200, 201-500, 501-1000, 1001-5000, 5000+","budget":"one of: Under $10k, $10k-$50k, $50k-$100k, $100k-$500k, $500k-$1M, $1M+","maturity":"one of: Ad-hoc, Developing, Established, Optimised","compliance":["from: SOC 2 Type II, ISO 27001, GDPR, HIPAA, FedRAMP, PCI-DSS, CCPA, NIST 800-53, FINRA, None required"],"priorities":["top 3-4 from: Cost reduction, Security first, Fast deployment, Ease of adoption, Deep integrations, Vendor consolidation, Scalability, Data sovereignty, Open-source preferred, Local support"],"vendorPref":["from: Enterprise tier, Mid-market, SMB-friendly, Open-source, Best of breed, Suite/platform"],"process":"one of: Individual, Committee, Formal RFP, Board approval","regions":["from: North America, Europe, APAC, LATAM, Middle East, Africa, Global"],"stack":"comma-separated tools or null","notes":"2-3 sentence procurement context"}`;
+{"name":"company name or null","industry":"one of: Technology, Healthcare, Financial Services, Manufacturing, Retail, Education, Government, Non-profit, Professional Services, Media, Energy, Real Estate, Other","size":"one of: 1-10, 11-50, 51-200, 201-500, 501-1000, 1001-5000, 5000+","budget":"one of: Under $10k, $10k-$50k, $50k-$100k, $100k-$500k, $500k-$1M, $1M+","maturity":"one of: Ad-hoc, Developing, Established, Optimised","compliance":["from: SOC 2 Type II, ISO 27001, GDPR, HIPAA, FedRAMP, PCI-DSS, CCPA, NIST 800-53, FINRA, None required"],"priorities":["top 3-4 from: Cost reduction, Security first, Fast deployment, Ease of adoption, Deep integrations, Vendor consolidation, Scalability, Data sovereignty, Open-source preferred, Local support"],"vendorPref":["from: Enterprise tier, Mid-market, SMB-friendly, Open-source, Best of breed, Suite/platform"],"process":"one of: Individual, Committee, Formal RFP, Board approval","regions":["from: North America, Europe, APAC, LATAM, Middle East, Africa, Global"],"stack":"comma-separated tools or null","notes":"2-3 sentence purchase context"}`;
 
 		case 'compliance_suggest':
 			return `Based on this company profile: "${str(ctx.profileDesc)}"
@@ -459,7 +459,7 @@ Return only tool names separated by commas: Salesforce, Slack, Jira, AWS, ...`;
 			return `Based on this company profile:
 ${str(ctx.fullProfile)}
 
-Write a concise context note (3-5 sentences) that an AI assistant should know when helping this company evaluate and buy software. Cover: key constraints, compliance sensitivities, procurement approach, what they optimise for, and any red flags. Start with "Your company…"`;
+Write a concise context note (3-5 sentences) that an AI assistant should know when helping this company evaluate and buy software. Cover: key constraints, compliance sensitivities, purchase approach, what they optimise for, and any red flags. Start with "Your company…"`;
 
 		// --- Alignment Engines ---
 		case 'alignment_analyze':
@@ -508,7 +508,7 @@ Return JSON:
 {"title":"insight title","insight":"2-3 sentence executive insight","impact":"business impact statement","urgency":"low|medium|high","recommendedAction":"what leadership should do"}`;
 
 		case 'executive_milestone_brief': {
-			return `Generate an executive briefing for this procurement milestone.
+			return `Generate an executive briefing for this purchase intelligence milestone.
 
 Project: ${str(ctx.projectName)}
 Milestone: ${str(ctx.milestoneType)}
@@ -578,7 +578,7 @@ function buildCompanyContext(profile: Record<string, unknown> | undefined): stri
 	if (profile.industry) parts.push(`Industry: ${profile.industry}`);
 	if (profile.size) parts.push(`Size: ${profile.size}`);
 	if (profile.budget) parts.push(`Annual software budget: ${profile.budget}`);
-	if (profile.maturity) parts.push(`Procurement maturity: ${profile.maturity}`);
+	if (profile.maturity) parts.push(`Purchase maturity: ${profile.maturity}`);
 	if (profile.process) parts.push(`Decision process: ${profile.process}`);
 	if (profile.compliance) parts.push(`Compliance requirements: ${arr(profile.compliance).join(', ')}`);
 	if (profile.priorities) parts.push(`Organisational priorities: ${arr(profile.priorities).join(', ')}`);

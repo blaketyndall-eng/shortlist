@@ -17,11 +17,11 @@
 	const phases = $derived([
 		{
 			phase: 'define' as const,
-			label: 'Define',
+			label: 'Scope & Observe',
 			steps: [
 				{ key: 'triggers', label: 'Diagnose', href: `/project/${projectId}/solve/triggers` },
 				{ key: 'category', label: 'Category', href: `/project/${projectId}/solve/category` },
-				{ key: 'vendor_discovery', label: 'Discovery', href: `/project/${projectId}/solve/discovery` },
+				{ key: 'vendor_discovery', label: 'Discover', href: `/project/${projectId}/solve/discovery` },
 				{ key: 'constraints', label: 'Constraints', href: `/project/${projectId}/solve/constraints` },
 				{ key: 'priorities', label: 'Priorities', href: `/project/${projectId}/solve/priorities` },
 				{ key: 'brief', label: 'Brief', href: `/project/${projectId}/solve/brief` },
@@ -30,7 +30,7 @@
 		},
 		{
 			phase: 'evaluate' as const,
-			label: 'Evaluate',
+			label: 'Leverage & Execute',
 			steps: [
 				{ key: 'setup', label: 'Setup', href: `/project/${projectId}/setup` },
 				{ key: 'criteria', label: 'Criteria', href: `/project/${projectId}/criteria` },

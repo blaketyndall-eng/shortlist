@@ -329,7 +329,7 @@
 		</div>
 
 		<div class="field-group">
-			<label>Procurement Maturity</label>
+			<label>Purchase Maturity</label>
 			<select bind:value={profile.maturity} onchange={markDirty}>
 				<option value="">Select…</option>
 				{#each MATURITIES as opt}

@@ -173,7 +173,7 @@ export async function enrichVendor(vendorId: string): Promise<{
 async function enrichFromAI(vendor: Record<string, unknown>, apiKey: string | null): Promise<AIResearchResult | null> {
 	if (!apiKey) return null;
 
-	const systemPrompt = `You are a senior B2B software procurement analyst with deep expertise in vendor evaluation, market positioning, and total cost of ownership analysis. You work for Shortlist, a premier procurement intelligence platform.
+	const systemPrompt = `You are a senior B2B software purchase intelligence analyst with deep expertise in vendor evaluation, market positioning, and total cost of ownership analysis. You work for Shortlist, a premier purchase intelligence platform.
 
 Your task is to provide thorough, accurate vendor intelligence. Be specific with numbers, names, and facts. Avoid generic statements. If you're unsure about something, say so rather than guessing.
 

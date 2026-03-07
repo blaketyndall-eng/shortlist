@@ -23,7 +23,7 @@ export const POST: RequestHandler = async ({ request, locals, cookies }) => {
 
 	const supabase = createServerSupabase(cookies);
 
-	const prompt = `You are a senior procurement consultant writing a problem brief for a B2B software evaluation.
+	const prompt = `You are a senior purchase intelligence consultant writing a problem brief for a B2B software evaluation.
 
 Based on the following inputs, generate a structured problem brief. Return ONLY a JSON object:
 {

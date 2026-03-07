@@ -33,7 +33,7 @@ Criteria scores: ${JSON.stringify(fb.criteriaScores ?? {})}`;
 		})
 		.join('\n\n');
 
-	const prompt = `You are a B2B procurement analyst synthesizing post-demo feedback from ${feedbackEntries.length} team member(s) who evaluated "${vendorName}".
+	const prompt = `You are a B2B purchase intelligence analyst synthesizing post-demo feedback from ${feedbackEntries.length} team member(s) who evaluated "${vendorName}".
 
 Feedback submissions:
 ${feedbackSummary}

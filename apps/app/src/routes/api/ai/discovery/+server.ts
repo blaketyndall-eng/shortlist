@@ -66,7 +66,7 @@ export const POST: RequestHandler = async ({ request, locals, cookies }) => {
 	let aiSuggestions: any[] = [];
 	if (env.ANTHROPIC_API_KEY && (!libraryResults || libraryResults.length < 3)) {
 		try {
-			const systemPrompt = `You are a B2B procurement intelligence assistant with deep market knowledge. Suggest vendors that match the buyer's search query.
+			const systemPrompt = `You are a B2B purchase intelligence assistant with deep market knowledge. Suggest vendors that match the buyer's search query.
 
 CRITICAL: Only suggest real, established vendors. Include specific details like pricing ranges and employee counts. Return ONLY a JSON array, no markdown.`;
 

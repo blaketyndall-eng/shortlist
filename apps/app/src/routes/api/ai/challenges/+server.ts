@@ -23,7 +23,7 @@ export const POST: RequestHandler = async ({ request, locals, cookies }) => {
 
 	const supabase = createServerSupabase(cookies);
 
-	const prompt = `You are a procurement consultant playing devil's advocate. Generate 4 challenge questions for this software decision.
+	const prompt = `You are a purchase intelligence consultant playing devil's advocate. Generate 4 challenge questions for this software decision.
 
 Return ONLY a JSON array of objects with this structure:
 [
