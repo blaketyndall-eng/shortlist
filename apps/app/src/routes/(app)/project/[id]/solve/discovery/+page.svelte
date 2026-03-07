@@ -641,7 +641,7 @@
 	{/if}
 
 	<!-- Team Alignment Poll -->
-	{#if shortlist.length > 0}
+	{#if shortlisted.length > 0}
 		<div class="alignment-section">
 			<AlignmentPoll
 				{projectId}

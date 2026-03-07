@@ -28,8 +28,11 @@ const TOKEN_LIMITS: Partial<Record<string, number>> = {
 	demo_questions: 600,
 	demo_debrief: 600,
 	score_anomaly: 600,
-	negotiation_coach: 700,
+	negotiation_coach: 1200,
 	hidden_cost_spotter: 600,
+	vendor_comparison_narrative: 2000,
+	requirement_elicitation: 800,
+	market_intelligence: 1000,
 	risk_register: 700,
 	contract_risk: 700,
 	score_explanation: 2000,
@@ -62,6 +65,9 @@ const ENGINE_MODEL_OVERRIDE: Partial<Record<string, string>> = {
 	reference_questions: 'claude-haiku-4-5-20251001',
 	score_explanation: 'claude-opus-4-6',
 	executive_brief: 'claude-opus-4-6',
+	vendor_comparison_narrative: 'claude-sonnet-4-6',
+	requirement_elicitation: 'claude-sonnet-4-6',
+	market_intelligence: 'claude-sonnet-4-6',
 	// Alignment engines
 	alignment_analyze: 'claude-sonnet-4-6',
 	alignment_summary: 'claude-haiku-4-5-20251001',
@@ -77,6 +83,36 @@ interface EngineRequest {
 	projectId: string;
 	task?: string;
 }
+
+// JSON schema shapes for output validation per engine
+const ENGINE_SCHEMAS: Record<string, { required: string[]; type: 'object' | 'array' }> = {
+	category_detect: { required: ['category', 'label', 'confidence'], type: 'object' },
+	vendor_suggest: { required: ['name', 'tagline', 'tier'], type: 'array' },
+	challenges: { required: ['severity', 'title', 'question'], type: 'array' },
+	vendor_research: { required: ['overview', 'typicalPricing', 'knownStrengths'], type: 'object' },
+	score_prefill: { required: ['scores'], type: 'object' },
+	score_anomaly: { required: [], type: 'array' },
+	score_explanation: { required: ['explanations'], type: 'object' },
+	negotiation_coach: { required: ['overallAssessment', 'counterAsks', 'nextMove'], type: 'object' },
+	hidden_cost_spotter: { required: ['hiddenCosts', 'topAdvice'], type: 'object' },
+	risk_register: { required: [], type: 'array' },
+	contract_risk: { required: ['criticalClauses', 'topPriority'], type: 'object' },
+	executive_brief: { required: [], type: 'object' },
+	decision_readiness: { required: ['questions'], type: 'object' },
+	demo_questions: { required: ['text', 'crit'], type: 'array' },
+	reference_questions: { required: ['question', 'area'], type: 'array' },
+	company_autofill: { required: ['industry', 'size'], type: 'object' },
+	alignment_analyze: { required: ['overall', 'gaps'], type: 'object' },
+	alignment_summary: { required: ['headline', 'status'], type: 'object' },
+	executive_insight: { required: ['title', 'insight'], type: 'object' },
+	executive_milestone_brief: { required: ['title', 'summary', 'sections'], type: 'object' },
+	vendor_comparison_narrative: { required: ['narrative', 'verdicts'], type: 'object' },
+	requirement_elicitation: { required: ['questions'], type: 'object' },
+	market_intelligence: { required: ['trends', 'insights'], type: 'object' },
+};
+
+// Max retry attempts for validation failures
+const MAX_RETRIES = 2;
 
 export const POST: RequestHandler = async ({ request, locals, cookies }) => {
 	if (!locals.session || !locals.user) {
@@ -101,55 +137,93 @@ export const POST: RequestHandler = async ({ request, locals, cookies }) => {
 	try {
 		const systemPrompt = buildSystemPrompt(body.engine, body.context);
 		const userPrompt = buildUserPrompt(body.engine, body.context);
+		const schema = ENGINE_SCHEMAS[body.engine];
 
-		const response = await fetch('https://api.anthropic.com/v1/messages', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				'x-api-key': env.ANTHROPIC_API_KEY,
-				'anthropic-version': '2023-06-01',
-			},
-			body: JSON.stringify({
-				model,
-				max_tokens: maxTokens,
-				system: systemPrompt,
-				messages: [{ role: 'user', content: userPrompt }],
-			}),
-		});
+		let parsedResult: unknown;
+		let aiResult: any;
+		let validationPassed = false;
+		let attempts = 0;
+		let totalInputTokens = 0;
+		let totalOutputTokens = 0;
+		let validationErrors: string[] = [];
 
-		if (!response.ok) {
-			const err = await response.json().catch(() => ({}));
-			error(502, `AI provider error: ${err.error?.message ?? response.statusText}`);
+		// Retry loop for schema validation
+		while (attempts < (schema ? MAX_RETRIES : 1) && !validationPassed) {
+			attempts++;
+
+			const retryHint = attempts > 1
+				? `\n\nPREVIOUS ATTEMPT FAILED VALIDATION: ${validationErrors.join('; ')}. Please fix and return valid JSON.`
+				: '';
+
+			const response = await fetch('https://api.anthropic.com/v1/messages', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'x-api-key': env.ANTHROPIC_API_KEY,
+					'anthropic-version': '2023-06-01',
+				},
+				body: JSON.stringify({
+					model,
+					max_tokens: maxTokens,
+					system: systemPrompt,
+					messages: [{ role: 'user', content: userPrompt + retryHint }],
+				}),
+			});
+
+			if (!response.ok) {
+				const err = await response.json().catch(() => ({}));
+				error(502, `AI provider error: ${err.error?.message ?? response.statusText}`);
+			}
+
+			aiResult = await response.json();
+			totalInputTokens += aiResult.usage?.input_tokens ?? 0;
+			totalOutputTokens += aiResult.usage?.output_tokens ?? 0;
+
+			// Parse JSON from response
+			try {
+				const text = aiResult.content?.[0]?.text ?? '';
+				const cleaned = text.replace(/```json\n?|```/g, '').trim();
+				parsedResult = JSON.parse(cleaned);
+			} catch {
+				parsedResult = { text: aiResult.content?.[0]?.text ?? '' };
+				if (schema) {
+					validationErrors = ['Response was not valid JSON'];
+					continue;
+				}
+			}
+
+			// Validate against schema if defined
+			if (schema) {
+				validationErrors = validateEngineOutput(parsedResult, schema);
+				validationPassed = validationErrors.length === 0;
+			} else {
+				validationPassed = true;
+			}
 		}
 
-		const aiResult = await response.json();
 		const latency = Date.now() - startTime;
-		const inputTokens = aiResult.usage?.input_tokens ?? 0;
-		const outputTokens = aiResult.usage?.output_tokens ?? 0;
 		const credits = CREDIT_MAP[model] ?? 5;
 
-		// Track usage
+		// Track usage (sum all retry attempts)
 		const supabase = createServerSupabase(cookies);
 		await supabase.from('ai_usage').insert({
 			user_id: locals.user.id,
 			project_id: body.projectId,
 			engine: body.engine,
 			model,
-			input_tokens: inputTokens,
-			output_tokens: outputTokens,
-			credits_used: credits,
+			input_tokens: totalInputTokens,
+			output_tokens: totalOutputTokens,
+			credits_used: credits * attempts,
 			latency_ms: latency,
+			...(attempts > 1 ? { metadata: { retries: attempts, validationErrors } } : {}),
 		});
 
-		// Parse the AI response
-		let parsedResult: unknown;
-		try {
-			const text = aiResult.content?.[0]?.text ?? '';
-			const cleaned = text.replace(/```json\n?|```/g, '').trim();
-			parsedResult = JSON.parse(cleaned);
-		} catch {
-			parsedResult = { text: aiResult.content?.[0]?.text ?? '' };
-		}
+		const confidence = estimateConfidence(depth, body.engine, parsedResult, {
+			validationPassed,
+			attempts,
+			outputTokens: totalOutputTokens,
+			latency,
+		});
 
 		return json({
 			engine: body.engine,
@@ -157,8 +231,10 @@ export const POST: RequestHandler = async ({ request, locals, cookies }) => {
 			data: parsedResult,
 			result: parsedResult,
 			model: model as AIModel,
-			confidence: estimateConfidence(depth, aiResult),
-			tokensUsed: { input: inputTokens, output: outputTokens },
+			confidence,
+			tokensUsed: { input: totalInputTokens, output: totalOutputTokens },
+			...(attempts > 1 ? { retries: attempts } : {}),
+			validated: validationPassed,
 		});
 	} catch (err: any) {
 		if (err.status) throw err;
@@ -205,6 +281,11 @@ function buildSystemPrompt(engine: string, context: Record<string, unknown>): st
 		priorities_suggest: 'You are a purchase intelligence strategist. Return ONLY a JSON array of strings, no markdown.',
 		stack_suggest: 'You are a solutions architect. Return ONLY a comma-separated list of tool names, no markdown or explanation.',
 		context_notes: 'You are a purchase intelligence assistant writing buyer context notes. Write in second person, clear and direct. 3–5 sentences max.',
+
+		// --- Comparison & Intelligence ---
+		vendor_comparison_narrative: 'You are a senior B2B purchase intelligence analyst writing comparative vendor narratives for executive decision-makers. Be specific, data-driven, and opinionated. Return ONLY valid JSON.',
+		requirement_elicitation: 'You are a purchase intelligence consultant who helps buyers uncover hidden requirements they haven\'t considered. Draw on deep domain expertise. Return ONLY valid JSON.',
+		market_intelligence: 'You are a market research analyst specializing in B2B software markets. Provide specific, current intelligence about market trends, vendor movements, and category dynamics. Return ONLY valid JSON.',
 
 		// --- Discovery & RFP ---
 		discovery: 'You are Shortlist AI, specializing in vendor discovery: identifying, researching, and recommending vendors for specific use cases.',
@@ -311,12 +392,16 @@ Problem context: ${str(ctx.problem)}
 Team size: ${str(ctx.teamSize)}
 Budget: ${str(ctx.budget)}
 Year 1 quoted cost: ${str(ctx.year1Cost)}
+Contract terms offered: ${str(ctx.contractTerms) || 'unknown'}
+Competing vendors: ${str(ctx.competitors) || 'unknown'}
 
 Negotiation log so far:
 ${str(ctx.negotiationLog)}
 
+Provide specific, actionable negotiation coaching. Reference real benchmarks for this category.
+
 Return JSON:
-{"overallAssessment":"2-sentence read on negotiation","benchmarkInsight":"what deals like this typically achieve","counterAsks":["ask1","ask2","ask3"],"redFlags":["warning1"],"walkAwaySignal":"when to walk away","nextMove":"best next move"}`;
+{"overallAssessment":"2-sentence read on negotiation position and leverage","benchmarkInsight":"what deals like this typically achieve — cite specific discount ranges","counterAsks":[{"ask":"specific counter-ask","rationale":"why this works","priority":"must|should|nice"}],"concessions":["things you can offer in exchange for better terms"],"redFlags":["specific warning signs in the current deal"],"walkAwaySignal":"specific conditions that should trigger walking away","nextMove":"best next tactical move with specific language to use","timingAdvice":"when to push and when to wait based on sales cycle dynamics","contractWatchList":["specific contract clauses to negotiate: auto-renewal, price lock, termination, SLA penalties"]}`;
 
 		case 'hidden_cost_spotter':
 			return `Identify hidden costs and pricing traps for "${str(ctx.vendor)}" in the ${str(ctx.category) || 'software'} category.
@@ -538,6 +623,72 @@ Return JSON:
 Be concise, data-driven, and actionable. Highlight risks and decisions needed. Max 400 words for all sections combined.`;
 		}
 
+		// --- Comparison Narrative ---
+		case 'vendor_comparison_narrative':
+			return `Write a comparative analysis of these shortlisted vendors for an executive audience.
+
+Problem being solved: ${str(ctx.problem)}
+Category: ${str(ctx.category)}
+Budget: ${str(ctx.budget)}
+Team size: ${str(ctx.teamSize)}
+
+Vendors and their scores:
+${str(ctx.vendorSummaries)}
+
+Evaluation criteria and weights:
+${str(ctx.criteriaWeights)}
+
+Write a nuanced comparison that goes beyond the numbers. For each vendor, explain:
+- What this vendor gets uniquely right for THIS buyer
+- Where it falls short vs the others
+- The hidden trade-off buyers often miss
+
+Return JSON:
+{"narrative":"4-6 paragraph comparative analysis (800 words max)","verdicts":[{"vendor":"name","verdict":"1-sentence final verdict","bestFor":"when to choose this one","watchOut":"biggest risk"}],"recommendation":"2-sentence overall recommendation","confidenceNote":"honest assessment of analysis confidence and what data is missing"}`;
+
+		// --- Requirement Elicitation ---
+		case 'requirement_elicitation':
+			return `Help this buyer uncover requirements they may not have considered for their ${str(ctx.category)} evaluation.
+
+Problem: ${str(ctx.problem)}
+Current approach: ${str(ctx.existingTool) || 'none'}
+Team size: ${str(ctx.teamSize)}
+Budget: ${str(ctx.budget)}
+Industry: ${str(ctx.industry)}
+Must-haves already identified: ${str(ctx.currentMustHaves)}
+Constraints identified: ${str(ctx.currentConstraints)}
+
+Generate 5-7 probing questions that surface hidden requirements. Focus on:
+- Integration dependencies they may not have considered
+- Scale/growth requirements for the next 2-3 years
+- Security and compliance implications specific to their industry
+- Change management and adoption risks
+- Total cost of ownership beyond license fees
+- Data migration and portability concerns
+
+Return JSON:
+{"questions":[{"question":"the probing question","area":"integration|scale|security|adoption|cost|data|workflow","why":"why this matters for their situation","typical_discovery":"what teams usually discover when they answer this"}],"blindSpots":["2-3 common blind spots for ${str(ctx.category)} evaluations"]}`;
+
+		// --- Market Intelligence ---
+		case 'market_intelligence':
+			return `Provide market intelligence for the ${str(ctx.category)} software category.
+
+Buyer context:
+- Industry: ${str(ctx.industry)}
+- Size: ${str(ctx.teamSize)}
+- Budget: ${str(ctx.budget)}
+- Problem: ${str(ctx.problem)}
+- Vendors being evaluated: ${str(ctx.vendorNames)}
+
+Provide specific, actionable intelligence covering:
+1. Category trends (consolidation, new entrants, pricing shifts)
+2. Vendor-specific movements (recent funding, acquisitions, leadership changes)
+3. Buyer leverage opportunities (end of quarter, competitive dynamics, switching trends)
+4. Risk signals (vendor stability, market shifts that could affect this purchase)
+
+Return JSON:
+{"trends":[{"trend":"specific trend","impact":"how it affects this buyer","timeframe":"when relevant"}],"insights":[{"type":"opportunity|risk|trend","title":"short title","detail":"2-sentence detail","actionable":"what the buyer should do"}],"negotiationLeverage":["timing or competitive dynamics that help the buyer"],"categoryOutlook":"2-sentence forward-looking assessment"}`;
+
 		// Task-based routing for legacy evaluate engine
 		case 'evaluate': {
 			const task = str(ctx.task);
@@ -605,10 +756,115 @@ function arr(v: unknown): any[] {
 	return [];
 }
 
-function estimateConfidence(depth: EngineDepth, result: any): number {
-	const outputTokens = result.usage?.output_tokens ?? 0;
-	let base = depth === 'deep' ? 75 : depth === 'standard' ? 65 : 55;
-	if (outputTokens > 1000) base += 10;
-	if (outputTokens > 2000) base += 5;
-	return Math.min(base, 95);
+/**
+ * Validate AI output against expected schema shape.
+ * Returns an array of error strings (empty = valid).
+ */
+function validateEngineOutput(
+	data: unknown,
+	schema: { required: string[]; type: 'object' | 'array' }
+): string[] {
+	const errors: string[] = [];
+
+	if (schema.type === 'array') {
+		if (!Array.isArray(data)) {
+			errors.push(`Expected array, got ${typeof data}`);
+			return errors;
+		}
+		if (data.length === 0) return errors; // Empty arrays are valid
+		// Validate first item has required fields
+		const firstItem = data[0];
+		if (typeof firstItem === 'object' && firstItem !== null) {
+			for (const key of schema.required) {
+				if (!(key in firstItem)) {
+					errors.push(`Array items missing required field: ${key}`);
+				}
+			}
+		}
+	} else {
+		if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+			errors.push(`Expected object, got ${Array.isArray(data) ? 'array' : typeof data}`);
+			return errors;
+		}
+		for (const key of schema.required) {
+			if (!(key in data)) {
+				errors.push(`Missing required field: ${key}`);
+			}
+		}
+	}
+
+	return errors;
+}
+
+/**
+ * Semantic confidence scoring — replaces token-count-based heuristic.
+ * Evaluates: model depth, output quality signals, validation status,
+ * structural completeness, and response characteristics.
+ */
+function estimateConfidence(
+	depth: EngineDepth,
+	engine: string,
+	result: unknown,
+	meta: { validationPassed: boolean; attempts: number; outputTokens: number; latency: number }
+): number {
+	// Base confidence by model tier
+	let score = depth === 'deep' ? 80 : depth === 'standard' ? 70 : 55;
+
+	// Schema validation: strong positive/negative signal
+	if (meta.validationPassed) {
+		score += 8;
+	} else {
+		score -= 20;
+	}
+
+	// Retry penalty — needed retries indicates instability
+	if (meta.attempts > 1) {
+		score -= (meta.attempts - 1) * 10;
+	}
+
+	// Structural completeness — check how "filled out" the response is
+	const completeness = measureCompleteness(result);
+	score += Math.round(completeness * 12); // 0-12 points for completeness
+
+	// Response length signal — very short responses may be low quality
+	if (meta.outputTokens < 50 && engine !== 'alignment_summary') {
+		score -= 10;
+	}
+
+	// Engine-specific quality adjustments
+	const freeformEngines = ['executive_brief', 'context_notes'];
+	if (freeformEngines.includes(engine) && typeof result === 'object' && result !== null) {
+		const text = 'text' in result ? String((result as any).text) : '';
+		if (text.length > 200) score += 5;
+	}
+
+	return Math.min(95, Math.max(15, score));
+}
+
+/**
+ * Measure how "complete" an AI response is: ratio of non-null, non-empty values.
+ */
+function measureCompleteness(data: unknown): number {
+	if (data === null || data === undefined) return 0;
+
+	if (Array.isArray(data)) {
+		if (data.length === 0) return 0.3;
+		// Check first 3 items
+		const samples = data.slice(0, 3);
+		const scores = samples.map((item) => measureCompleteness(item));
+		return scores.reduce((a, b) => a + b, 0) / scores.length;
+	}
+
+	if (typeof data === 'object') {
+		const entries = Object.entries(data as Record<string, unknown>);
+		if (entries.length === 0) return 0.2;
+		const filled = entries.filter(([, v]) =>
+			v !== null && v !== undefined && v !== '' &&
+			!(Array.isArray(v) && v.length === 0)
+		);
+		return filled.length / entries.length;
+	}
+
+	if (typeof data === 'string') return data.length > 0 ? 0.8 : 0;
+	return 0.5;
 }

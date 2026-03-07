@@ -114,45 +114,117 @@
 		generatingBrief = false;
 	}
 
+	/**
+	 * Multi-signal knockout matrix — evaluates vendors against must-haves and constraints
+	 * using feature matching, risk analysis, compliance checking, and budget validation.
+	 */
 	function runKnockoutMatrix() {
-		const results: Record<string, { pass: boolean; flags: string[] }> = {};
+		const results: Record<string, { pass: boolean; flags: string[]; score: number }> = {};
+
 		for (const vendor of vendors) {
 			const flags: string[] = [];
+			let knockoutScore = 100;
 
-			// Check each must-have against vendor info
+			const vendorFeatures = (vendor.features ?? []).map((f: string) => f.toLowerCase());
+			const vendorRisks = (vendor.risks ?? []).map((r: string) => r.toLowerCase());
+			const vendorText = [
+				vendor.tagline, vendor.bestFor, vendor.whyFits,
+				...(vendor.features ?? []), ...(vendor.fitSignals ?? []),
+			].filter(Boolean).join(' ').toLowerCase();
+
+			// 1. Must-have evaluation — multi-word semantic matching
 			for (const must of mustHaves) {
-				const vendorFeatures = (vendor.features ?? []).map((f: string) => f.toLowerCase());
-				const vendorRisks = (vendor.risks ?? []).map((r: string) => r.toLowerCase());
 				const label = (must.label ?? '').toLowerCase();
+				const keywords = label.split(/\s+/).filter((w: string) => w.length > 2);
 
-				// Check if any risk explicitly contradicts this must-have
-				if (vendorRisks.some((r: string) => r.includes(label) || label.includes(r.split(' ')[0]))) {
-					flags.push(`Risk flagged: ${must.label}`);
+				// Check if risks explicitly contradict
+				const riskConflict = vendorRisks.some((r: string) =>
+					keywords.some((k: string) => r.includes(k)) ||
+					r.includes(label)
+				);
+				if (riskConflict) {
+					flags.push(`⛔ Risk conflicts with: ${must.label}`);
+					knockoutScore -= 25;
 				}
-			}
 
-			// Check hard constraints
-			for (const constraint of hardConstraints) {
-				const desc = (constraint.description ?? '').toLowerCase();
-				const vendorRisks = (vendor.risks ?? []).map((r: string) => r.toLowerCase());
-				if (vendorRisks.some((r: string) => r.includes(desc.split(' ')[0]))) {
-					flags.push(`Constraint concern: ${constraint.description}`);
-				}
-			}
+				// Check if features support this must-have
+				const featureMatch = vendorFeatures.some((f: string) =>
+					keywords.some((k: string) => f.includes(k))
+				) || vendorText.includes(label);
 
-			// Budget check based on tier
-			if (questions.budget && vendor.tier) {
-				const budgetNum = parseInt(String(questions.budget).replace(/[^0-9]/g, ''), 10);
-				if (budgetNum > 0) {
-					const tierMins: Record<string, number> = { enterprise: 50000, mid_market: 20000, smb: 5000 };
-					const tierMin = tierMins[vendor.tier] ?? 0;
-					if (tierMin > budgetNum * 1.5) {
-						flags.push('Likely over budget — enterprise pricing typically starts above your range');
+				if (!featureMatch && !riskConflict) {
+					// Not explicitly supported — check broader text
+					const broadMatch = keywords.filter((k: string) => vendorText.includes(k));
+					if (broadMatch.length === 0) {
+						flags.push(`⚠ No evidence for: ${must.label}`);
+						knockoutScore -= 15;
+					} else if (broadMatch.length < keywords.length * 0.5) {
+						flags.push(`△ Partial match on: ${must.label} (${broadMatch.length}/${keywords.length} signals)`);
+						knockoutScore -= 5;
 					}
 				}
 			}
 
-			results[vendor.id] = { pass: flags.length === 0, flags };
+			// 2. Hard constraint evaluation — compliance, integration, and deployment checks
+			for (const constraint of hardConstraints) {
+				const desc = (constraint.description ?? '').toLowerCase();
+				const descKeywords = desc.split(/\s+/).filter((w: string) => w.length > 2);
+
+				// Check if vendor risks contradict constraint
+				const violated = vendorRisks.some((r: string) =>
+					descKeywords.some((k: string) => r.includes(k))
+				);
+				if (violated) {
+					flags.push(`⛔ Constraint violated: ${constraint.description}`);
+					knockoutScore -= 30;
+				}
+
+				// Check if vendor info supports constraint (compliance terms, integrations, etc.)
+				const complianceTerms = ['soc', 'iso', 'hipaa', 'gdpr', 'fedramp', 'pci', 'ccpa', 'nist'];
+				const isComplianceConstraint = complianceTerms.some((t) => desc.includes(t));
+				if (isComplianceConstraint) {
+					const certMatch = vendorText.includes(desc.split(' ')[0]);
+					if (!certMatch) {
+						flags.push(`⚠ No compliance evidence for: ${constraint.description}`);
+						knockoutScore -= 20;
+					}
+				}
+			}
+
+			// 3. Budget check — enhanced with tier + pricing signal analysis
+			if (questions.budget && vendor.tier) {
+				const budgetNum = parseInt(String(questions.budget).replace(/[^0-9]/g, ''), 10);
+				if (budgetNum > 0) {
+					const tierMins: Record<string, number> = {
+						enterprise: 50000, mid_market: 20000, smb: 5000, free: 0,
+					};
+					const tierMin = tierMins[vendor.tier] ?? 0;
+					if (tierMin > budgetNum * 1.5) {
+						flags.push('💰 Likely over budget — pricing tier significantly exceeds range');
+						knockoutScore -= 20;
+					} else if (tierMin > budgetNum) {
+						flags.push('💰 Budget stretch — pricing tier is at the high end of range');
+						knockoutScore -= 8;
+					}
+				}
+			}
+
+			// 4. Fit score check — if vendor has a very low fit score, flag it
+			if (vendor.fitScore != null && vendor.fitScore < 35) {
+				flags.push(`📊 Low fit score: ${vendor.fitScore}/100 — poor overall match`);
+				knockoutScore -= 15;
+			}
+
+			// 5. Fit concern analysis — surface concerns from scoring
+			if (vendor.fitConcerns?.length) {
+				for (const concern of vendor.fitConcerns.slice(0, 2)) {
+					flags.push(`△ ${concern}`);
+					knockoutScore -= 5;
+				}
+			}
+
+			const pass = knockoutScore >= 50 && !flags.some((f: string) => f.startsWith('⛔'));
+			results[vendor.id] = { pass, flags, score: Math.max(0, knockoutScore) };
 		}
 		knockoutResults = results;
 	}

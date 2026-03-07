@@ -37,6 +37,10 @@
 	let budgetRange = $state(solveData.budgetRange ?? '');
 	let timeline = $state(solveData.timeline ?? '');
 	let saving = $state(false);
+	let validationErrors = $state<string[]>([]);
+	let showValidation = $state(false);
+	let autosaveTimer: ReturnType<typeof setTimeout> | null = null;
+	let lastAutosave = $state('');
 
 	function toggleTrigger(id: string) {
 		if (selectedTriggers.includes(id)) {
@@ -44,6 +48,38 @@
 		} else {
 			selectedTriggers = [...selectedTriggers, id];
 		}
+		scheduleAutosave();
+	}
+
+	// Autosave — debounced save on any field change
+	function scheduleAutosave() {
+		if (autosaveTimer) clearTimeout(autosaveTimer);
+		autosaveTimer = setTimeout(async () => {
+			const newSolveData = {
+				...(data.project.solve_data ?? {}),
+				...buildSolveData(),
+			};
+			await supabase
+				.from('projects')
+				.update({ solve_data: newSolveData, updated_at: new Date().toISOString() })
+				.eq('id', projectId);
+			lastAutosave = new Date().toLocaleTimeString();
+		}, 3000);
+	}
+
+	// Validate before proceeding
+	function validate(): string[] {
+		const errors: string[] = [];
+		if (selectedTriggers.length === 0) {
+			errors.push('Select at least one trigger for your search');
+		}
+		if (!problemDescription.trim() || problemDescription.trim().length < 15) {
+			errors.push('Describe the problem in at least a few sentences (15+ characters)');
+		}
+		if (!budgetRange.trim()) {
+			errors.push('Provide an estimated budget range to help with vendor matching');
+		}
+		return errors;
 	}
 
 	function buildSolveData() {
@@ -72,8 +108,12 @@
 	}
 
 	async function saveAndContinue() {
-		if (selectedTriggers.length === 0) return;
+		showValidation = true;
+		validationErrors = validate();
+		if (validationErrors.length > 0) return;
+
 		saving = true;
+		if (autosaveTimer) clearTimeout(autosaveTimer);
 
 		const newSolveData = {
 			...(data.project.solve_data ?? {}),
@@ -94,6 +134,8 @@
 
 	async function saveDraft() {
 		saving = true;
+		if (autosaveTimer) clearTimeout(autosaveTimer);
+
 		const newSolveData = {
 			...(data.project.solve_data ?? {}),
 			...buildSolveData(),
@@ -108,9 +150,17 @@
 			.eq('id', projectId);
 
 		saving = false;
+		lastAutosave = new Date().toLocaleTimeString();
 	}
 
 	const canContinue = $derived(selectedTriggers.length > 0 && problemDescription.trim().length > 10);
+
+	// Wire autosave to reactive field changes
+	$effect(() => {
+		// Track field changes for autosave (reading the values creates subscriptions)
+		const _ = [problemDescription, whoAffected, frequency, costOfNothing, successLooks, currentTool, companySize, budgetRange, timeline];
+		if (_.some(v => v)) scheduleAutosave();
+	});
 </script>
 
 <svelte:head>
@@ -229,16 +279,29 @@
 		</div>
 	</QuestionBlock>
 
+	{#if showValidation && validationErrors.length > 0}
+		<div class="validation-errors">
+			{#each validationErrors as err}
+				<p class="validation-error">⚠ {err}</p>
+			{/each}
+		</div>
+	{/if}
+
 	<div class="step-actions">
-		<Button variant="ghost" onclick={saveDraft} loading={saving}>Save draft</Button>
-		<Button
-			variant="primary"
-			onclick={saveAndContinue}
-			loading={saving}
-			disabled={!canContinue}
-		>
-			Continue to Category →
-		</Button>
+		{#if lastAutosave}
+			<span class="autosave-indicator">Saved at {lastAutosave}</span>
+		{/if}
+		<div class="step-actions-buttons">
+			<Button variant="ghost" onclick={saveDraft} loading={saving}>Save draft</Button>
+			<Button
+				variant="primary"
+				onclick={saveAndContinue}
+				loading={saving}
+				disabled={!canContinue}
+			>
+				Continue to Category →
+			</Button>
+		</div>
 	</div>
 </div>
 
@@ -325,13 +388,40 @@
 		margin-bottom: var(--space-1);
 	}
 
+	.validation-errors {
+		background: rgba(240, 80, 80, 0.06);
+		border: 1px solid rgba(240, 80, 80, 0.2);
+		border-radius: var(--radius-md);
+		padding: var(--space-3) var(--space-4);
+		margin-top: var(--space-4);
+	}
+
+	.validation-error {
+		font-size: 0.8125rem;
+		color: #dc2626;
+		margin: 0;
+		line-height: 1.75;
+	}
+
+	.autosave-indicator {
+		font-size: 0.75rem;
+		color: var(--neutral-400);
+		font-style: italic;
+	}
+
 	.step-actions {
 		display: flex;
-		justify-content: flex-end;
+		justify-content: space-between;
+		align-items: center;
 		gap: var(--space-3);
 		margin-top: var(--space-6);
 		padding-top: var(--space-4);
 		border-top: 1px solid var(--neutral-100);
+	}
+
+	.step-actions-buttons {
+		display: flex;
+		gap: var(--space-3);
 	}
 
 	@media (max-width: 640px) {

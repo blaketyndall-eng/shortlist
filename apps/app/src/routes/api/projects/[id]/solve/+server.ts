@@ -171,3 +171,60 @@ export const POST: RequestHandler = async ({ params, request, locals, cookies, u
 
 	return json({ success: true, phase: 'evaluate' });
 };
+
+/**
+ * DELETE /api/projects/[id]/solve
+ * Rollback from EVALUATE phase back to DEFINE (reversible phase transition).
+ * Preserves all SOLVE data — just resets the phase flag and step.
+ */
+export const DELETE: RequestHandler = async ({ params, locals, cookies }) => {
+	if (!locals.session || !locals.user) {
+		error(401, 'Unauthorized');
+	}
+
+	const supabase = createServerSupabase(cookies);
+
+	// Verify project exists and is in evaluate phase
+	const { data: project, error: fetchErr } = await supabase
+		.from('projects')
+		.select('id, phase, solve_data, org_id')
+		.eq('id', params.id)
+		.single();
+
+	if (fetchErr || !project) {
+		error(404, 'Project not found');
+	}
+
+	if (project.phase !== 'evaluate') {
+		error(400, 'Project is not in evaluate phase — nothing to rollback');
+	}
+
+	// Rollback: set phase back to define, restore last SOLVE step
+	const lastSolveStep = project.solve_data?.lastCompletedStep ?? 'challenges';
+	const { error: updateErr } = await supabase
+		.from('projects')
+		.update({
+			phase: 'define',
+			current_step: lastSolveStep,
+			updated_at: new Date().toISOString(),
+		})
+		.eq('id', params.id);
+
+	if (updateErr) {
+		error(500, `Failed to rollback: ${updateErr.message}`);
+	}
+
+	// Log the rollback
+	try {
+		await supabase.from('activity_log').insert({
+			project_id: params.id,
+			user_id: locals.user.id,
+			action: 'phase_rollback',
+			details: { from: 'evaluate', to: 'define', restoredStep: lastSolveStep },
+		});
+	} catch {
+		// Non-critical
+	}
+
+	return json({ success: true, phase: 'define', currentStep: lastSolveStep });
+};

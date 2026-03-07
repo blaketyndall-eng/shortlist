@@ -13,6 +13,11 @@
 	let generating = $state(false);
 	let challengesReady = $state((solveData.challenges ?? []).length > 0);
 
+	// Challenge acknowledgment tracking — users must respond to high-severity challenges
+	let acknowledgments = $state<Record<number, 'acknowledged' | 'adjusted' | null>>(
+		solveData.challengeAcknowledgments ?? {}
+	);
+
 	interface Challenge {
 		icon: string;
 		severity: 'high' | 'medium' | 'low';
@@ -150,13 +155,44 @@
 		generating = false;
 	}
 
+	// Check if high-severity challenges are all acknowledged
+	const highSeverityIndices = $derived(
+		challenges.map((c, i) => c.severity === 'high' ? i : -1).filter(i => i >= 0)
+	);
+	const allHighAcknowledged = $derived(
+		highSeverityIndices.every(i => acknowledgments[i] != null)
+	);
+	const hasAdjustments = $derived(
+		Object.values(acknowledgments).some(v => v === 'adjusted')
+	);
+
 	async function saveAndTransition() {
+		// Block if high-severity challenges are unacknowledged
+		if (!allHighAcknowledged) return;
+
+		// If user chose "adjusted" on any challenge, go back to brief instead
+		if (hasAdjustments) {
+			const newSolveData = {
+				...solveData,
+				challenges,
+				challengeAcknowledgments: acknowledgments,
+			};
+			await supabase
+				.from('projects')
+				.update({ solve_data: newSolveData, updated_at: new Date().toISOString() })
+				.eq('id', projectId);
+			goto(`/project/${projectId}/solve/brief`);
+			return;
+		}
+
 		saving = true;
 
 		// Save challenges to solve_data
 		const newSolveData = {
 			...solveData,
 			challenges,
+			challengeAcknowledgments: acknowledgments,
+			lastCompletedStep: 'challenges',
 			completedSteps: [...new Set([
 				...(solveData.completedSteps ?? []),
 				'triggers', 'category', 'vendor_discovery', 'constraints', 'priorities', 'brief', 'challenges',
@@ -258,6 +294,8 @@
 				{@const sev = severityColors[challenge.severity] ?? severityColors.low}
 				<div
 					class="challenge-card"
+					class:acknowledged={acknowledgments[i] === 'acknowledged'}
+					class:adjusted={acknowledgments[i] === 'adjusted'}
 					style="border-color: {sev.border}"
 				>
 					<div class="challenge-header">
@@ -271,6 +309,26 @@
 					</div>
 					<p class="challenge-question">{challenge.question}</p>
 					<p class="challenge-context">{challenge.context}</p>
+
+					<!-- Challenge acknowledgment (required for high severity) -->
+					<div class="challenge-response">
+						{#if acknowledgments[i]}
+							<span class="challenge-ack-badge">
+								{acknowledgments[i] === 'acknowledged' ? '✓ Acknowledged — proceeding as-is' : '↩ Adjusted — going back to refine'}
+							</span>
+						{:else}
+							<div class="challenge-ack-buttons">
+								<button class="ack-btn ack-proceed" onclick={() => (acknowledgments[i] = 'acknowledged')}>
+									I've considered this — proceed
+								</button>
+								{#if challenge.severity === 'high'}
+									<button class="ack-btn ack-adjust" onclick={() => (acknowledgments[i] = 'adjusted')}>
+										This changes things — adjust
+									</button>
+								{/if}
+							</div>
+						{/if}
+					</div>
 				</div>
 			{/each}
 		</div>
@@ -284,16 +342,28 @@
 		</div>
 	{/if}
 
+	{#if challengesReady && !allHighAcknowledged}
+		<div class="enforcement-notice">
+			<p>⚠ Please respond to all high-signal challenges before continuing. This ensures your decision is pressure-tested.</p>
+		</div>
+	{/if}
+
 	<div class="step-actions">
 		<Button variant="ghost" onclick={() => goto(`/project/${projectId}/solve/brief`)}>← Back to Brief</Button>
-		<Button
-			variant="primary"
-			onclick={saveAndTransition}
-			loading={saving}
-			disabled={!challengesReady}
-		>
-			I'm confident — Start Evaluation →
-		</Button>
+		{#if hasAdjustments}
+			<Button variant="primary" onclick={saveAndTransition}>
+				↩ Go Back & Adjust
+			</Button>
+		{:else}
+			<Button
+				variant="primary"
+				onclick={saveAndTransition}
+				loading={saving}
+				disabled={!challengesReady || !allHighAcknowledged}
+			>
+				I'm confident — Start Evaluation →
+			</Button>
+		{/if}
 	</div>
 </div>
 
@@ -365,6 +435,75 @@
 		font-size: 0.8125rem; color: var(--neutral-500); line-height: 1.75; margin: 0;
 	}
 
+	/* Challenge response buttons */
+	.challenge-response {
+		margin-top: var(--space-3);
+		padding-top: var(--space-2);
+		border-top: 1px solid var(--neutral-100);
+	}
+
+	.challenge-ack-buttons {
+		display: flex;
+		gap: var(--space-2);
+	}
+
+	.ack-btn {
+		padding: 6px 14px;
+		border-radius: var(--radius-sm);
+		font-size: 0.75rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all 0.15s ease;
+		border: 1px solid;
+	}
+
+	.ack-proceed {
+		background: rgba(0, 204, 150, 0.06);
+		border-color: rgba(0, 204, 150, 0.25);
+		color: #00cc96;
+	}
+	.ack-proceed:hover {
+		background: rgba(0, 204, 150, 0.12);
+	}
+
+	.ack-adjust {
+		background: rgba(240, 160, 52, 0.06);
+		border-color: rgba(240, 160, 52, 0.25);
+		color: #d97706;
+	}
+	.ack-adjust:hover {
+		background: rgba(240, 160, 52, 0.12);
+	}
+
+	.challenge-ack-badge {
+		font-size: 0.75rem;
+		font-weight: 600;
+		color: #00cc96;
+	}
+
+	.challenge-card.acknowledged {
+		opacity: 0.7;
+		border-color: rgba(0, 204, 150, 0.2) !important;
+	}
+
+	.challenge-card.adjusted {
+		border-color: rgba(240, 160, 52, 0.4) !important;
+		background: rgba(240, 160, 52, 0.03);
+	}
+
+	.enforcement-notice {
+		background: rgba(240, 80, 80, 0.04);
+		border: 1px solid rgba(240, 80, 80, 0.15);
+		border-radius: var(--radius-md);
+		padding: var(--space-3) var(--space-4);
+		margin-top: var(--space-4);
+	}
+	.enforcement-notice p {
+		font-size: 0.8125rem;
+		color: #dc2626;
+		margin: 0;
+	}
+
 	/* Actions */
 	.step-actions {
 		display: flex; justify-content: space-between; align-items: center;
@@ -375,5 +514,6 @@
 	@media (max-width: 640px) {
 		.challenge-card { padding: var(--space-3); }
 		.step-actions { flex-direction: column; gap: var(--space-3); }
+		.challenge-ack-buttons { flex-direction: column; }
 	}
 </style>
