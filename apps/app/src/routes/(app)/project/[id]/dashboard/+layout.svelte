@@ -12,7 +12,7 @@
 		{ id: 'reports', label: 'Reports', icon: '📄', href: `/project/${projectId}/dashboard/reports` },
 	];
 
-	const activeTab = $derived(() => {
+	const activeTab = $derived.by(() => {
 		const path = $page.url.pathname;
 		const match = tabs.find((t) => path.includes(`/dashboard/${t.id}`));
 		return match?.id ?? 'overview';
@@ -34,9 +34,9 @@
 				<a
 					href={tab.href}
 					class="tab-btn"
-					class:active={activeTab() === tab.id}
+					class:active={activeTab === tab.id}
 					role="tab"
-					aria-selected={activeTab() === tab.id}
+					aria-selected={activeTab === tab.id}
 				>
 					<span class="tab-icon">{tab.icon}</span>
 					<span class="tab-label">{tab.label}</span>

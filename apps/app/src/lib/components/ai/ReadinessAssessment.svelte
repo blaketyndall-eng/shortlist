@@ -71,7 +71,7 @@
 		reversibility: '#06b6d4'
 	};
 
-	let readinessScore = $derived(() => {
+	let readinessScore = $derived.by(() => {
 		const total = result?.questions?.length ?? 0;
 		if (total === 0) return 0;
 		const answered = Object.keys(answers).length;
@@ -84,9 +84,9 @@
 <div class="readiness">
 	<div class="ra-header">
 		<span class="ra-badge">✦ Decision Readiness</span>
-		{#if result && readinessScore() >= 0}
-			<span class="ra-score" class:high={readinessScore() >= 80} class:mid={readinessScore() >= 50 && readinessScore() < 80} class:low={readinessScore() < 50}>
-				{readinessScore()}% ready
+		{#if result && readinessScore >= 0}
+			<span class="ra-score" class:high={readinessScore >= 80} class:mid={readinessScore >= 50 && readinessScore < 80} class:low={readinessScore < 50}>
+				{readinessScore}% ready
 			</span>
 		{/if}
 	</div>

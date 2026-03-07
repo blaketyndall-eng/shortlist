@@ -26,7 +26,7 @@
 		{ key: 'implementation_readiness', label: 'Implementation Readiness', description: 'Plan in place, timeline agreed, team assigned', weight: 6, score: 0, source: 'manual' }
 	]);
 
-	let overallConfidence = $derived(() => {
+	let overallConfidence = $derived.by(() => {
 		let totalWeight = 0;
 		let totalScore = 0;
 		for (const f of factors) {
@@ -129,12 +129,12 @@
 
 	<!-- Overall score -->
 	<div class="overall-score">
-		<div class="score-circle" style="--color: {confColor(overallConfidence())}">
-			<span class="score-num">{overallConfidence()}</span>
+		<div class="score-circle" style="--color: {confColor(overallConfidence)}">
+			<span class="score-num">{overallConfidence}</span>
 			<span class="score-pct">%</span>
 		</div>
 		<div class="score-info">
-			<span class="score-label" style="color: {confColor(overallConfidence())}">{confLabel(overallConfidence())}</span>
+			<span class="score-label" style="color: {confColor(overallConfidence)}">{confLabel(overallConfidence)}</span>
 			<p class="score-desc">Based on {factors.length} factors weighted by importance to your decision process.</p>
 		</div>
 	</div>

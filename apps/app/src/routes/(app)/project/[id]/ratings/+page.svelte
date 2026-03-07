@@ -36,7 +36,7 @@
 		};
 	}
 
-	const completionPct = $derived(() => {
+	const completionPct = $derived.by(() => {
 		const total = vendors.length * criteria.length;
 		if (total === 0) return 0;
 		let filled = 0;
@@ -97,7 +97,7 @@
 		<div>
 			<h2>Score vendors</h2>
 			<p class="step-description">
-				Rate each vendor on every criterion (0–10). {completionPct()}% complete.
+				Rate each vendor on every criterion (0–10). {completionPct}% complete.
 			</p>
 		</div>
 		<Button variant="secondary" size="sm" onclick={saveProgress} loading={saving}>

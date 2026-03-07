@@ -156,7 +156,7 @@
 		}
 	}
 
-	let filteredTasks = $derived(() => {
+	let filteredTasks = $derived.by(() => {
 		return plan.tasks.filter((t) => {
 			if (filterPhase !== 'all' && t.phase !== filterPhase) return false;
 			if (filterStatus !== 'all' && t.status !== filterStatus) return false;
@@ -164,15 +164,15 @@
 		});
 	});
 
-	let phaseTasks = $derived(() => {
+	let phaseTasks = $derived.by(() => {
 		const phases = ['pre-launch', 'launch', 'post-launch', 'optimization'] as const;
 		return phases.map((p) => ({
 			phase: p,
-			tasks: filteredTasks().filter((t) => t.phase === p)
+			tasks: filteredTasks.filter((t) => t.phase === p)
 		})).filter((g) => g.tasks.length > 0);
 	});
 
-	let stats = $derived(() => {
+	let stats = $derived.by(() => {
 		const total = plan.tasks.length;
 		const completed = plan.tasks.filter((t) => t.status === 'completed').length;
 		const blocked = plan.tasks.filter((t) => t.status === 'blocked').length;
@@ -264,25 +264,25 @@
 	<!-- Progress -->
 	<div class="stats-row">
 		<div class="stat-card">
-			<span class="stat-num">{stats().progress}%</span>
+			<span class="stat-num">{stats.progress}%</span>
 			<span class="stat-lbl">Complete</span>
 		</div>
 		<div class="stat-card">
-			<span class="stat-num" style="color: #f59e0b">{stats().inProgress}</span>
+			<span class="stat-num" style="color: #f59e0b">{stats.inProgress}</span>
 			<span class="stat-lbl">In Progress</span>
 		</div>
 		<div class="stat-card">
-			<span class="stat-num" style="color: #ef4444">{stats().blocked}</span>
+			<span class="stat-num" style="color: #ef4444">{stats.blocked}</span>
 			<span class="stat-lbl">Blocked</span>
 		</div>
 		<div class="stat-card">
-			<span class="stat-num" style="color: #00cc96">{stats().completed}</span>
+			<span class="stat-num" style="color: #00cc96">{stats.completed}</span>
 			<span class="stat-lbl">Done</span>
 		</div>
 	</div>
 
 	<div class="progress-bar">
-		<div class="prog-fill" style="width: {stats().progress}%"></div>
+		<div class="prog-fill" style="width: {stats.progress}%"></div>
 	</div>
 
 	<!-- Filters -->
@@ -338,7 +338,7 @@
 
 	<!-- Task list grouped by phase -->
 	<div class="task-phases">
-		{#each phaseTasks() as group}
+		{#each phaseTasks as group}
 			<div class="phase-group">
 				<div class="phase-header">
 					<span class="phase-icon">{phaseIcon[group.phase]}</span>
@@ -400,7 +400,7 @@
 				<p>No implementation tasks yet.</p>
 				<p class="empty-hint">Use <strong>AI Generate Plan</strong> to create a comprehensive implementation plan, or add tasks manually.</p>
 			</div>
-		{:else if filteredTasks().length === 0}
+		{:else if filteredTasks.length === 0}
 			<div class="empty">No tasks match current filters.</div>
 		{/if}
 	</div>

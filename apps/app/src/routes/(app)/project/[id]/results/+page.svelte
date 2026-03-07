@@ -19,7 +19,7 @@
 	const winner = $derived(rankings[0]);
 
 	// Group criteria by category for the breakdown
-	const categories = $derived(() => {
+	const categories = $derived.by(() => {
 		const cats = new Map<string, Criterion[]>();
 		for (const c of criteria) {
 			const existing = cats.get(c.category) ?? [];

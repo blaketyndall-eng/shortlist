@@ -18,14 +18,14 @@
 	const preEvalDone: Record<string, boolean> = solveData.preEvalDone ?? {};
 
 	// Team members from project members or SOLVE stakeholders
-	const teamMembers = $derived(() => {
+	const teamMembers = $derived.by(() => {
 		const members: { name: string; role: string; done: boolean }[] = [];
 
 		// From stakeholders
 		for (const sh of stakeholders) {
 			members.push({
 				name: sh.name,
-				role: sh.role ?? sh.influenceLevel ?? 'Member',
+				role: sh.role ?? sh.influence ?? 'Member',
 				done: preEvalDone[sh.name] ?? false,
 			});
 		}
@@ -61,10 +61,9 @@
 	}
 
 	const hasPreEvalData = $derived(Object.keys(preEvalScores).length > 0);
-	const completionRate = $derived(() => {
-		const members = teamMembers();
-		const done = members.filter((m) => m.done).length;
-		return members.length > 0 ? Math.round((done / members.length) * 100) : 0;
+	const completionRate = $derived.by(() => {
+		const done = teamMembers.filter((m) => m.done).length;
+		return teamMembers.length > 0 ? Math.round((done / teamMembers.length) * 100) : 0;
 	});
 </script>
 
@@ -77,12 +76,12 @@
 	<Card>
 		<h3 class="section-label">PRE-EVALUATION STATUS</h3>
 		<div class="completion-bar-container">
-			<div class="completion-bar" style="width: {completionRate()}%"></div>
+			<div class="completion-bar" style="width: {completionRate}%"></div>
 		</div>
-		<p class="completion-text">{completionRate()}% of team members have submitted pre-evaluation scores</p>
+		<p class="completion-text">{completionRate}% of team members have submitted pre-evaluation scores</p>
 
 		<div class="member-list">
-			{#each teamMembers() as member (member.name)}
+			{#each teamMembers as member (member.name)}
 				<div class="member-row">
 					<div class="member-avatar">{member.name.charAt(0)}</div>
 					<div class="member-info">
@@ -143,9 +142,9 @@
 							<span class="sh-name">{sh.name}</span>
 							<span class="sh-detail">{sh.role ?? ''}{sh.department ? ` · ${sh.department}` : ''}</span>
 						</div>
-						{#if sh.influenceLevel}
-							<span class="sh-influence" class:decision={sh.influenceLevel === 'decision_maker'}>
-								{sh.influenceLevel.replace('_', ' ')}
+						{#if sh.influence}
+							<span class="sh-influence" class:decision={sh.influence === 'decision_maker'}>
+								{sh.influence.replace('_', ' ')}
 							</span>
 						{/if}
 					</div>
