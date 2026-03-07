@@ -20,10 +20,10 @@
 		size: '120 employees',
 		project: 'CRM Platform Evaluation',
 		budget: '$50,000 — $120,000 / year',
-		teamLead: 'Sarah Chen',
+		teamLead: 'Karen Liu',
 		teamRole: 'VP of Revenue Operations',
 		members: [
-			{ name: 'Sarah Chen', role: 'VP RevOps', avatar: 'SC', color: '#00cc96' },
+			{ name: 'Karen Liu', role: 'VP RevOps', avatar: 'KL', color: '#00cc96' },
 			{ name: 'Marcus Rivera', role: 'Sales Director', avatar: 'MR', color: '#4a96f8' },
 			{ name: 'Priya Patel', role: 'CTO', avatar: 'PP', color: '#a06cf0' },
 			{ name: 'James Wright', role: 'CFO', avatar: 'JW', color: '#f0a034' },

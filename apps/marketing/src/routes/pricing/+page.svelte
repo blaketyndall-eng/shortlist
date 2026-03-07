@@ -81,6 +81,67 @@
 		</div>
 	</div>
 
+	<section class="compare-matrix">
+		<h2>How Shortlist compares</h2>
+		<p class="compare-sub">Stop using tools that weren't built for purchase decisions.</p>
+		<div class="compare-table-wrap">
+			<table class="compare-table">
+				<thead>
+					<tr>
+						<th>Capability</th>
+						<th>Spreadsheets</th>
+						<th>Generic PM Tools</th>
+						<th class="compare-hl">Shortlist</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>Structured evaluation workflow</td>
+						<td class="compare-no">Manual</td>
+						<td class="compare-partial">Partial</td>
+						<td class="compare-yes">SOLVE (5 steps)</td>
+					</tr>
+					<tr>
+						<td>AI vendor enrichment</td>
+						<td class="compare-no">No</td>
+						<td class="compare-no">No</td>
+						<td class="compare-yes">25 AI engines</td>
+					</tr>
+					<tr>
+						<td>Fit scoring</td>
+						<td class="compare-no">DIY formulas</td>
+						<td class="compare-no">No</td>
+						<td class="compare-yes">Automated</td>
+					</tr>
+					<tr>
+						<td>Team alignment tracking</td>
+						<td class="compare-no">No</td>
+						<td class="compare-partial">Basic polls</td>
+						<td class="compare-yes">Role-based analysis</td>
+					</tr>
+					<tr>
+						<td>Vendor library (100+)</td>
+						<td class="compare-no">No</td>
+						<td class="compare-no">No</td>
+						<td class="compare-yes">Pre-loaded</td>
+					</tr>
+					<tr>
+						<td>Executive briefings</td>
+						<td class="compare-no">Manual decks</td>
+						<td class="compare-no">No</td>
+						<td class="compare-yes">AI-generated</td>
+					</tr>
+					<tr>
+						<td>Side-by-side comparison</td>
+						<td class="compare-partial">Manual</td>
+						<td class="compare-no">No</td>
+						<td class="compare-yes">Built-in</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</section>
+
 	<section class="faq">
 		<h2>Frequently asked questions</h2>
 		<div class="faq-grid">
@@ -299,6 +360,37 @@
 		background: #009e74;
 		border-color: #009e74;
 		box-shadow: 0 8px 22px rgba(0, 204, 150, 0.22);
+	}
+
+	/* ═══════ COMPARISON MATRIX ═══════ */
+	.compare-matrix { margin-bottom: 80px; text-align: center; }
+	.compare-matrix h2 {
+		font-family: 'Playfair Display', serif; font-size: 1.75rem; font-weight: 800;
+		color: #ffffff; margin-bottom: 8px;
+	}
+	.compare-sub { font-size: 1rem; color: #6b7e96; margin-bottom: 40px; }
+	.compare-table-wrap { overflow-x: auto; }
+	.compare-table {
+		width: 100%; border-collapse: collapse; text-align: left; font-size: 0.875rem;
+	}
+	.compare-table th {
+		padding: 12px 16px; font-weight: 600; color: #8b95a5;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.08); font-size: 0.8125rem;
+		text-transform: uppercase; letter-spacing: 0.04em;
+	}
+	.compare-table th.compare-hl { color: #00cc96; }
+	.compare-table td {
+		padding: 14px 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.04); color: #8b95a5;
+	}
+	.compare-table td:first-child { color: #c0c8d4; font-weight: 500; }
+	.compare-table td.compare-yes { color: #00cc96; font-weight: 600; }
+	.compare-table td.compare-no { color: #5a6472; }
+	.compare-table td.compare-partial { color: #f0a034; }
+	.compare-table tbody tr:hover { background: rgba(255, 255, 255, 0.02); }
+
+	@media (max-width: 640px) {
+		.compare-table { font-size: 0.8125rem; }
+		.compare-table th, .compare-table td { padding: 10px 10px; }
 	}
 
 	/* ═══════ FAQ ═══════ */

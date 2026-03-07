@@ -19,6 +19,15 @@
 			</a>
 			<a href="/demo" class="btn-ghost">See Live Demo</a>
 		</div>
+
+		<div class="hero-social-proof">
+			<div class="proof-logos">
+				<span class="proof-logo-pill">Orion Software</span>
+				<span class="proof-logo-pill">Apex Digital</span>
+				<span class="proof-logo-pill">Vantage Systems</span>
+			</div>
+			<p class="proof-metric">Teams make purchase decisions <strong>10x faster</strong> with Shortlist</p>
+		</div>
 	</div>
 
 	<!-- Interactive demo preview -->
@@ -165,6 +174,7 @@
 			</div>
 		</div>
 	</div>
+	<p class="case-disclaimer">Based on platform benchmarks and simulated team workflows.</p>
 </section>
 
 <!-- ═══════ PROBLEM → BUYING & SELLING BROKEN ═══════ -->
@@ -474,6 +484,17 @@
 	}
 	.btn-ghost:hover { border-color: rgba(255, 255, 255, 0.28); text-decoration: none; }
 
+	/* ═══════ HERO SOCIAL PROOF ═══════ */
+	.hero-social-proof { margin-top: 2.5rem; text-align: center; }
+	.proof-logos { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 10px; }
+	.proof-logo-pill {
+		padding: 5px 14px; background: rgba(255, 255, 255, 0.04);
+		border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 9999px;
+		font-size: 0.8125rem; font-weight: 500; color: #6b7e96;
+	}
+	.proof-metric { font-size: 0.875rem; color: #5a6472; margin: 0; }
+	.proof-metric strong { color: #00cc96; font-weight: 600; }
+
 	/* ═══════ HERO SCREENSHOT ═══════ */
 	.hero-screenshot { max-width: 960px; margin: 0 auto; perspective: 1200px; position: relative; }
 	.screen-frame {
@@ -590,6 +611,7 @@
 	.case-stat { font-size: 0.75rem; color: #8b95a5; }
 	.case-stat strong { color: #00cc96; font-weight: 700; }
 	.case-divider { color: rgba(255, 255, 255, 0.12); font-size: 0.75rem; }
+	.case-disclaimer { text-align: center; font-size: 0.75rem; color: #3a4a5c; margin-top: 1.5rem; font-style: italic; }
 
 	/* ═══════ PROBLEM — BUYING / SELLING BROKEN ═══════ */
 	.problem-section { padding: 5rem 2rem; }
