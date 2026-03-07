@@ -15,11 +15,22 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.order('updated_at', { ascending: false })
 		.limit(20);
 
-	// Fetch team members count
-	const { count: teamCount } = await locals.supabase
+	// Fetch team members count — all members across teams the user belongs to
+	// First get the user's team IDs, then count all members in those teams
+	const { data: userTeams } = await locals.supabase
 		.from('team_members')
-		.select('*', { count: 'exact', head: true })
+		.select('team_id')
 		.eq('user_id', userId);
+
+	let teamCount = 0;
+	if (userTeams && userTeams.length > 0) {
+		const teamIds = userTeams.map((t) => t.team_id);
+		const { count } = await locals.supabase
+			.from('team_members')
+			.select('*', { count: 'exact', head: true })
+			.in('team_id', teamIds);
+		teamCount = count ?? 0;
+	}
 
 	// Fetch AI credits used this month
 	const startOfMonth = new Date();
@@ -46,16 +57,36 @@ export const load: PageServerLoad = async ({ locals }) => {
 	}
 
 	// Fetch recent activity across user's projects
+	// DB columns are: verb, detail, user_id — map to type, description, user_name for UI
 	const projectIds = (projects ?? []).map((p) => p.id);
 	let activities: any[] = [];
 	if (projectIds.length > 0) {
 		const { data: activityData } = await locals.supabase
 			.from('activity_log')
-			.select('id, type, description, user_name, created_at, metadata')
+			.select('id, verb, detail, user_id, created_at, metadata')
 			.in('project_id', projectIds)
 			.order('created_at', { ascending: false })
 			.limit(15);
-		activities = activityData ?? [];
+
+		if (activityData && activityData.length > 0) {
+			// Resolve user names from profiles
+			const userIds = [...new Set(activityData.map((a) => a.user_id).filter(Boolean))];
+			const { data: profileData } = await locals.supabase
+				.from('profiles')
+				.select('id, full_name')
+				.in('id', userIds);
+
+			const nameMap = new Map((profileData ?? []).map((p) => [p.id, p.full_name]));
+
+			activities = activityData.map((a) => ({
+				id: a.id,
+				type: a.verb ?? 'default',
+				description: a.detail ?? '',
+				user_name: nameMap.get(a.user_id) ?? null,
+				created_at: a.created_at,
+				metadata: a.metadata
+			}));
+		}
 	}
 
 	return {

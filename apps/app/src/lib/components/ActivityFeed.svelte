@@ -12,13 +12,19 @@
 
 	const icons: Record<string, string> = {
 		project_created: '🆕',
+		created_project: '🆕',
+		created: '🆕',
 		vendor_added: '🏢',
+		shortlisted_vendors: '🏢',
 		score_submitted: '⭐',
+		scored_vendor: '⭐',
 		ai_analysis: '🤖',
 		comment_added: '💬',
+		added_note: '💬',
 		poll_created: '📊',
 		member_invited: '👥',
 		step_completed: '✅',
+		completed_solve: '✅',
 		project_completed: '🏆',
 		default: '📌'
 	};

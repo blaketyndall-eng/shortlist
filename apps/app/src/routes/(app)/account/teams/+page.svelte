@@ -29,7 +29,6 @@
 			message = 'Team created!';
 			showCreateModal = false;
 			newTeamName = '';
-			// Reload page data
 			window.location.reload();
 		} else {
 			const err = await res.json();
@@ -71,6 +70,12 @@
 		inviteRole = 'member';
 		showInviteModal = true;
 	}
+
+	function roleColor(role: string): string {
+		if (role === 'admin') return 'var(--primary-600)';
+		if (role === 'leadership') return 'var(--accent, #e6a817)';
+		return 'var(--neutral-400)';
+	}
 </script>
 
 <svelte:head>
@@ -92,7 +97,7 @@
 		<div class="message" class:error={message.startsWith('Error')}>{message}</div>
 	{/if}
 
-	{#if data.memberships.length === 0}
+	{#if data.teams.length === 0}
 		<Card>
 			<div class="empty-state">
 				<p>You haven't joined any teams yet.</p>
@@ -100,38 +105,47 @@
 			</div>
 		</Card>
 	{:else}
-		{#each data.memberships as membership}
-			{@const team = membership.teams as any}
-			{@const isAdmin = membership.role === 'admin'}
+		{#each data.teams as team (team.id)}
 			<Card>
 				<div class="team-header">
 					<div>
-						<h3>{team?.name}</h3>
-						<span class="team-slug">/{team?.slug}</span>
+						<h3>{team.name}</h3>
+						<span class="team-meta">{team.members.length} member{team.members.length !== 1 ? 's' : ''}</span>
 					</div>
-					{#if isAdmin}
-						<Button variant="secondary" size="sm" onclick={() => openInvite(team?.id)}>
+					{#if team.userRole === 'admin'}
+						<Button variant="secondary" size="sm" onclick={() => openInvite(team.id)}>
 							Invite Member
 						</Button>
 					{/if}
 				</div>
 
 				<div class="members-list">
-					{#each team?.team_members ?? [] as member (member.profiles?.id)}
+					{#each team.members as member (member.id)}
 						<div class="member-row">
 							<div class="member-avatar">
-								{member.profiles?.full_name?.charAt(0)?.toUpperCase() ?? '?'}
+								{member.name?.charAt(0)?.toUpperCase() ?? '?'}
 							</div>
 							<div class="member-info">
 								<span class="member-name">
-									{member.profiles?.full_name ?? 'Unknown'}
-									{#if member.profiles?.id === data.userId}
+									{member.name ?? 'Unknown'}
+									{#if member.user_id === data.userId}
 										<span class="you-badge">you</span>
 									{/if}
 								</span>
-								<span class="member-email">{member.profiles?.email}</span>
+								<span class="member-detail">
+									{#if member.title}
+										{member.title}
+									{/if}
+									{#if member.title && member.department}
+										·
+									{/if}
+									{#if member.department}
+										{member.department}
+									{/if}
+								</span>
+								<span class="member-email">{member.email}</span>
 							</div>
-							<span class="member-role">{member.role}</span>
+							<span class="member-role" style="color: {roleColor(member.role)}">{member.role}</span>
 						</div>
 					{/each}
 				</div>
@@ -209,7 +223,7 @@
 		margin-bottom: var(--space-4);
 	}
 
-	.team-slug {
+	.team-meta {
 		font-size: 0.75rem;
 		color: var(--neutral-400);
 	}
@@ -231,15 +245,15 @@
 	.member-row:last-child { border-bottom: none; }
 
 	.member-avatar {
-		width: 32px;
-		height: 32px;
+		width: 36px;
+		height: 36px;
 		border-radius: 50%;
 		background: var(--primary-100);
 		color: var(--primary-700);
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		font-size: 0.75rem;
+		font-size: 0.8125rem;
 		font-weight: 700;
 		flex-shrink: 0;
 	}
@@ -264,18 +278,25 @@
 		vertical-align: middle;
 	}
 
-	.member-email {
+	.member-detail {
 		display: block;
 		font-size: 0.75rem;
+		color: var(--neutral-500);
+		margin-top: 1px;
+	}
+
+	.member-email {
+		display: block;
+		font-size: 0.6875rem;
 		color: var(--neutral-400);
 	}
 
 	.member-role {
-		font-size: 0.75rem;
+		font-size: 0.6875rem;
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
-		color: var(--neutral-400);
 		font-weight: 600;
+		flex-shrink: 0;
 	}
 
 	.empty-state {
