@@ -239,18 +239,36 @@ export async function getExecutiveDashboard(
 	const totalVendors = projectHealth.reduce((sum, p) => sum + p.vendorCount, 0);
 	const riskAlerts = projectHealth.filter(p => p.riskLevel === 'high').length;
 
-	// Get team participation
-	const { count: totalPolls } = await supabase
+	// Calculate team participation rate from poll response data
+	const { data: allPolls } = await supabase
 		.from('alignment_polls')
-		.select('*', { count: 'exact', head: true })
+		.select('id')
 		.eq('org_id', orgId);
+
+	let teamParticipationRate = 0;
+	if (allPolls && allPolls.length > 0) {
+		const pollIds = allPolls.map(p => p.id);
+		const { data: responses } = await supabase
+			.from('alignment_responses')
+			.select('poll_id, user_id')
+			.in('poll_id', pollIds);
+
+		const { data: members } = await supabase
+			.from('team_members')
+			.select('user_id')
+			.eq('org_id', orgId);
+
+		const totalMembers = members?.length ?? 1;
+		const uniqueRespondents = new Set((responses ?? []).map((r: any) => r.user_id)).size;
+		teamParticipationRate = Math.round((uniqueRespondents / Math.max(totalMembers, 1)) * 100);
+	}
 
 	return {
 		activeProjects: projectList.filter((p: any) => p.status !== 'archived').length,
 		overallAlignmentScore: overallAlignment,
 		vendorsInPipeline: totalVendors,
 		riskAlerts,
-		teamParticipationRate: 0, // TODO: calculate from response rates
+		teamParticipationRate,
 		projects: projectHealth,
 		recentBriefings: (briefings ?? []) as ExecutiveBriefing[],
 	};

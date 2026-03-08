@@ -402,21 +402,29 @@ export async function autoEnrichPending(
  *
  * @param staleDays - Days since last enrichment before re-enriching (default: 30)
  * @param limit - Max vendors to reset per run (default: 10)
+ * @param trustTier - Optional trust tier filter for tiered refresh cycles
  */
 export async function markStaleForReenrich(
 	staleDays = 30,
-	limit = 10
+	limit = 10,
+	trustTier?: string
 ): Promise<{ marked: number }> {
 	const supabase = createAdminSupabase();
 	const cutoff = new Date(Date.now() - staleDays * 24 * 60 * 60 * 1000).toISOString();
 
-	const { data: stale, error: sErr } = await supabase
+	let query = supabase
 		.from('vendor_library')
 		.select('id')
 		.eq('enrichment_status', 'enriched')
 		.lt('enriched_at', cutoff)
 		.order('enriched_at', { ascending: true })
 		.limit(limit);
+
+	if (trustTier) {
+		query = query.eq('trust_tier', trustTier);
+	}
+
+	const { data: stale, error: sErr } = await query;
 
 	if (sErr || !stale?.length) {
 		return { marked: 0 };

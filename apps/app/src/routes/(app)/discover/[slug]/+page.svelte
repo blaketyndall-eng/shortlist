@@ -367,8 +367,36 @@
 				</Card>
 			{/if}
 
-			<!-- Data Sources -->
-			{#if vendor.enriched_at}
+			<!-- Data Confidence (Pillar 5 — intelligence transparency) -->
+			{#if vendor.enrichment_status === 'enriched' && vendor.trust_tier}
+				<Card>
+					<h2>Data Confidence</h2>
+					<div class="confidence-grid">
+						<div class="confidence-row">
+							<span class="conf-label">Trust Tier</span>
+							<span class="conf-value conf-tier" class:verified={vendor.trust_tier === 'verified'} class:provisional={vendor.trust_tier === 'provisional'} class:pending-tier={vendor.trust_tier === 'pending'}>
+								{vendor.trust_tier}
+							</span>
+						</div>
+						{#if vendor.enriched_at}
+							<div class="confidence-row">
+								<span class="conf-label">Last Enriched</span>
+								<span class="conf-value">{new Date(vendor.enriched_at).toLocaleDateString()}</span>
+							</div>
+						{/if}
+						{#if vendor.data_sources?.length}
+							<div class="confidence-row">
+								<span class="conf-label">Data Sources</span>
+								<span class="conf-value">{parseArr(vendor.data_sources).length} source{parseArr(vendor.data_sources).length !== 1 ? 's' : ''}</span>
+							</div>
+						{/if}
+					</div>
+					<p class="confidence-note">AI-enriched fields are research-grade estimates. Verify critical data points with the vendor directly.</p>
+				</Card>
+			{/if}
+
+			<!-- Data Sources (fallback for no trust tier) -->
+			{#if vendor.enriched_at && !vendor.trust_tier}
 				<div class="data-meta">
 					<span>Last enriched: {new Date(vendor.enriched_at).toLocaleDateString()}</span>
 					{#if vendor.data_sources?.length}
@@ -632,6 +660,21 @@
 		background: rgba(0, 204, 150, 0.08); color: #00cc96;
 		border-radius: var(--radius-sm);
 	}
+
+	/* Data confidence */
+	.confidence-grid { display: flex; flex-direction: column; gap: 0; }
+	.confidence-row {
+		display: flex; justify-content: space-between; align-items: center;
+		padding: var(--space-2) 0; border-bottom: 1px solid var(--neutral-100);
+	}
+	.confidence-row:last-child { border-bottom: none; }
+	.conf-label { font-size: 0.8125rem; color: var(--neutral-500); }
+	.conf-value { font-size: 0.8125rem; font-weight: 600; color: var(--neutral-800); }
+	.conf-tier { text-transform: capitalize; font-weight: 700; }
+	.conf-tier.verified { color: #16a34a; }
+	.conf-tier.provisional { color: #d97706; }
+	.conf-tier.pending-tier { color: var(--neutral-400); }
+	.confidence-note { font-size: 0.75rem; color: var(--neutral-400); margin-top: var(--space-2); font-style: italic; }
 
 	/* Data meta */
 	.data-meta {

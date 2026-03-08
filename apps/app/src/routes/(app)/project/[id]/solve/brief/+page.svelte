@@ -12,6 +12,7 @@
 	let saving = $state(false);
 	let generatingBrief = $state(false);
 	let briefGenerated = $state(!!solveData.brief);
+	let briefError = $state('');
 
 	// Gather all solve data for brief generation
 	const triggers = solveData.triggers ?? [];
@@ -35,6 +36,25 @@
 	const constraints = solveData.constraints ?? [];
 	const stakeholders = solveData.stakeholders ?? [];
 	const priorities = solveData.priorities ?? { must_have: [], nice_to_have: [], bonus: [] };
+
+	// Poll results from prior steps (surfaced per Pillar 4)
+	const discoveryPollId = solveData.discoveryPollId ?? null;
+	let pollResults = $state<any>(null);
+	let pollLoading = $state(false);
+
+	async function loadPollResults() {
+		if (!discoveryPollId) return;
+		pollLoading = true;
+		try {
+			const res = await fetch(`/api/alignment/poll/${discoveryPollId}`);
+			if (res.ok) {
+				pollResults = await res.json();
+			}
+		} catch { /* ignore */ }
+		pollLoading = false;
+	}
+
+	$effect(() => { if (discoveryPollId) loadPollResults(); });
 
 	const mustHaves = priorities.must_have ?? [];
 	const niceToHaves = priorities.nice_to_have ?? [];
@@ -63,6 +83,7 @@
 
 	async function generateBrief() {
 		generatingBrief = true;
+		briefError = '';
 
 		// Build executive summary from SOLVE data
 		const catName = category.label ?? category.category ?? 'software';
@@ -115,8 +136,9 @@
 			} else {
 				brief = { execSummary, problem: problemDesc, successCriteria: successIn90, peerBenchmark: '' };
 			}
-		} catch {
+		} catch (err: any) {
 			brief = { execSummary, problem: problemDesc, successCriteria: successIn90, peerBenchmark: '' };
+			briefError = 'AI brief generation encountered an error — using locally-generated brief instead.';
 		}
 
 		// Run knockout matrix
@@ -281,6 +303,10 @@
 	<p class="step-description">
 		Your shared starting point before any demos begin. Review, export, or challenge the decision below.
 	</p>
+
+	{#if briefError}
+		<div class="warning-banner" role="alert">{briefError}</div>
+	{/if}
 
 	{#if generatingBrief}
 		<div class="generating">
@@ -453,6 +479,35 @@
 			</Card>
 		{/if}
 
+		<!-- Team Alignment (from discovery poll) -->
+		{#if pollResults?.summary}
+			<Card>
+				<div class="brief-section">
+					<h3 class="section-label">TEAM ALIGNMENT</h3>
+					<p class="section-hint">Results from vendor discovery poll — how aligned is your team?</p>
+					<div class="poll-summary">
+						{#if pollResults.summary.overallScore != null}
+							<div class="poll-score-row">
+								<span class="poll-score" style="color: {pollResults.summary.overallScore >= 70 ? '#00cc96' : pollResults.summary.overallScore >= 40 ? '#d97706' : '#dc2626'}">{pollResults.summary.overallScore}%</span>
+								<span class="poll-score-label">alignment score</span>
+							</div>
+						{/if}
+						{#if pollResults.summary.responseCount}
+							<span class="poll-meta">{pollResults.summary.responseCount} team member{pollResults.summary.responseCount !== 1 ? 's' : ''} responded</span>
+						{/if}
+						{#if pollResults.summary.topConcerns?.length}
+							<div class="poll-concerns">
+								<span class="poll-concerns-label">Top concerns:</span>
+								{#each pollResults.summary.topConcerns.slice(0, 3) as concern}
+									<span class="poll-concern-chip">{concern}</span>
+								{/each}
+							</div>
+						{/if}
+					</div>
+				</div>
+			</Card>
+		{/if}
+
 		<!-- Peer Benchmark (if available) -->
 		{#if brief.peerBenchmark}
 			<div class="benchmark-box">
@@ -483,6 +538,11 @@
 <style>
 	.step-brief h2 { margin-bottom: var(--space-1); }
 	.step-description { color: var(--neutral-500); margin-bottom: var(--space-5); }
+	.warning-banner {
+		background: rgba(240, 160, 48, 0.1); color: #d97706;
+		padding: var(--space-3); border-radius: var(--radius-md);
+		margin-bottom: var(--space-4); font-size: 0.875rem;
+	}
 
 	.generating {
 		text-align: center; padding: var(--space-8);
@@ -611,6 +671,19 @@
 		color: var(--accent-500, #4a96f8); margin-bottom: var(--space-2);
 	}
 	.benchmark-text { font-size: 0.875rem; color: var(--neutral-600); line-height: 1.75; margin: 0; }
+
+	/* Poll summary */
+	.poll-summary { display: flex; flex-direction: column; gap: var(--space-2); }
+	.poll-score-row { display: flex; align-items: baseline; gap: var(--space-2); }
+	.poll-score { font-size: 1.5rem; font-weight: 800; }
+	.poll-score-label { font-size: 0.8125rem; color: var(--neutral-500); }
+	.poll-meta { font-size: 0.8125rem; color: var(--neutral-400); }
+	.poll-concerns { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; margin-top: var(--space-1); }
+	.poll-concerns-label { font-size: 0.75rem; color: var(--neutral-400); font-weight: 600; }
+	.poll-concern-chip {
+		font-size: 0.75rem; padding: 2px 8px; border-radius: var(--radius-sm);
+		background: rgba(240, 80, 80, 0.06); color: #dc2626;
+	}
 
 	/* Actions */
 	.step-actions {

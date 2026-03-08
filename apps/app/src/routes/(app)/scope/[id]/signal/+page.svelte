@@ -47,14 +47,30 @@
 			if (!getRes.ok) { error = 'Failed to load scope'; saving = false; return; }
 			const { scope } = await getRes.json();
 
+			const newSignal = {
+				trigger: trigger.trim(),
+				urgency,
+				impactedUsers: impactedUsersText.split(',').map((s: string) => s.trim()).filter(Boolean),
+				businessImpact: businessImpact.trim(),
+			};
+
+			// Invalidate downstream if signal data changed materially (Pillar 4)
+			const oldSignal = scope.data?.signal;
+			const signalChanged = oldSignal && (
+				oldSignal.trigger !== newSignal.trigger ||
+				oldSignal.urgency !== newSignal.urgency ||
+				oldSignal.businessImpact !== newSignal.businessImpact
+			);
+
 			const updatedData = {
 				...scope.data,
-				signal: {
-					trigger: trigger.trim(),
-					urgency,
-					impactedUsers: impactedUsersText.split(',').map((s: string) => s.trim()).filter(Boolean),
-					businessImpact: businessImpact.trim(),
-				},
+				signal: newSignal,
+				...(signalChanged ? {
+					cause: { ...(scope.data?.cause ?? {}), _stale: true },
+					options: { ...(scope.data?.options ?? {}), _stale: true },
+					prepare: { ...(scope.data?.prepare ?? {}), _stale: true },
+					endorse: { ...(scope.data?.endorse ?? {}), _stale: true },
+				} : {}),
 			};
 
 			const res = await fetch(`/api/scopes/${scopeId}`, {

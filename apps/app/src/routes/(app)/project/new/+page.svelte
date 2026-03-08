@@ -10,8 +10,36 @@
 	let category = $state('');
 	let loading = $state(false);
 	let error = $state('');
+	let smartDefaults = $state<{
+		hasPastData: boolean;
+		pastProjectCount: number;
+		criteria: Array<{ name: string; frequency: number }>;
+		frequentVendors: Array<{ name: string; count: number }>;
+		summary: string;
+	} | null>(null);
+	let loadingDefaults = $state(false);
 
 	const supabase = createSupabaseBrowserClient();
+
+	// Fetch smart defaults when category changes
+	$effect(() => {
+		if (category) {
+			loadingDefaults = true;
+			fetch('/api/smart-defaults', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ category }),
+			})
+				.then(res => res.ok ? res.json() : null)
+				.then(data => {
+					smartDefaults = data?.hasPastData ? data : null;
+					loadingDefaults = false;
+				})
+				.catch(() => { loadingDefaults = false; });
+		} else {
+			smartDefaults = null;
+		}
+	});
 
 	const categories = [
 		{ value: 'software', label: 'Software / SaaS' },
@@ -140,6 +168,40 @@
 					{/each}
 				</div>
 			</fieldset>
+
+			{#if smartDefaults}
+				<div class="smart-defaults">
+					<div class="sd-header">
+						<span class="sd-badge">Intelligence Loop</span>
+						<span class="sd-summary">{smartDefaults.summary}</span>
+					</div>
+					{#if smartDefaults.criteria.length > 0}
+						<div class="sd-section">
+							<span class="sd-label">Common criteria from past evaluations</span>
+							<div class="sd-chips">
+								{#each smartDefaults.criteria.slice(0, 5) as c}
+									<span class="sd-chip">{c.name} <em>({c.frequency}x)</em></span>
+								{/each}
+							</div>
+						</div>
+					{/if}
+					{#if smartDefaults.frequentVendors.length > 0}
+						<div class="sd-section">
+							<span class="sd-label">Frequently evaluated vendors</span>
+							<div class="sd-chips">
+								{#each smartDefaults.frequentVendors.slice(0, 5) as v}
+									<span class="sd-chip">{v.name} <em>({v.count}x)</em></span>
+								{/each}
+							</div>
+						</div>
+					{/if}
+					<p class="sd-note">These patterns will be pre-loaded into your SOLVE workflow to help you start faster.</p>
+				</div>
+			{:else if loadingDefaults}
+				<div class="smart-defaults loading">
+					<p>Checking past evaluations...</p>
+				</div>
+			{/if}
 
 			<div class="actions">
 				<Button variant="ghost" type="button" onclick={() => goto('/dashboard')}>
@@ -325,6 +387,30 @@
 		font-weight: 600;
 		color: var(--primary-600);
 	}
+
+	/* Smart defaults */
+	.smart-defaults {
+		background: rgba(99, 102, 241, 0.04); border: 1px solid rgba(99, 102, 241, 0.15);
+		border-radius: var(--radius-md); padding: var(--space-4); margin-bottom: var(--space-5);
+	}
+	.smart-defaults.loading { text-align: center; }
+	.smart-defaults.loading p { font-size: 0.8125rem; color: var(--neutral-400); margin: 0; }
+	.sd-header { margin-bottom: var(--space-3); }
+	.sd-badge {
+		display: inline-block; background: var(--primary-500); color: white;
+		font-size: 0.625rem; font-weight: 700; padding: 2px 8px;
+		border-radius: 999px; margin-right: var(--space-2);
+	}
+	.sd-summary { font-size: 0.8125rem; color: var(--neutral-600); }
+	.sd-section { margin-bottom: var(--space-2); }
+	.sd-label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--neutral-500); margin-bottom: var(--space-1); }
+	.sd-chips { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+	.sd-chip {
+		font-size: 0.75rem; padding: 2px 8px;
+		background: rgba(99, 102, 241, 0.08); border-radius: 999px; color: var(--neutral-700);
+	}
+	.sd-chip em { font-style: normal; color: var(--neutral-400); }
+	.sd-note { font-size: 0.75rem; color: var(--neutral-400); margin: var(--space-2) 0 0; font-style: italic; }
 
 	@media (max-width: 640px) {
 		.choice-cards { grid-template-columns: 1fr; }

@@ -190,9 +190,11 @@
 	}
 
 	const canFinalize = $derived(
-		brief &&
-		decision &&
-		(!requiresApproval || approvalStatus === 'approved')
+		brief !== null &&
+		brief.executiveSummary !== '' &&
+		decision !== '' &&
+		(!requiresApproval || approvalStatus === 'approved') &&
+		approvalStatus !== 'rejected'
 	);
 
 	const actionLabel = $derived(
@@ -337,6 +339,19 @@
 						Approve
 					</Button>
 				</div>
+			</div>
+		{/if}
+
+		{#if approvalStatus === 'rejected'}
+			<div class="rejection-banner" role="alert">
+				<strong>Approval rejected</strong>
+				<p>This SCOPE was rejected by the approver. Review the notes above, adjust your approach, and re-submit for approval.</p>
+			</div>
+		{/if}
+
+		{#if !brief}
+			<div class="brief-required" role="alert">
+				<p>Generate a decision brief above before finalizing. The brief documents the objective case for this decision.</p>
 			</div>
 		{/if}
 
@@ -513,4 +528,19 @@
 	.confirm-dialog h3 { margin-bottom: var(--space-2); font-size: 1rem; }
 	.confirm-dialog p { color: var(--neutral-500); font-size: 0.875rem; line-height: 1.5; margin-bottom: var(--space-5); }
 	.confirm-actions { display: flex; gap: var(--space-3); justify-content: flex-end; }
+
+	.rejection-banner {
+		background: rgba(240, 80, 80, 0.06); border: 1px solid rgba(240, 80, 80, 0.2);
+		border-radius: var(--radius-md); padding: var(--space-3) var(--space-4);
+		margin-bottom: var(--space-4);
+	}
+	.rejection-banner strong { color: #f05050; font-size: 0.875rem; }
+	.rejection-banner p { font-size: 0.8125rem; color: var(--neutral-600); margin: var(--space-1) 0 0; }
+
+	.brief-required {
+		background: rgba(240, 160, 48, 0.06); border: 1px solid rgba(240, 160, 48, 0.2);
+		border-radius: var(--radius-md); padding: var(--space-3) var(--space-4);
+		margin-bottom: var(--space-4);
+	}
+	.brief-required p { font-size: 0.8125rem; color: var(--neutral-600); margin: 0; }
 </style>

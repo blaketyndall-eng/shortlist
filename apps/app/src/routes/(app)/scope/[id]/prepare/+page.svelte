@@ -134,6 +134,9 @@
 		if (score >= 50) return '#f0a030';
 		return '#f05050';
 	}
+
+	const readinessBlocked = $derived(readinessScore !== null && readinessScore < 50);
+	const hasHighSeverityGaps = $derived(gaps.some(g => g.severity === 'high'));
 </script>
 
 <svelte:head>
@@ -259,12 +262,22 @@
 			{/if}
 		</div>
 
+		{#if readinessBlocked}
+			<div class="readiness-gate" role="alert">
+				<strong>Not ready to proceed</strong>
+				<p>Your readiness score is {readinessScore}/100 — below the minimum threshold of 50. Address the gaps above before moving to endorsement.</p>
+				{#if hasHighSeverityGaps}
+					<p class="gate-detail">You have {gaps.filter(g => g.severity === 'high').length} high-severity gap{gaps.filter(g => g.severity === 'high').length > 1 ? 's' : ''} to resolve.</p>
+				{/if}
+			</div>
+		{/if}
+
 		<div class="actions">
 			<Button variant="ghost" type="button" onclick={() => goto(`/scope/${scopeId}/options`)}>
 				Back
 			</Button>
-			<Button variant="primary" loading={saving} onclick={handleSave}>
-				Save & Continue
+			<Button variant="primary" loading={saving} onclick={handleSave} disabled={readinessBlocked}>
+				{readinessBlocked ? 'Resolve Gaps First' : 'Save & Continue'}
 			</Button>
 		</div>
 	</div>
@@ -352,6 +365,15 @@
 		text-align: center;
 	}
 	.empty-hint p { font-size: 0.875rem; color: var(--neutral-400); margin: 0; line-height: 1.5; }
+
+	.readiness-gate {
+		background: rgba(240, 80, 80, 0.06); border: 1px solid rgba(240, 80, 80, 0.2);
+		border-radius: var(--radius-md); padding: var(--space-3) var(--space-4);
+		margin-bottom: var(--space-4);
+	}
+	.readiness-gate strong { color: #f05050; font-size: 0.875rem; }
+	.readiness-gate p { font-size: 0.8125rem; color: var(--neutral-600); margin: var(--space-1) 0 0; }
+	.readiness-gate .gate-detail { color: #f05050; font-weight: 500; }
 
 	.actions {
 		display: flex; justify-content: space-between; gap: var(--space-3);

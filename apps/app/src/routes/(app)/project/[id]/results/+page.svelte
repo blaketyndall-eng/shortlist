@@ -17,6 +17,87 @@
 	);
 
 	const winner = $derived(rankings[0]);
+	let briefLoading = $state(false);
+
+	function exportCSV() {
+		const header = ['Rank', 'Vendor', 'Score', 'Percentage', ...criteria.map(c => c.name)];
+		const rows = rankings.map((r, i) => [
+			i + 1,
+			r.vendorName,
+			r.totalScore.toFixed(2),
+			r.percentage.toFixed(1) + '%',
+			...criteria.map(c => {
+				const b = r.breakdown.find(b => b.criterionId === c.id);
+				return b?.rawScore ?? 0;
+			}),
+		]);
+		const csv = [header, ...rows].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+		const blob = new Blob([csv], { type: 'text/csv' });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = `${data.project.name.replace(/\s+/g, '-')}-results.csv`;
+		a.click();
+		URL.revokeObjectURL(url);
+	}
+
+	function exportJSON() {
+		const exportData = {
+			project: data.project.name,
+			exportedAt: new Date().toISOString(),
+			criteria: criteria.map(c => ({ name: c.name, weight: weights[c.id] ?? c.weight, category: c.category })),
+			rankings: rankings.map((r, i) => ({
+				rank: i + 1,
+				vendor: r.vendorName,
+				score: r.totalScore,
+				percentage: r.percentage,
+				breakdown: r.breakdown,
+			})),
+		};
+		const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = `${data.project.name.replace(/\s+/g, '-')}-results.json`;
+		a.click();
+		URL.revokeObjectURL(url);
+	}
+
+	async function generateExecutiveBrief() {
+		briefLoading = true;
+		try {
+			const res = await fetch('/api/ai/engine', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					engine: 'executive_milestone_brief',
+					projectId: data.project.id,
+					context: {
+						rankings: rankings.slice(0, 5).map((r, i) => ({
+							rank: i + 1,
+							vendor: r.vendorName,
+							score: r.totalScore,
+							percentage: r.percentage,
+						})),
+						criteriaCount: criteria.length,
+						vendorCount: vendors.length,
+						winner: winner?.vendorName,
+						winnerScore: winner?.percentage,
+					},
+				}),
+			});
+			if (res.ok) {
+				const result = await res.json();
+				const briefText = result.data?.summary ?? result.result?.summary ?? 'Brief generated — check executive dashboard.';
+				alert(`Executive Brief Generated:\n\n${briefText}`);
+			} else {
+				alert('Failed to generate executive brief. Please try again.');
+			}
+		} catch {
+			alert('Error generating brief. Please try again.');
+		}
+		briefLoading = false;
+	}
 
 	// Group criteria by category for the breakdown
 	const categories = $derived.by(() => {
@@ -134,11 +215,20 @@
 			← Back to Ratings
 		</Button>
 		<div class="right-actions">
+			<Button variant="secondary" onclick={exportCSV}>
+				Export CSV
+			</Button>
+			<Button variant="secondary" onclick={exportJSON}>
+				Export JSON
+			</Button>
 			<Button variant="secondary" onclick={() => {
 				const w = window.open(`/api/projects/${data.project.id}/export`, '_blank');
 				if (w) setTimeout(() => w.print(), 1000);
 			}}>
 				Export PDF
+			</Button>
+			<Button variant="secondary" onclick={generateExecutiveBrief} loading={briefLoading}>
+				Executive Brief
 			</Button>
 			<Button variant="secondary" onclick={() => {
 				navigator.clipboard.writeText(window.location.href);

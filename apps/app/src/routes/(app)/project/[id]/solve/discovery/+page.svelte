@@ -48,7 +48,16 @@
 	let swiping = $state(false);
 	let swipeDirection = $state<'left' | 'right' | null>(null);
 	let saving = $state(false);
+	let discoveryError = $state('');
 	let customVendorName = $state('');
+	let libraryCount = $state(0);
+
+	// Fetch dynamic vendor library count
+	$effect(() => {
+		supabase.from('vendor_library').select('id', { count: 'exact', head: true }).then(({ count }) => {
+			libraryCount = count ?? 0;
+		});
+	});
 	let allReviewed = $derived(vendors.length > 0 && vendors.every((v) => v.swiped !== null));
 	let shortlisted = $derived(vendors.filter((v) => v.swiped === 'right'));
 
@@ -163,6 +172,7 @@
 
 	async function discoverVendors() {
 		loading = true;
+		discoveryError = '';
 		try {
 			// Step 1: Get AI-suggested vendors from engine
 			const aiRes = await fetch('/api/ai/engine', {
@@ -255,8 +265,11 @@
 			}
 
 			vendors = merged.length > 0 ? merged : vendors;
-		} catch {
-			// Keep existing vendors if error
+			if (merged.length === 0) {
+				discoveryError = 'No vendors found for this category. Try adjusting your problem description or category.';
+			}
+		} catch (err: any) {
+			discoveryError = `Vendor discovery failed: ${err?.message ?? 'Network error'}. Please try again.`;
 		}
 		loading = false;
 	}
@@ -310,7 +323,9 @@
 					fitSignals: s.signals,
 				}));
 			}
-		} catch { /* ignore */ }
+		} catch {
+			discoveryError = 'Library search failed — please try again.';
+		}
 		libraryLoading = false;
 	}
 
@@ -409,6 +424,10 @@
 	<p class="step-description">
 		AI-matched vendors ranked by fit for your problem, company, and budget. Swipe right to shortlist, left to skip.
 	</p>
+
+	{#if discoveryError}
+		<div class="error-banner" role="alert">{discoveryError}</div>
+	{/if}
 
 	{#if vendors.length === 0}
 		<Card>
@@ -580,7 +599,7 @@
 	{#if vendors.length > 0}
 		<div class="library-explorer">
 			<button class="toggle-library" onclick={() => showLibrary = !showLibrary} type="button">
-				{showLibrary ? '▾' : '▸'} Explore vendor library ({171} vendors)
+				{showLibrary ? '▾' : '▸'} Explore vendor library ({libraryCount} vendors)
 			</button>
 
 			{#if showLibrary}
@@ -669,6 +688,11 @@
 <style>
 	.step-discovery h2 { margin-bottom: var(--space-1); }
 	.step-description { color: var(--neutral-500); margin-bottom: var(--space-5); }
+	.error-banner {
+		background: rgba(240, 80, 80, 0.1); color: #f05050;
+		padding: var(--space-3); border-radius: var(--radius-md);
+		margin-bottom: var(--space-4); font-size: 0.875rem;
+	}
 
 	.discovery-prompt { text-align: center; padding: var(--space-6); }
 	.discovery-prompt p { margin-bottom: var(--space-4); color: var(--neutral-600); }

@@ -70,6 +70,7 @@ export interface FitScore {
 		featureOverlap: number;
 		complianceMatch: number;
 		integrationFit: number;
+		dataResidency: number;
 	};
 	signals: string[]; // Human-readable fit signals
 	concerns: string[]; // Potential mismatches
@@ -122,17 +123,21 @@ export function scoreVendorFit(
 	// 5. Compliance Match (10%)
 	const complianceScore = scoreComplianceMatch(vendor, buyer, signals, concerns);
 
-	// 6. Integration Fit (10%)
+	// 6. Integration Fit (8%)
 	const integrationScore = scoreIntegrationFit(vendor, buyer, signals, concerns);
 
-	// Weighted total
+	// 7. Data Residency (7%) — regional deployment requirements
+	const dataResidencyScore = scoreDataResidency(vendor, buyer, signals, concerns);
+
+	// Weighted total (35 + 15 + 15 + 15 + 8 + 7 + 5 = 100)
 	const totalScore = Math.round(
 		problemScore * 0.35 +
 		sizeScore * 0.15 +
 		budgetScore * 0.15 +
 		featureScore * 0.15 +
-		complianceScore * 0.10 +
-		integrationScore * 0.10
+		complianceScore * 0.08 +
+		integrationScore * 0.07 +
+		dataResidencyScore * 0.05
 	);
 
 	return {
@@ -146,6 +151,7 @@ export function scoreVendorFit(
 			featureOverlap: featureScore,
 			complianceMatch: complianceScore,
 			integrationFit: integrationScore,
+			dataResidency: dataResidencyScore,
 		},
 		signals,
 		concerns,
@@ -265,8 +271,16 @@ function scoreBudgetFit(
 	const budgetStr = project.budget || buyer.budget;
 	if (!budgetStr) return 60;
 
-	const budgetRange = BUDGET_RANGES[budgetStr];
-	if (!budgetRange) return 60;
+	let budgetRange = BUDGET_RANGES[budgetStr];
+	if (!budgetRange) {
+		// Parse range formats like '20k-50k', '$20,000-$50,000', '20000-50000'
+		const rangeParsed = parseBudgetRange(budgetStr);
+		if (rangeParsed) {
+			budgetRange = rangeParsed;
+		} else {
+			return 60;
+		}
+	}
 
 	// Try to parse vendor pricing
 	const pricingText = (vendor.pricing_starts_at ?? vendor.ai_pricing ?? '').toLowerCase();
@@ -423,6 +437,66 @@ function scoreIntegrationFit(
 	return 40;
 }
 
+function scoreDataResidency(
+	vendor: VendorRecord,
+	buyer: BuyerProfile,
+	signals: string[],
+	concerns: string[]
+): number {
+	if (!buyer.regions?.length) return 70; // No regional requirements = fine
+
+	const deploymentModel = (vendor.ai_deployment_model ?? '').toLowerCase();
+	const vendorText = [
+		vendor.ai_overview, vendor.description,
+		...(vendor.ai_security_certs ?? []),
+	].filter(Boolean).join(' ').toLowerCase();
+
+	// Check if vendor supports on-premise/self-hosted (full control over data residency)
+	if (deploymentModel.includes('on-prem') || deploymentModel.includes('self-hosted') || deploymentModel.includes('hybrid')) {
+		signals.push(`Supports ${deploymentModel} — data residency controllable`);
+		return 90;
+	}
+
+	// Check for regional mentions (EU, US, APAC, etc.)
+	const regionKeywords: Record<string, string[]> = {
+		'eu': ['eu', 'europe', 'gdpr', 'european', 'frankfurt', 'ireland', 'london'],
+		'us': ['us', 'united states', 'america', 'virginia', 'oregon', 'us-east', 'us-west'],
+		'apac': ['apac', 'asia', 'singapore', 'tokyo', 'sydney', 'mumbai', 'asia-pacific'],
+	};
+
+	const requiredRegions = buyer.regions.map(r => r.toLowerCase());
+	const supportedRegions: string[] = [];
+
+	for (const [region, keywords] of Object.entries(regionKeywords)) {
+		if (keywords.some(k => vendorText.includes(k))) {
+			supportedRegions.push(region);
+		}
+	}
+
+	const matchedRegions = requiredRegions.filter(r =>
+		supportedRegions.some(sr => sr.includes(r) || r.includes(sr))
+	);
+
+	if (matchedRegions.length === requiredRegions.length) {
+		signals.push(`Supports data residency in ${matchedRegions.join(', ')}`);
+		return 85;
+	}
+
+	if (matchedRegions.length > 0) {
+		const missing = requiredRegions.filter(r => !matchedRegions.includes(r));
+		concerns.push(`Data residency unclear for: ${missing.join(', ')}`);
+		return 55;
+	}
+
+	// Cloud-only with no regional info
+	if (deploymentModel === 'cloud-only' || deploymentModel === 'cloud') {
+		concerns.push('Cloud-only with no regional data residency info');
+		return 35;
+	}
+
+	return 50; // Unknown
+}
+
 // ============================================================
 // Helpers
 // ============================================================
@@ -439,6 +513,30 @@ const STOP_WORDS = new Set([
 	'such', 'only', 'also', 'very', 'just', 'than', 'too', 'any', 'every',
 	'want', 'looking', 'need', 'like', 'get', 'make',
 ]);
+
+/**
+ * Parse budget range strings like '20k-50k', '$20,000-$50,000', '20000-50000'
+ * Returns [min, max] in annual USD or null if unparseable
+ */
+function parseBudgetRange(str: string): [number, number] | null {
+	const clean = str.replace(/[\$,\s]/g, '').toLowerCase();
+	// Match patterns: 20k-50k, 20000-50000, 20k
+	const rangeMatch = clean.match(/^(\d+)(k|m)?[-–](\d+)(k|m)?$/);
+	if (rangeMatch) {
+		const mult = (s: string | undefined) => s === 'm' ? 1000000 : s === 'k' ? 1000 : 1;
+		const lo = parseInt(rangeMatch[1]) * mult(rangeMatch[2]);
+		const hi = parseInt(rangeMatch[3]) * mult(rangeMatch[4]);
+		return [lo, hi];
+	}
+	// Single value: 50k, 50000
+	const singleMatch = clean.match(/^(\d+)(k|m)?$/);
+	if (singleMatch) {
+		const mult = singleMatch[2] === 'm' ? 1000000 : singleMatch[2] === 'k' ? 1000 : 1;
+		const val = parseInt(singleMatch[1]) * mult;
+		return [val * 0.5, val * 1.5]; // ±50% range around stated value
+	}
+	return null;
+}
 
 function extractKeywords(text: string): string[] {
 	return text

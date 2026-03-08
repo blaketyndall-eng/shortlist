@@ -34,9 +34,21 @@ export const GET = async ({ request }: RequestEvent) => {
 	const log: string[] = [];
 
 	try {
-		// Step 1: Mark stale vendors for re-enrichment (>30 days old)
-		const staleResult = await markStaleForReenrich(30, 10);
-		log.push(`Marked ${staleResult.marked} stale vendors for re-enrichment`);
+		// Step 0: Auto-downgrade stale trust tiers
+		let downgraded = 0;
+		try {
+			downgraded = await autoDowngradeStaleTiers();
+			log.push(`Trust tier downgrades: ${downgraded}`);
+		} catch (dErr: any) {
+			log.push(`Tier downgrade skipped: ${dErr.message}`);
+		}
+
+		// Step 1: Tiered refresh — Verified (30d), Provisional (14d), Pending (2d)
+		const verifiedStale = await markStaleForReenrich(30, 5, 'verified');
+		const provisionalStale = await markStaleForReenrich(14, 5, 'provisional');
+		const pendingStale = await markStaleForReenrich(2, 5, 'pending');
+		const totalMarked = verifiedStale.marked + provisionalStale.marked + pendingStale.marked;
+		log.push(`Tiered refresh: ${verifiedStale.marked} verified (30d), ${provisionalStale.marked} provisional (14d), ${pendingStale.marked} pending (2d)`);
 
 		// Step 2: Enrich pending vendors (20 per run, 3 concurrent)
 		const enrichResult = await autoEnrichPending(20);
@@ -68,10 +80,11 @@ export const GET = async ({ request }: RequestEvent) => {
 		return json({
 			success: true,
 			duration,
-			stale: staleResult,
+			tieredRefresh: { verified: verifiedStale, provisional: provisionalStale, pending: pendingStale },
 			enrichment: enrichResult,
 			moderation: moderatorResult,
 			changeAlerts,
+			downgraded,
 			log,
 		});
 	} catch (err: any) {
@@ -84,6 +97,54 @@ export const GET = async ({ request }: RequestEvent) => {
 		}, { status: 500 });
 	}
 };
+
+/**
+ * Auto-downgrade trust tiers for stale vendors.
+ * Verified → Provisional if stale >45 days
+ * Provisional → Pending if stale >21 days
+ */
+async function autoDowngradeStaleTiers(): Promise<number> {
+	const supabase = createAdminSupabase();
+	let downgraded = 0;
+
+	const now = new Date();
+
+	// Verified → Provisional (enriched >45 days ago)
+	const verifiedCutoff = new Date(now.getTime() - 45 * 24 * 60 * 60 * 1000).toISOString();
+	const { data: staleVerified } = await supabase
+		.from('vendor_library')
+		.select('id')
+		.eq('trust_tier', 'verified')
+		.lt('enriched_at', verifiedCutoff);
+
+	if (staleVerified && staleVerified.length > 0) {
+		const ids = staleVerified.map(v => v.id);
+		await supabase
+			.from('vendor_library')
+			.update({ trust_tier: 'provisional' })
+			.in('id', ids);
+		downgraded += ids.length;
+	}
+
+	// Provisional → Pending (enriched >21 days ago)
+	const provisionalCutoff = new Date(now.getTime() - 21 * 24 * 60 * 60 * 1000).toISOString();
+	const { data: staleProvisional } = await supabase
+		.from('vendor_library')
+		.select('id')
+		.eq('trust_tier', 'provisional')
+		.lt('enriched_at', provisionalCutoff);
+
+	if (staleProvisional && staleProvisional.length > 0) {
+		const ids = staleProvisional.map(v => v.id);
+		await supabase
+			.from('vendor_library')
+			.update({ trust_tier: 'pending' })
+			.in('id', ids);
+		downgraded += ids.length;
+	}
+
+	return downgraded;
+}
 
 /**
  * Detect material changes between enrichment cycles.

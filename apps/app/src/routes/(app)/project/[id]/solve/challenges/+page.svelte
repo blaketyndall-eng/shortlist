@@ -12,6 +12,7 @@
 	let saving = $state(false);
 	let generating = $state(false);
 	let challengesReady = $state((solveData.challenges ?? []).length > 0);
+	let challengeError = $state('');
 
 	// Challenge acknowledgment tracking — users must respond to high-severity challenges
 	let acknowledgments = $state<Record<number, 'acknowledged' | 'adjusted' | null>>(
@@ -39,6 +40,18 @@
 	const vendors = (solveData.discoveredVendors ?? []).filter((v: any) =>
 		(solveData.shortlistedVendorIds ?? []).includes(v.id)
 	);
+
+	// Poll results from prior steps (surfaced per Pillar 4)
+	const discoveryPollId = solveData.discoveryPollId ?? null;
+	let pollResults = $state<any>(null);
+
+	$effect(() => {
+		if (!discoveryPollId) return;
+		fetch(`/api/alignment/poll/${discoveryPollId}`)
+			.then(r => r.ok ? r.json() : null)
+			.then(data => { if (data) pollResults = data; })
+			.catch(() => {});
+	});
 
 	const severityColors: Record<string, { border: string; text: string; label: string }> = {
 		high: { border: 'rgba(240, 80, 80, 0.3)', text: '#dc2626', label: 'HIGH SIGNAL' },
@@ -119,6 +132,7 @@
 
 	async function generateChallenges() {
 		generating = true;
+		challengeError = '';
 		const budgetNum = parseInt(String(budget).replace(/[^0-9]/g, ''), 10) || 0;
 		const catName = category.category ?? 'software';
 
@@ -149,6 +163,7 @@
 			}
 		} catch {
 			challenges = generateFallbackChallenges();
+			challengeError = 'AI challenge generation failed — showing standard challenges instead.';
 		}
 
 		challengesReady = true;
@@ -283,6 +298,10 @@
 		These are the questions a good consultant would ask. Answer them honestly. They won't change your brief, but they might change your mind.
 	</p>
 
+	{#if challengeError}
+		<div class="warning-banner" role="alert">{challengeError}</div>
+	{/if}
+
 	{#if generating}
 		<div class="generating">
 			<div class="generating-icon">✦</div>
@@ -333,6 +352,18 @@
 			{/each}
 		</div>
 
+		<!-- Team alignment from polls -->
+		{#if pollResults?.summary?.overallScore != null}
+			<div class="alignment-reminder">
+				<span class="alignment-score" style="color: {pollResults.summary.overallScore >= 70 ? '#00cc96' : pollResults.summary.overallScore >= 40 ? '#d97706' : '#dc2626'}">
+					{pollResults.summary.overallScore}% team alignment
+				</span>
+				{#if pollResults.summary.overallScore < 60}
+					<span class="alignment-warn">— consider revisiting alignment before committing</span>
+				{/if}
+			</div>
+		{/if}
+
 		<!-- Guidance box -->
 		<div class="guidance-box">
 			<div class="guidance-strong">If you answered yes to the challenges above — go back and adjust.</div>
@@ -370,6 +401,11 @@
 <style>
 	.step-challenges h2 { margin-bottom: var(--space-1); }
 	.step-description { color: var(--neutral-500); margin-bottom: var(--space-5); }
+	.warning-banner {
+		background: rgba(240, 160, 48, 0.1); color: #d97706;
+		padding: var(--space-3); border-radius: var(--radius-md);
+		margin-bottom: var(--space-4); font-size: 0.875rem;
+	}
 
 	.generating {
 		text-align: center; padding: var(--space-8);
@@ -503,6 +539,18 @@
 		color: #dc2626;
 		margin: 0;
 	}
+
+	/* Alignment reminder */
+	.alignment-reminder {
+		padding: var(--space-3) var(--space-4);
+		background: rgba(74, 150, 248, 0.04);
+		border: 1px solid rgba(74, 150, 248, 0.15);
+		border-radius: var(--radius-md);
+		margin-bottom: var(--space-4);
+		font-size: 0.8125rem;
+	}
+	.alignment-score { font-weight: 700; }
+	.alignment-warn { color: var(--neutral-500); }
 
 	/* Actions */
 	.step-actions {
