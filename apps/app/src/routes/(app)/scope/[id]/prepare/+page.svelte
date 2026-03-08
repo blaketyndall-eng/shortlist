@@ -2,381 +2,294 @@
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
-	import Button from '$components/ui/Button.svelte';
-	import Card from '$components/ui/Card.svelte';
 
-	const scopeId = $derived($page.params.id);
+	const scopeId = $page.params.id;
+	let scope = $state<any>(null);
+	let saving = $state(false);
+	let assessing = $state(false);
+	let aiError = $state('');
 
 	let budgetEstimate = $state('');
 	let timeline = $state('');
 	let stakeholders = $state('');
 	let riskAssessment = $state('');
 	let readinessScore = $state<number | null>(null);
-	let gaps: Array<{ area: string; severity: string; description: string; recommendation: string }> = $state([]);
-	let blockers: string[] = $state([]);
-	let scopeData = $state<Record<string, any>>({});
-	let assessing = $state(false);
-	let saving = $state(false);
-	let error = $state('');
+	let readinessLevel = $state('');
+	let gaps = $state<any[]>([]);
+	let strengths = $state<string[]>([]);
 
 	const timelineOptions = [
-		'1-2 weeks',
-		'2-4 weeks',
-		'1-2 months',
-		'3-6 months',
-		'6-12 months',
-		'12+ months',
+		'Less than 1 month', '1-3 months', '3-6 months',
+		'6-12 months', 'More than 12 months'
 	];
 
 	onMount(async () => {
-		try {
-			const res = await fetch(`/api/scopes/${scopeId}`);
-			if (res.ok) {
-				const data = await res.json();
-				scopeData = data.scope?.data ?? {};
-				if (scopeData.prepare) {
-					budgetEstimate = scopeData.prepare.budgetEstimate?.toString() ?? '';
-					timeline = scopeData.prepare.timeline ?? '';
-					stakeholders = scopeData.prepare.stakeholders ?? '';
-					riskAssessment = scopeData.prepare.riskAssessment ?? '';
-					readinessScore = scopeData.prepare.readinessScore ?? null;
-					gaps = scopeData.prepare.gaps ?? [];
-					blockers = scopeData.prepare.blockers ?? [];
-				}
+		const res = await fetch(`/api/scopes/${scopeId}`);
+		if (res.ok) {
+			scope = await res.json();
+			const p = scope.data?.prepare;
+			if (p) {
+				budgetEstimate = p.budgetEstimate ? String(p.budgetEstimate) : '';
+				timeline = p.timeline ?? '';
+				stakeholders = p.stakeholders ?? '';
+				riskAssessment = p.riskAssessment ?? '';
+				readinessScore = p.readinessScore ?? null;
+				gaps = p.gaps ?? [];
 			}
-		} catch { /* use defaults */ }
+		}
 	});
 
 	async function runReadinessCheck() {
 		assessing = true;
-		error = '';
+		aiError = '';
 		try {
+			const signal = scope?.data?.signal ?? {};
 			const res = await fetch('/api/ai/engine', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
 					engine: 'scope_readiness_assess',
-					depth: 'deep',
+					depth: 'quick',
+					scopeId,
 					context: {
-						signal: scopeData.signal ?? {},
-						cause: scopeData.cause ?? {},
-						options: scopeData.options ?? {},
-						budgetEstimate: parseFloat(budgetEstimate) || 0,
-						timeline,
-						stakeholders,
-						riskAssessment,
+						selectedApproach: scope?.decision ?? scope?.data?.options?.selectedApproach,
+						budgetEstimate, timeline, stakeholders, riskAssessment,
+						trigger: signal.trigger,
 					},
 				}),
 			});
-
 			if (res.ok) {
 				const data = await res.json();
 				const result = data.result ?? data.data ?? {};
-				readinessScore = result.readinessScore ?? null;
+				readinessScore = result.score ?? null;
+				readinessLevel = result.level ?? '';
 				gaps = result.gaps ?? [];
-				blockers = result.blockers ?? [];
+				strengths = result.strengths ?? [];
 			} else {
-				error = 'Assessment failed — try again';
+				aiError = 'Readiness check failed — try again.';
 			}
 		} catch {
-			error = 'Network error — check your connection and try again';
-		} finally {
-			assessing = false;
+			aiError = 'Readiness check failed — try again.';
 		}
-	}
-
-	async function handleSave() {
-		saving = true;
-		error = '';
-
-		try {
-			const getRes = await fetch(`/api/scopes/${scopeId}`);
-			if (!getRes.ok) { error = 'Failed to load scope'; saving = false; return; }
-			const { scope } = await getRes.json();
-
-			const updatedData = {
-				...scope.data,
-				prepare: {
-					budgetEstimate: parseFloat(budgetEstimate) || 0,
-					timeline,
-					stakeholders: stakeholders.trim(),
-					riskAssessment: riskAssessment.trim(),
-					readinessScore,
-					gaps,
-					blockers,
-				},
-			};
-
-			const res = await fetch(`/api/scopes/${scopeId}`, {
-				method: 'PATCH',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					data: updatedData,
-					current_step: 'endorse',
-				}),
-			});
-
-			if (!res.ok) {
-				error = 'Failed to save';
-				saving = false;
-				return;
-			}
-
-			goto(`/scope/${scopeId}/endorse`);
-		} catch {
-			error = 'Network error — check your connection and try again';
-			saving = false;
-		}
+		assessing = false;
 	}
 
 	function scoreColor(score: number): string {
-		if (score >= 75) return '#50b080';
-		if (score >= 50) return '#f0a030';
-		return '#f05050';
+		if (score >= 75) return '#00cc96';
+		if (score >= 50) return '#fbbf24';
+		return '#f87171';
 	}
 
-	const readinessBlocked = $derived(readinessScore !== null && readinessScore < 50);
-	const hasHighSeverityGaps = $derived(gaps.some(g => g.severity === 'high'));
+	async function saveAndContinue() {
+		saving = true;
+		await fetch(`/api/scopes/${scopeId}`, {
+			method: 'PATCH',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				data: {
+					...scope?.data,
+					prepare: {
+						budgetEstimate: Number(budgetEstimate) || 0,
+						timeline, stakeholders, riskAssessment,
+						readinessScore, gaps,
+					}
+				},
+				current_step: 'endorse',
+			}),
+		});
+		goto(`/scope/${scopeId}/endorse`);
+	}
 </script>
 
 <svelte:head>
-	<title>Prepare — SCOPE</title>
+	<title>Prepare — SCOPE — Shortlist</title>
 </svelte:head>
 
-<Card>
-	<div class="step-content">
-		<h2>Are we ready?</h2>
-		<p class="step-intro">Budget, timeline, stakeholders, risks — lay the groundwork before seeking endorsement.</p>
+<div class="step-page">
+	<h2>Assess Readiness</h2>
+	<p class="step-desc">Are you ready to act? Fill in planning details and run a readiness assessment.</p>
 
-		{#if error}
-			<div class="error-banner" role="alert">{error}</div>
-		{/if}
-
-		<label class="field">
-			<span>Estimated budget ($)</span>
-			<input
-				type="number"
-				bind:value={budgetEstimate}
-				placeholder="e.g., 50000"
-				min="0"
-				step="1000"
-			/>
-		</label>
-
-		<label class="field">
-			<span>Expected timeline</span>
-			<select bind:value={timeline}>
-				<option value="">Select timeline…</option>
+	<div class="form-row">
+		<div class="form-group">
+			<label for="budget">Budget Estimate ($)</label>
+			<input type="number" id="budget" bind:value={budgetEstimate} placeholder="e.g., 50000" />
+		</div>
+		<div class="form-group">
+			<label for="timeline">Timeline</label>
+			<select id="timeline" bind:value={timeline}>
+				<option value="">Select timeline...</option>
 				{#each timelineOptions as opt}
 					<option value={opt}>{opt}</option>
 				{/each}
 			</select>
-		</label>
-
-		<label class="field">
-			<span>Key stakeholders</span>
-			<textarea
-				bind:value={stakeholders}
-				placeholder="Who needs to be involved? Decision makers, budget owners, end users, IT/security…"
-				rows="3"
-			></textarea>
-		</label>
-
-		<label class="field">
-			<span>Risk assessment</span>
-			<textarea
-				bind:value={riskAssessment}
-				placeholder="What could go wrong? Migration risks, adoption challenges, vendor lock-in, timeline slippage…"
-				rows="3"
-			></textarea>
-		</label>
-
-		<!-- AI Readiness Assessment -->
-		<div class="ai-section">
-			<div class="ai-header">
-				<h3>Readiness Check</h3>
-				<Button
-					variant="secondary"
-					size="sm"
-					loading={assessing}
-					onclick={runReadinessCheck}
-				>
-					{readinessScore !== null ? 'Re-assess' : 'Run Readiness Check'}
-				</Button>
-			</div>
-
-			{#if readinessScore === null && !assessing}
-				<div class="empty-hint">
-					<p>Fill in your budget, timeline, stakeholders, and risks above, then click "Run Readiness Check" for an AI assessment of how prepared your organization is to move forward.</p>
-				</div>
-			{/if}
-
-			{#if readinessScore !== null}
-				<div class="readiness-result">
-					<div class="score-display">
-						<div
-							class="score-ring"
-							style:border-color={scoreColor(readinessScore)}
-						>
-							<span class="score-value">{readinessScore}</span>
-							<span class="score-label">/ 100</span>
-						</div>
-						<span
-							class="score-verdict"
-							style:color={scoreColor(readinessScore)}
-						>
-							{readinessScore >= 75 ? 'Ready to proceed' : readinessScore >= 50 ? 'Needs attention' : 'Not ready'}
-						</span>
-					</div>
-
-					{#if gaps.length > 0}
-						<div class="gaps-section">
-							<h4>Gaps identified</h4>
-							{#each gaps as gap}
-								<div class="gap-item">
-									<div class="gap-header">
-										<span class="gap-area">{gap.area}</span>
-										<span
-											class="gap-severity"
-											style:color={gap.severity === 'high' ? '#f05050' : gap.severity === 'medium' ? '#f0a030' : '#50b080'}
-										>
-											{gap.severity}
-										</span>
-									</div>
-									<p class="gap-desc">{gap.description}</p>
-									<p class="gap-rec">→ {gap.recommendation}</p>
-								</div>
-							{/each}
-						</div>
-					{/if}
-
-					{#if blockers.length > 0}
-						<div class="blockers-section">
-							<h4>Blockers</h4>
-							{#each blockers as blocker}
-								<div class="blocker-item">🚫 {blocker}</div>
-							{/each}
-						</div>
-					{/if}
-				</div>
-			{/if}
-		</div>
-
-		{#if readinessBlocked}
-			<div class="readiness-gate" role="alert">
-				<strong>Not ready to proceed</strong>
-				<p>Your readiness score is {readinessScore}/100 — below the minimum threshold of 50. Address the gaps above before moving to endorsement.</p>
-				{#if hasHighSeverityGaps}
-					<p class="gate-detail">You have {gaps.filter(g => g.severity === 'high').length} high-severity gap{gaps.filter(g => g.severity === 'high').length > 1 ? 's' : ''} to resolve.</p>
-				{/if}
-			</div>
-		{/if}
-
-		<div class="actions">
-			<Button variant="ghost" type="button" onclick={() => goto(`/scope/${scopeId}/options`)}>
-				Back
-			</Button>
-			<Button variant="primary" loading={saving} onclick={handleSave} disabled={readinessBlocked}>
-				{readinessBlocked ? 'Resolve Gaps First' : 'Save & Continue'}
-			</Button>
 		</div>
 	</div>
-</Card>
+
+	<div class="form-group">
+		<label for="stakeholders">Key Stakeholders</label>
+		<textarea id="stakeholders" bind:value={stakeholders} rows="2" placeholder="Who needs to be involved? e.g., CISO, VP Engineering, CFO"></textarea>
+	</div>
+
+	<div class="form-group">
+		<label for="risk">Risk Assessment</label>
+		<textarea id="risk" bind:value={riskAssessment} rows="2" placeholder="What are the key risks of this approach?"></textarea>
+	</div>
+
+	<div class="ai-section">
+		<button class="ai-btn" onclick={runReadinessCheck} disabled={assessing}>
+			{#if assessing}
+				<span class="spinner"></span> Assessing...
+			{:else}
+				✦ Run Readiness Check
+			{/if}
+		</button>
+		{#if aiError}
+			<div class="ai-error">{aiError}</div>
+		{/if}
+	</div>
+
+	{#if readinessScore !== null}
+		<div class="readiness-result">
+			<div class="score-display">
+				<div class="score-circle" style="border-color: {scoreColor(readinessScore)}">
+					<span class="score-num" style="color: {scoreColor(readinessScore)}">{readinessScore}</span>
+					<span class="score-label">/ 100</span>
+				</div>
+				{#if readinessLevel}
+					<span class="readiness-level" style="color: {scoreColor(readinessScore)}">{readinessLevel.replace('_', ' ')}</span>
+				{/if}
+			</div>
+
+			{#if strengths.length > 0}
+				<div class="strengths">
+					<span class="section-label good">Strengths</span>
+					{#each strengths as s}
+						<span class="strength-item">✓ {s}</span>
+					{/each}
+				</div>
+			{/if}
+
+			{#if gaps.length > 0}
+				<div class="gaps-list">
+					<span class="section-label bad">Gaps & Blockers</span>
+					{#each gaps as gap, i (gap.area ?? `gap-${i}`)}
+						<div class="gap-card">
+							<div class="gap-header">
+								<span class="gap-title">{gap.title}</span>
+								<span class="gap-severity" class:high={gap.severity === 'high'} class:medium={gap.severity === 'medium'}>{gap.severity}</span>
+							</div>
+							<p class="gap-detail">{gap.detail}</p>
+							{#if gap.action}
+								<span class="gap-action">→ {gap.action}</span>
+							{/if}
+						</div>
+					{/each}
+				</div>
+			{/if}
+		</div>
+	{/if}
+
+	<div class="step-actions">
+		<a href="/scope/{scopeId}/options" class="btn-ghost">← Back</a>
+		<button class="btn-primary" onclick={saveAndContinue} disabled={saving}>
+			{saving ? 'Saving...' : 'Continue to Endorse →'}
+		</button>
+	</div>
+</div>
 
 <style>
-	.step-content h2 { margin-bottom: var(--space-1); }
-	.step-intro { color: var(--neutral-500); font-size: 0.875rem; margin-bottom: var(--space-5); }
+	.step-page h2 { color: var(--text, #e2e8f0); margin-bottom: 0.25rem; }
+	.step-desc { color: var(--text-muted, #94a3b8); font-size: 0.875rem; margin-bottom: 1.5rem; }
 
-	.error-banner {
-		background: rgba(240, 80, 80, 0.1); color: #f05050;
-		padding: var(--space-3); border-radius: var(--radius-md);
-		margin-bottom: var(--space-4); font-size: 0.875rem;
+	.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+	.form-group { margin-bottom: 1.25rem; }
+	.form-group label {
+		display: block; font-size: 0.8125rem; font-weight: 600;
+		color: var(--text, #e2e8f0); margin-bottom: 0.4rem;
 	}
+	input[type="number"], select, textarea {
+		width: 100%; padding: 0.65rem 0.85rem;
+		background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.1);
+		border-radius: 8px; color: var(--text, #e2e8f0); font-size: 0.875rem; font-family: inherit;
+	}
+	textarea { resize: vertical; }
+	input:focus, select:focus, textarea:focus {
+		outline: none; border-color: #00cc96; box-shadow: 0 0 0 2px rgba(0, 204, 150, 0.15);
+	}
+	input::placeholder, textarea::placeholder { color: rgba(255, 255, 255, 0.25); }
+	select { cursor: pointer; }
 
-	.field { display: block; margin-bottom: var(--space-5); }
-	.field span { display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: var(--space-2); color: var(--neutral-700); }
-	.field input, .field textarea, .field select {
-		width: 100%; padding: var(--space-2) var(--space-3);
-		border: 1px solid var(--neutral-300); border-radius: var(--radius-md);
-		font-size: 0.9375rem; font-family: inherit; resize: vertical;
-		background: white;
+	.ai-section { margin-bottom: 1.5rem; }
+	.ai-btn {
+		display: flex; align-items: center; gap: 0.5rem;
+		padding: 0.6rem 1.25rem; background: rgba(0, 204, 150, 0.08);
+		border: 1px dashed rgba(0, 204, 150, 0.25); border-radius: 8px;
+		color: #00cc96; font-size: 0.8125rem; font-weight: 600; cursor: pointer; width: 100%;
 	}
-	.field input:focus, .field textarea:focus, .field select:focus {
-		outline: var(--focus-ring); outline-offset: var(--focus-ring-offset);
-		border-color: var(--primary-500);
+	.ai-btn:hover { background: rgba(0, 204, 150, 0.15); }
+	.ai-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+	.spinner {
+		width: 14px; height: 14px; border: 2px solid rgba(0, 204, 150, 0.2);
+		border-top-color: #00cc96; border-radius: 50%; animation: spin 0.8s linear infinite;
 	}
-
-	.ai-section { margin-bottom: var(--space-5); }
-	.ai-header {
-		display: flex; align-items: center; justify-content: space-between;
-		margin-bottom: var(--space-3);
+	@keyframes spin { to { transform: rotate(360deg); } }
+	.ai-error {
+		margin-top: 0.5rem; padding: 0.5rem; background: rgba(239, 68, 68, 0.08);
+		border-radius: 6px; color: #f87171; font-size: 0.8rem;
 	}
-	.ai-header h3 { font-size: 1rem; font-weight: 600; margin: 0; }
 
 	.readiness-result {
-		background: var(--neutral-50); border: 1px solid var(--neutral-200);
-		border-radius: var(--radius-md); padding: var(--space-4);
+		padding: 1.25rem; background: rgba(0, 0, 0, 0.15);
+		border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 12px; margin-bottom: 1.5rem;
 	}
+	.score-display { text-align: center; margin-bottom: 1rem; }
+	.score-circle {
+		width: 80px; height: 80px; border-radius: 50%;
+		border: 3px solid; display: flex; flex-direction: column;
+		align-items: center; justify-content: center; margin: 0 auto 0.5rem;
+	}
+	.score-num { font-size: 1.5rem; font-weight: 800; line-height: 1; }
+	.score-label { font-size: 0.6rem; color: var(--text-muted, #64748b); }
+	.readiness-level { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
 
-	.score-display {
-		display: flex; flex-direction: column; align-items: center;
-		margin-bottom: var(--space-4);
+	.section-label {
+		font-size: 0.625rem; font-weight: 700; text-transform: uppercase;
+		letter-spacing: 0.08em; display: block; margin-bottom: 0.35rem;
 	}
-	.score-ring {
-		width: 80px; height: 80px;
-		border: 4px solid; border-radius: 50%;
-		display: flex; flex-direction: column;
-		align-items: center; justify-content: center;
-		margin-bottom: var(--space-2);
-	}
-	.score-value { font-size: 1.5rem; font-weight: 700; line-height: 1; }
-	.score-label { font-size: 0.6875rem; color: var(--neutral-400); }
-	.score-verdict { font-size: 0.875rem; font-weight: 600; }
+	.section-label.good { color: #00cc96; }
+	.section-label.bad { color: #f87171; }
 
-	.gaps-section, .blockers-section { margin-top: var(--space-4); }
-	.gaps-section h4, .blockers-section h4 {
-		font-size: 0.8125rem; font-weight: 600; color: var(--neutral-500);
-		text-transform: uppercase; letter-spacing: 0.05em;
-		margin-bottom: var(--space-2);
-	}
+	.strengths { margin-bottom: 1rem; }
+	.strength-item { display: block; font-size: 0.8125rem; color: var(--text-muted, #94a3b8); margin-bottom: 0.15rem; }
 
-	.gap-item {
-		padding: var(--space-2) 0;
-		border-bottom: 1px solid var(--neutral-200);
+	.gaps-list { display: flex; flex-direction: column; gap: 0.4rem; }
+	.gap-card {
+		padding: 0.65rem 0.85rem; background: rgba(239, 68, 68, 0.04);
+		border: 1px solid rgba(239, 68, 68, 0.08); border-radius: 8px;
 	}
-	.gap-item:last-child { border-bottom: none; }
-	.gap-header {
-		display: flex; align-items: center; justify-content: space-between;
-		margin-bottom: var(--space-1);
+	.gap-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.2rem; }
+	.gap-title { font-weight: 600; font-size: 0.8125rem; color: var(--text, #e2e8f0); }
+	.gap-severity {
+		font-size: 0.6rem; font-weight: 700; text-transform: uppercase;
+		padding: 1px 6px; border-radius: 4px; letter-spacing: 0.04em;
 	}
-	.gap-area { font-weight: 500; font-size: 0.875rem; }
-	.gap-severity { font-size: 0.75rem; font-weight: 600; text-transform: capitalize; }
-	.gap-desc { font-size: 0.8125rem; color: var(--neutral-500); margin-bottom: var(--space-1); }
-	.gap-rec { font-size: 0.8125rem; color: var(--primary-600); }
+	.gap-severity.high { background: rgba(239, 68, 68, 0.12); color: #f87171; }
+	.gap-severity.medium { background: rgba(245, 158, 11, 0.12); color: #fbbf24; }
+	.gap-detail { font-size: 0.75rem; color: var(--text-muted, #94a3b8); margin: 0 0 0.2rem; }
+	.gap-action { font-size: 0.7rem; color: #00cc96; font-weight: 500; }
 
-	.blocker-item {
-		font-size: 0.875rem; color: #f05050;
-		padding: var(--space-1) 0;
+	.step-actions {
+		display: flex; justify-content: space-between; align-items: center;
+		margin-top: 2rem; padding-top: 1rem; border-top: 1px solid rgba(255, 255, 255, 0.06);
 	}
+	.btn-ghost { background: none; border: none; color: var(--text-muted, #94a3b8); font-size: 0.875rem; cursor: pointer; text-decoration: none; }
+	.btn-ghost:hover { color: var(--text, #e2e8f0); text-decoration: none; }
+	.btn-primary {
+		padding: 0.6rem 1.5rem; background: #00cc96; color: #0a0f1e;
+		border: none; border-radius: 8px; font-size: 0.875rem; font-weight: 600; cursor: pointer;
+	}
+	.btn-primary:hover { opacity: 0.9; }
+	.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
 
-	.empty-hint {
-		background: var(--neutral-50); border: 1px dashed var(--neutral-200);
-		border-radius: var(--radius-md); padding: var(--space-4);
-		text-align: center;
-	}
-	.empty-hint p { font-size: 0.875rem; color: var(--neutral-400); margin: 0; line-height: 1.5; }
-
-	.readiness-gate {
-		background: rgba(240, 80, 80, 0.06); border: 1px solid rgba(240, 80, 80, 0.2);
-		border-radius: var(--radius-md); padding: var(--space-3) var(--space-4);
-		margin-bottom: var(--space-4);
-	}
-	.readiness-gate strong { color: #f05050; font-size: 0.875rem; }
-	.readiness-gate p { font-size: 0.8125rem; color: var(--neutral-600); margin: var(--space-1) 0 0; }
-	.readiness-gate .gate-detail { color: #f05050; font-weight: 500; }
-
-	.actions {
-		display: flex; justify-content: space-between; gap: var(--space-3);
-		padding-top: var(--space-4); border-top: 1px solid var(--neutral-100);
-	}
+	@media (max-width: 640px) { .form-row { grid-template-columns: 1fr; } }
 </style>

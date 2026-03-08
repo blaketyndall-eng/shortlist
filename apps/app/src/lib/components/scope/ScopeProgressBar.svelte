@@ -1,83 +1,80 @@
 <script lang="ts">
-	import type { ScopeStep } from '@shortlist/shared-types';
-	import { SCOPE_STEPS, SCOPE_LABELS } from '@shortlist/shared-types';
+	const STEPS = [
+		{ key: 'signal', label: 'S', full: 'Signal' },
+		{ key: 'cause', label: 'C', full: 'Cause' },
+		{ key: 'options', label: 'O', full: 'Options' },
+		{ key: 'prepare', label: 'P', full: 'Prepare' },
+		{ key: 'endorse', label: 'E', full: 'Endorse' },
+	];
 
-	let { currentStep, scopeId } = $props<{ currentStep: ScopeStep; scopeId: string }>();
+	const STEP_ORDER = ['signal', 'cause', 'options', 'prepare', 'endorse'];
 
-	const currentIndex = $derived(SCOPE_STEPS.indexOf(currentStep));
+	interface Props {
+		currentStep: string;
+		completedSteps?: string[];
+	}
+
+	let { currentStep, completedSteps = [] }: Props = $props();
+
+	function stepIndex(step: string): number {
+		return STEP_ORDER.indexOf(step);
+	}
+
+	function isCompleted(step: string): boolean {
+		return completedSteps.includes(step) || stepIndex(step) < stepIndex(currentStep);
+	}
+
+	function isCurrent(step: string): boolean {
+		return step === currentStep;
+	}
 </script>
 
-<nav class="scope-progress" aria-label="SCOPE workflow progress">
-	{#each SCOPE_STEPS as step, i}
-		{@const isCompleted = i < currentIndex}
-		{@const isCurrent = step === currentStep}
-		{@const isClickable = i <= currentIndex}
-
+<div class="scope-progress">
+	{#each STEPS as step, i (step.key)}
 		{#if i > 0}
-			<div class="connector" class:completed={i <= currentIndex}></div>
+			<div class="step-connector" class:completed={isCompleted(step.key) || isCurrent(step.key)}></div>
 		{/if}
-
-		{#if isClickable}
-			<a
-				href="/scope/{scopeId}/{step}"
-				class="step"
-				class:completed={isCompleted}
-				class:current={isCurrent}
-				aria-current={isCurrent ? 'step' : undefined}
-			>
-				<span class="step-dot">
-					{#if isCompleted}✓{:else}{step.charAt(0).toUpperCase()}{/if}
-				</span>
-				<span class="step-label">{SCOPE_LABELS[step]}</span>
-			</a>
-		{:else}
-			<div class="step future">
-				<span class="step-dot">{step.charAt(0).toUpperCase()}</span>
-				<span class="step-label">{SCOPE_LABELS[step]}</span>
-			</div>
-		{/if}
+		<div
+			class="step-node"
+			class:completed={isCompleted(step.key)}
+			class:current={isCurrent(step.key)}
+			class:upcoming={!isCompleted(step.key) && !isCurrent(step.key)}
+			title={step.full}
+		>
+			<span class="step-letter">{step.label}</span>
+			<span class="step-label">{step.full}</span>
+		</div>
 	{/each}
-</nav>
+</div>
 
 <style>
 	.scope-progress {
 		display: flex;
 		align-items: center;
 		gap: 0;
-		padding: var(--space-2) 0;
+		padding: 0.75rem 0;
 	}
 
-	.connector {
+	.step-connector {
 		flex: 1;
 		height: 2px;
-		background: var(--neutral-200);
-		min-width: 20px;
-		transition: background var(--transition-fast);
+		background: rgba(255, 255, 255, 0.08);
+		transition: background 0.3s;
 	}
 
-	.connector.completed {
-		background: var(--primary-500, #6366f1);
+	.step-connector.completed {
+		background: #00cc96;
 	}
 
-	.step {
+	.step-node {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: var(--space-1);
-		text-decoration: none;
-		color: inherit;
-		transition: all var(--transition-fast);
+		gap: 0.25rem;
+		cursor: default;
 	}
 
-	a.step:hover {
-		text-decoration: none;
-	}
-
-	a.step:hover .step-dot {
-		transform: scale(1.1);
-	}
-
-	.step-dot {
+	.step-letter {
 		width: 32px;
 		height: 32px;
 		border-radius: 50%;
@@ -86,43 +83,37 @@
 		justify-content: center;
 		font-size: 0.75rem;
 		font-weight: 700;
-		transition: all var(--transition-fast);
-		border: 2px solid var(--neutral-200);
-		background: var(--color-bg-secondary, white);
-		color: var(--neutral-400);
-	}
-
-	.step.completed .step-dot {
-		background: var(--primary-500, #6366f1);
-		border-color: var(--primary-500, #6366f1);
-		color: white;
-	}
-
-	.step.current .step-dot {
-		border-color: var(--primary-500, #6366f1);
-		color: var(--primary-600, #4f46e5);
-		background: rgba(99, 102, 241, 0.1);
-		box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-	}
-
-	.step.future .step-dot {
-		opacity: 0.5;
+		letter-spacing: 0.02em;
+		transition: all 0.3s;
 	}
 
 	.step-label {
-		font-size: 0.6875rem;
+		font-size: 0.625rem;
 		font-weight: 500;
-		color: var(--neutral-400);
-		text-transform: uppercase;
 		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		transition: color 0.3s;
 	}
 
-	.step.current .step-label {
-		color: var(--primary-600, #4f46e5);
-		font-weight: 600;
+	.step-node.completed .step-letter {
+		background: rgba(0, 204, 150, 0.15);
+		color: #00cc96;
+		border: 2px solid #00cc96;
 	}
+	.step-node.completed .step-label { color: #00cc96; }
 
-	.step.completed .step-label {
-		color: var(--neutral-600);
+	.step-node.current .step-letter {
+		background: #00cc96;
+		color: #0a0f1e;
+		border: 2px solid #00cc96;
+		box-shadow: 0 0 12px rgba(0, 204, 150, 0.3);
 	}
+	.step-node.current .step-label { color: #00cc96; font-weight: 700; }
+
+	.step-node.upcoming .step-letter {
+		background: rgba(255, 255, 255, 0.04);
+		color: rgba(255, 255, 255, 0.25);
+		border: 2px solid rgba(255, 255, 255, 0.08);
+	}
+	.step-node.upcoming .step-label { color: rgba(255, 255, 255, 0.25); }
 </style>

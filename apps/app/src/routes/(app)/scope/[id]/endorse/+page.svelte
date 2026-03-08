@@ -2,545 +2,421 @@
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
-	import Button from '$components/ui/Button.svelte';
-	import Card from '$components/ui/Card.svelte';
-	import type { ScopeDecision } from '@shortlist/shared-types';
-	import { DECISION_LABELS } from '@shortlist/shared-types';
 
-	const scopeId = $derived($page.params.id);
-
-	interface Brief {
-		title: string;
-		executiveSummary: string;
-		sections: Array<{ heading: string; body: string; keyPoints: string[] }>;
-		recommendation: string;
-		costOfInaction: string;
-		nextSteps: string[];
-	}
-
-	let brief = $state<Brief | null>(null);
-	let requiresApproval = $state(false);
-	let approvalStatus = $state<'pending' | 'approved' | 'rejected' | ''>('');
-	let approverNotes = $state('');
-	let scopeData = $state<Record<string, any>>({});
-	let decision = $state<ScopeDecision | ''>('');
-	let sponsorThreshold = $state<number | null>(null);
-	let generating = $state(false);
+	const scopeId = $page.params.id;
+	let scope = $state<any>(null);
 	let saving = $state(false);
-	let transitioning = $state(false);
-	let showConfirm = $state(false);
-	let error = $state('');
+	let generating = $state(false);
+	let aiError = $state('');
+
+	let brief = $state<any>(null);
+	let requiresApproval = $state(false);
+	let approvalStatus = $state('');
+	let approverNotes = $state('');
+	let sponsorThreshold = $state<number | null>(null);
 
 	onMount(async () => {
-		try {
-			const res = await fetch(`/api/scopes/${scopeId}`);
-			if (res.ok) {
-				const data = await res.json();
-				scopeData = data.scope?.data ?? {};
-				decision = data.scope?.decision ?? scopeData.options?.selectedApproach ?? '';
-				if (scopeData.endorse) {
-					brief = scopeData.endorse.brief ?? null;
-					requiresApproval = scopeData.endorse.requiresApproval ?? false;
-					approvalStatus = scopeData.endorse.approvalStatus ?? '';
-					approverNotes = scopeData.endorse.approverNotes ?? '';
-				}
+		const res = await fetch(`/api/scopes/${scopeId}`);
+		if (res.ok) {
+			scope = await res.json();
+			const e = scope.data?.endorse;
+			if (e) {
+				brief = e.brief ?? null;
+				requiresApproval = e.requiresApproval ?? false;
+				approvalStatus = e.approvalStatus ?? '';
+				approverNotes = e.approverNotes ?? '';
 			}
-
-			// Check sponsor threshold from company profile
-			const profileRes = await fetch('/api/company-profile');
-			if (profileRes.ok) {
-				const profileData = await profileRes.json();
-				sponsorThreshold = profileData.profile?.sponsor_approval_threshold ?? null;
-				// Check if budget exceeds threshold
-				const budget = scopeData.prepare?.budgetEstimate ?? 0;
+		}
+		// Load sponsor threshold from profile
+		try {
+			const pRes = await fetch('/api/profile');
+			if (pRes.ok) {
+				const profile = await pRes.json();
+				sponsorThreshold = profile.sponsor_approval_threshold ?? null;
+				// Check if approval is required based on budget vs threshold
+				const budget = scope?.data?.prepare?.budgetEstimate ?? 0;
 				if (sponsorThreshold && budget > sponsorThreshold) {
 					requiresApproval = true;
 				}
 			}
-		} catch { /* use defaults */ }
+		} catch { /* ignore */ }
 	});
+
+	const decision = $derived(scope?.decision ?? scope?.data?.options?.selectedApproach ?? '');
+	const budgetEstimate = $derived(scope?.data?.prepare?.budgetEstimate ?? 0);
+
+	const decisionLabels: Record<string, string> = {
+		buy: 'Buy Software',
+		build: 'Build Internally',
+		fix: 'Fix Existing',
+		partner: 'Partner / Outsource',
+		do_nothing: 'Do Nothing',
+	};
+
+	const decisionIcons: Record<string, string> = {
+		buy: '🛒', build: '🔨', fix: '🔧', partner: '🤝', do_nothing: '⏸',
+	};
 
 	async function generateBrief() {
 		generating = true;
-		error = '';
+		aiError = '';
 		try {
+			const signal = scope?.data?.signal ?? {};
+			const cause = scope?.data?.cause ?? {};
+			const options = scope?.data?.options ?? {};
+			const prepare = scope?.data?.prepare ?? {};
 			const res = await fetch('/api/ai/engine', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
 					engine: 'scope_brief_generate',
-					depth: 'deep',
+					depth: 'standard',
+					scopeId,
 					context: {
-						signal: scopeData.signal ?? {},
-						cause: scopeData.cause ?? {},
-						options: scopeData.options ?? {},
-						prepare: scopeData.prepare ?? {},
 						decision,
+						trigger: signal.trigger,
+						businessImpact: signal.businessImpact,
+						urgency: signal.urgency,
+						hypothesis: cause.hypothesis,
+						selectedApproach: options.selectedApproach,
+						reasoning: options.reasoning,
+						budgetEstimate: prepare.budgetEstimate,
+						timeline: prepare.timeline,
+						stakeholders: prepare.stakeholders,
+						riskAssessment: prepare.riskAssessment,
+						readinessScore: prepare.readinessScore,
+						gaps: prepare.gaps,
 					},
 				}),
 			});
-
 			if (res.ok) {
 				const data = await res.json();
-				const result = data.result ?? data.data ?? {};
-				brief = {
-					title: result.title ?? '',
-					executiveSummary: result.executiveSummary ?? '',
-					sections: result.sections ?? [],
-					recommendation: result.recommendation ?? '',
-					costOfInaction: result.costOfInaction ?? '',
-					nextSteps: result.nextSteps ?? [],
-				};
+				brief = data.result ?? data.data ?? {};
 			} else {
-				error = 'Failed to generate brief';
+				aiError = 'Brief generation failed — try again.';
 			}
 		} catch {
-			error = 'Network error — check your connection and try again';
-		} finally {
-			generating = false;
+			aiError = 'Brief generation failed — try again.';
 		}
+		generating = false;
 	}
 
-	async function saveBrief() {
+	async function finalize(action: 'approve' | 'do_nothing') {
 		saving = true;
-		error = '';
+		const endorseData = {
+			brief,
+			requiresApproval,
+			approvalStatus: requiresApproval ? approvalStatus : 'self_approved',
+			approverNotes,
+		};
+
+		// Save endorse data
+		await fetch(`/api/scopes/${scopeId}`, {
+			method: 'PATCH',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				data: { ...scope?.data, endorse: endorseData },
+				current_step: 'endorse',
+				status: action === 'do_nothing' ? 'completed' : scope?.status,
+				completed_at: action === 'do_nothing' ? new Date().toISOString() : null,
+			}),
+		});
+
+		if (action === 'do_nothing') {
+			goto('/dashboard');
+			return;
+		}
+
+		// Create project from SCOPE
 		try {
-			const getRes = await fetch(`/api/scopes/${scopeId}`);
-			if (!getRes.ok) { error = 'Failed to load scope'; saving = false; return; }
-			const { scope } = await getRes.json();
-
-			const updatedData = {
-				...scope.data,
-				endorse: {
-					brief,
-					requiresApproval,
-					approvalStatus: approvalStatus || (requiresApproval ? 'pending' : 'approved'),
-					approverNotes: approverNotes.trim(),
-				},
-			};
-
-			const res = await fetch(`/api/scopes/${scopeId}`, {
-				method: 'PATCH',
+			const res = await fetch(`/api/scopes/${scopeId}/to-project`, {
+				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					data: updatedData,
-					decision: decision || undefined,
-				}),
 			});
-
-			if (!res.ok) {
-				error = 'Failed to save';
-				saving = false;
-				return;
-			}
-		} catch {
-			error = 'Network error — check your connection and try again';
-			saving = false;
-		}
-		saving = false;
-	}
-
-	async function finalizeScope() {
-		transitioning = true;
-		error = '';
-
-		// Save brief first
-		await saveBrief();
-		if (error) { transitioning = false; return; }
-
-		try {
-			if (decision === 'do_nothing') {
-				// Mark scope complete, no project
-				const res = await fetch(`/api/scopes/${scopeId}`, {
-					method: 'PATCH',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({
-						status: 'completed',
-						decision: 'do_nothing',
-						completed_at: new Date().toISOString(),
-					}),
-				});
-
-				if (!res.ok) { error = 'Failed to complete'; transitioning = false; return; }
-				goto('/dashboard');
-			} else {
-				// Transition to project
-				const res = await fetch(`/api/scopes/${scopeId}/to-project`, {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ decision }),
-				});
-
-				if (res.ok) {
-					const data = await res.json();
-					if (data.project?.id) {
-						goto(`/project/${data.project.id}`);
-					} else {
-						goto('/dashboard');
-					}
+			if (res.ok) {
+				const result = await res.json();
+				if (result.project?.id) {
+					goto(`/project/${result.project.id}/solve/triggers`);
 				} else {
-					error = 'Failed to create project';
-					transitioning = false;
+					goto('/dashboard');
 				}
+			} else {
+				goto('/dashboard');
 			}
 		} catch {
-			error = 'Network error — check your connection and try again';
-			transitioning = false;
+			goto('/dashboard');
 		}
 	}
-
-	const canFinalize = $derived(
-		brief !== null &&
-		brief.executiveSummary !== '' &&
-		decision !== '' &&
-		(!requiresApproval || approvalStatus === 'approved') &&
-		approvalStatus !== 'rejected'
-	);
-
-	const actionLabel = $derived(
-		decision === 'do_nothing'
-			? 'Mark Complete'
-			: decision === 'buy'
-				? 'Create Project & Start SOLVE'
-				: 'Create Project'
-	);
 </script>
 
 <svelte:head>
-	<title>Endorse — SCOPE</title>
+	<title>Endorse — SCOPE — Shortlist</title>
 </svelte:head>
 
-<Card>
-	<div class="step-content">
-		<h2>Get the green light</h2>
-		<p class="step-intro">Generate a decision brief and secure endorsement. This is your objective case — built from data, not persuasion.</p>
+<div class="step-page">
+	<h2>Endorse Decision</h2>
+	<p class="step-desc">Generate an executive brief, get sign-off, and take action.</p>
 
-		{#if error}
-			<div class="error-banner" role="alert">{error}</div>
+	<!-- Decision Summary -->
+	<div class="decision-summary">
+		<span class="decision-icon">{decisionIcons[decision] ?? '📋'}</span>
+		<div>
+			<span class="decision-label">{decisionLabels[decision] ?? decision}</span>
+			{#if budgetEstimate}
+				<span class="decision-budget">${budgetEstimate.toLocaleString()} estimated</span>
+			{/if}
+		</div>
+		{#if requiresApproval}
+			<span class="approval-badge">Approval Required</span>
 		{/if}
+	</div>
 
-		<!-- Decision Summary -->
-		{#if decision}
-			<div class="decision-banner">
-				<span class="decision-label">Recommended approach</span>
-				<span class="decision-value">{DECISION_LABELS[decision] ?? decision}</span>
-			</div>
+	<!-- Generate Brief -->
+	<div class="ai-section">
+		<button class="ai-btn" onclick={generateBrief} disabled={generating}>
+			{#if generating}
+				<span class="spinner"></span> Generating Brief...
+			{:else}
+				✦ {brief ? 'Regenerate Brief' : 'Generate Executive Brief'}
+			{/if}
+		</button>
+		{#if aiError}
+			<div class="ai-error">{aiError}</div>
 		{/if}
+	</div>
 
-		<!-- Generate Brief -->
-		<div class="ai-section">
-			<div class="ai-header">
-				<h3>Decision Brief</h3>
-				<Button
-					variant="secondary"
-					size="sm"
-					loading={generating}
-					onclick={generateBrief}
-				>
-					{brief ? 'Re-generate Brief' : 'Generate Brief'}
-				</Button>
-			</div>
+	<!-- Brief Display -->
+	{#if brief}
+		<div class="brief-document">
+			{#if brief.title}
+				<h3 class="brief-title">{brief.title}</h3>
+			{/if}
 
-			{#if brief}
-				<div class="brief-content">
-					<h3 class="brief-title">{brief.title}</h3>
+			{#if brief.execSummary}
+				<div class="brief-section">
+					<span class="brief-label">Executive Summary</span>
+					<p>{brief.execSummary}</p>
+				</div>
+			{/if}
 
-					<div class="brief-section">
-						<h4>Executive Summary</h4>
-						<p>{brief.executiveSummary}</p>
-					</div>
+			{#if brief.problem}
+				<div class="brief-section">
+					<span class="brief-label">Problem Statement</span>
+					<p>{brief.problem}</p>
+				</div>
+			{/if}
 
-					{#each brief.sections as section}
-						<div class="brief-section">
-							<h4>{section.heading}</h4>
-							<p>{section.body}</p>
-							{#if section.keyPoints?.length}
-								<ul class="key-points">
-									{#each section.keyPoints as point}
-										<li>{point}</li>
-									{/each}
-								</ul>
-							{/if}
-						</div>
+			{#if brief.analysis}
+				<div class="brief-section">
+					<span class="brief-label">Analysis</span>
+					<p>{brief.analysis}</p>
+				</div>
+			{/if}
+
+			{#if brief.recommendation}
+				<div class="brief-section highlight">
+					<span class="brief-label">Recommendation</span>
+					<p>{brief.recommendation}</p>
+				</div>
+			{/if}
+
+			{#if brief.risks?.length}
+				<div class="brief-section">
+					<span class="brief-label">Key Risks</span>
+					{#each brief.risks as risk, i (i)}
+						<p class="risk-item">⚠ {risk}</p>
 					{/each}
+				</div>
+			{/if}
 
-					<div class="brief-section highlight">
-						<h4>Recommendation</h4>
-						<p>{brief.recommendation}</p>
-					</div>
+			{#if brief.nextSteps?.length}
+				<div class="brief-section">
+					<span class="brief-label">Next Steps</span>
+					{#each brief.nextSteps as step, i (i)}
+						<p class="next-step">{i + 1}. {step}</p>
+					{/each}
+				</div>
+			{/if}
 
-					{#if brief.costOfInaction}
-						<div class="brief-section warning">
-							<h4>Risk of Delay</h4>
-							<p>{brief.costOfInaction}</p>
-						</div>
-					{/if}
-
-					{#if brief.nextSteps?.length}
-						<div class="brief-section">
-							<h4>Next Steps</h4>
-							<ol>
-								{#each brief.nextSteps as step}
-									<li>{step}</li>
-								{/each}
-							</ol>
-						</div>
-					{/if}
+			{#if brief.timeline}
+				<div class="brief-meta">
+					<span>Timeline: {brief.timeline}</span>
+					{#if brief.budget}<span>Budget: {brief.budget}</span>{/if}
 				</div>
 			{/if}
 		</div>
+	{/if}
 
-		<!-- Approval Gate -->
-		{#if requiresApproval}
-			<div class="approval-gate">
-				<div class="approval-header">
-					<span class="approval-badge">Approval Required</span>
-					<span class="approval-reason">
-						Budget (${scopeData.prepare?.budgetEstimate?.toLocaleString() ?? '—'}) exceeds your organization's approval threshold (${sponsorThreshold?.toLocaleString() ?? '—'})
-					</span>
-				</div>
-
-				<div class="approval-status">
-					{#if approvalStatus === 'approved'}
-						<span class="status-approved">✓ Approved</span>
-					{:else if approvalStatus === 'rejected'}
-						<span class="status-rejected">✗ Rejected</span>
-					{:else}
-						<span class="status-pending">⏳ Waiting for executive sign-off</span>
-					{/if}
-				</div>
-
-				<p class="approval-hint">
-					Share this page with your approving executive. They can review the brief above, then approve or reject below.
-				</p>
-
-				<label class="field">
-					<span>Executive notes</span>
-					<textarea
-						bind:value={approverNotes}
-						placeholder="Approver enters notes here — questions, conditions, or rationale…"
-						rows="2"
-					></textarea>
-				</label>
-
-				<div class="approval-actions">
-					<Button
-						variant="ghost"
-						size="sm"
-						onclick={() => { approvalStatus = 'rejected'; saveBrief(); }}
-					>
-						Reject
-					</Button>
-					<Button
-						variant="primary"
-						size="sm"
-						onclick={() => { approvalStatus = 'approved'; saveBrief(); }}
-					>
-						Approve
-					</Button>
+	<!-- Approval Section -->
+	{#if requiresApproval && brief}
+		<div class="approval-section">
+			<div class="approval-header">
+				<span class="approval-icon">🔒</span>
+				<div>
+					<span class="approval-title">Executive Approval Required</span>
+					<span class="approval-reason">Budget of ${budgetEstimate.toLocaleString()} exceeds the ${sponsorThreshold?.toLocaleString()} threshold</span>
 				</div>
 			</div>
-		{/if}
-
-		{#if approvalStatus === 'rejected'}
-			<div class="rejection-banner" role="alert">
-				<strong>Approval rejected</strong>
-				<p>This SCOPE was rejected by the approver. Review the notes above, adjust your approach, and re-submit for approval.</p>
+			<div class="form-group">
+				<label for="notes">Approver Notes</label>
+				<textarea id="notes" bind:value={approverNotes} rows="2" placeholder="Notes from the approving executive..."></textarea>
 			</div>
-		{/if}
-
-		{#if !brief}
-			<div class="brief-required" role="alert">
-				<p>Generate a decision brief above before finalizing. The brief documents the objective case for this decision.</p>
-			</div>
-		{/if}
-
-		<div class="actions">
-			<Button variant="ghost" type="button" onclick={() => goto(`/scope/${scopeId}/prepare`)}>
-				Back
-			</Button>
-			<div class="action-group">
-				{#if brief}
-					<Button variant="ghost" loading={saving} onclick={saveBrief}>
-						Save Draft
-					</Button>
-				{/if}
-				<Button
-					variant="primary"
-					loading={transitioning}
-					disabled={!canFinalize}
-					onclick={() => (showConfirm = true)}
-				>
-					{actionLabel}
-				</Button>
+			<div class="approval-actions">
+				<button class="approve-btn" onclick={() => { approvalStatus = 'approved'; }}>
+					{approvalStatus === 'approved' ? '✓ Approved' : 'Approve'}
+				</button>
+				<button class="reject-btn" onclick={() => { approvalStatus = 'rejected'; }}>
+					{approvalStatus === 'rejected' ? '✗ Rejected' : 'Reject'}
+				</button>
 			</div>
 		</div>
-	</div>
-</Card>
+	{/if}
 
-{#if showConfirm}
-	<div class="confirm-overlay" role="dialog" aria-modal="true">
-		<div class="confirm-dialog">
-			<h3>{decision === 'do_nothing' ? 'Complete this SCOPE?' : 'Finalize and create project?'}</h3>
-			<p>
-				{#if decision === 'do_nothing'}
-					This will mark the SCOPE as complete with a "Do Nothing" decision. No project will be created. This can't be undone.
-				{:else if decision === 'buy'}
-					This will finalize the SCOPE and create a new SOLVE project pre-filled with your diagnostic data. You'll move into vendor evaluation.
-				{:else}
-					This will finalize the SCOPE and create a "{DECISION_LABELS[decision] ?? decision}" project. The diagnostic data will carry forward.
-				{/if}
-			</p>
-			<div class="confirm-actions">
-				<Button variant="ghost" onclick={() => (showConfirm = false)} disabled={transitioning}>
-					Go back
-				</Button>
-				<Button variant="primary" loading={transitioning} onclick={() => { showConfirm = false; finalizeScope(); }}>
-					{decision === 'do_nothing' ? 'Yes, complete' : 'Yes, create project'}
-				</Button>
-			</div>
-		</div>
+	<!-- Final Actions -->
+	<div class="step-actions">
+		<a href="/scope/{scopeId}/prepare" class="btn-ghost">← Back</a>
+
+		{#if decision === 'do_nothing'}
+			<button class="btn-primary" onclick={() => finalize('do_nothing')} disabled={saving || !brief}>
+				{saving ? 'Saving...' : 'Mark Complete'}
+			</button>
+		{:else if decision === 'buy'}
+			<button
+				class="btn-primary"
+				onclick={() => finalize('approve')}
+				disabled={saving || !brief || (requiresApproval && approvalStatus !== 'approved')}
+			>
+				{saving ? 'Creating Project...' : 'Create Project & Start SOLVE →'}
+			</button>
+		{:else}
+			<button
+				class="btn-primary"
+				onclick={() => finalize('approve')}
+				disabled={saving || !brief || (requiresApproval && approvalStatus !== 'approved')}
+			>
+				{saving ? 'Creating Project...' : 'Create Project →'}
+			</button>
+		{/if}
 	</div>
-{/if}
+</div>
 
 <style>
-	.step-content h2 { margin-bottom: var(--space-1); }
-	.step-intro { color: var(--neutral-500); font-size: 0.875rem; margin-bottom: var(--space-5); }
+	.step-page h2 { color: var(--text, #e2e8f0); margin-bottom: 0.25rem; }
+	.step-desc { color: var(--text-muted, #94a3b8); font-size: 0.875rem; margin-bottom: 1.5rem; }
 
-	.error-banner {
-		background: rgba(240, 80, 80, 0.1); color: #f05050;
-		padding: var(--space-3); border-radius: var(--radius-md);
-		margin-bottom: var(--space-4); font-size: 0.875rem;
+	.decision-summary {
+		display: flex; align-items: center; gap: 0.75rem;
+		padding: 1rem; background: rgba(0, 204, 150, 0.04);
+		border: 1px solid rgba(0, 204, 150, 0.12); border-radius: 10px;
+		margin-bottom: 1.5rem;
+	}
+	.decision-icon { font-size: 1.5rem; }
+	.decision-label { font-weight: 700; font-size: 1rem; color: var(--text, #e2e8f0); display: block; }
+	.decision-budget { font-size: 0.8rem; color: var(--text-muted, #94a3b8); }
+	.approval-badge {
+		margin-left: auto; font-size: 0.65rem; font-weight: 700;
+		text-transform: uppercase; letter-spacing: 0.06em;
+		padding: 3px 8px; border-radius: 4px;
+		background: rgba(245, 158, 11, 0.12); color: #fbbf24;
 	}
 
-	.decision-banner {
-		background: var(--primary-50, rgba(99, 102, 241, 0.08));
-		border: 1px solid var(--primary-200, rgba(99, 102, 241, 0.2));
-		border-radius: var(--radius-md); padding: var(--space-3) var(--space-4);
-		margin-bottom: var(--space-5);
-		display: flex; align-items: center; gap: var(--space-3);
+	.ai-section { margin-bottom: 1.5rem; }
+	.ai-btn {
+		display: flex; align-items: center; gap: 0.5rem;
+		padding: 0.6rem 1.25rem; background: rgba(0, 204, 150, 0.08);
+		border: 1px dashed rgba(0, 204, 150, 0.25); border-radius: 8px;
+		color: #00cc96; font-size: 0.8125rem; font-weight: 600; cursor: pointer; width: 100%;
 	}
-	.decision-label {
-		font-size: 0.75rem; font-weight: 600; text-transform: uppercase;
-		letter-spacing: 0.05em; color: var(--neutral-400);
+	.ai-btn:hover { background: rgba(0, 204, 150, 0.15); }
+	.ai-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+	.spinner {
+		width: 14px; height: 14px; border: 2px solid rgba(0, 204, 150, 0.2);
+		border-top-color: #00cc96; border-radius: 50%; animation: spin 0.8s linear infinite;
 	}
-	.decision-value { font-weight: 600; color: var(--primary-600); }
+	@keyframes spin { to { transform: rotate(360deg); } }
+	.ai-error {
+		margin-top: 0.5rem; padding: 0.5rem; background: rgba(239, 68, 68, 0.08);
+		border-radius: 6px; color: #f87171; font-size: 0.8rem;
+	}
 
-	.ai-section { margin-bottom: var(--space-5); }
-	.ai-header {
-		display: flex; align-items: center; justify-content: space-between;
-		margin-bottom: var(--space-3);
-	}
-	.ai-header h3 { font-size: 1rem; font-weight: 600; margin: 0; }
-
-	.brief-content {
-		background: var(--neutral-50); border: 1px solid var(--neutral-200);
-		border-radius: var(--radius-md); padding: var(--space-4);
+	.brief-document {
+		padding: 1.5rem; background: rgba(0, 0, 0, 0.15);
+		border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 12px;
+		margin-bottom: 1.5rem;
 	}
 	.brief-title {
-		font-size: 1.125rem; font-weight: 700; margin: 0 0 var(--space-4);
-		color: var(--neutral-800);
+		font-size: 1.125rem; font-weight: 700; color: var(--text, #e2e8f0);
+		margin-bottom: 1.25rem; padding-bottom: 0.75rem;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 	}
-	.brief-section { margin-bottom: var(--space-4); }
-	.brief-section:last-child { margin-bottom: 0; }
-	.brief-section h4 {
-		font-size: 0.8125rem; font-weight: 600; text-transform: uppercase;
-		letter-spacing: 0.05em; color: var(--neutral-400);
-		margin-bottom: var(--space-2);
-	}
-	.brief-section p { font-size: 0.9375rem; color: var(--neutral-700); line-height: 1.6; }
-
+	.brief-section { margin-bottom: 1rem; }
 	.brief-section.highlight {
-		background: rgba(99, 102, 241, 0.06);
-		border-radius: var(--radius-md); padding: var(--space-3);
+		padding: 0.85rem; background: rgba(0, 204, 150, 0.04);
+		border: 1px solid rgba(0, 204, 150, 0.1); border-radius: 8px;
 	}
-	.brief-section.warning {
-		background: rgba(240, 160, 48, 0.08);
-		border-radius: var(--radius-md); padding: var(--space-3);
+	.brief-label {
+		font-size: 0.625rem; font-weight: 700; text-transform: uppercase;
+		letter-spacing: 0.1em; color: #4a96f8; display: block; margin-bottom: 0.3rem;
 	}
-
-	.key-points, .brief-section ol {
-		margin: var(--space-2) 0 0 var(--space-4); padding: 0;
-		font-size: 0.875rem; color: var(--neutral-600);
-	}
-	.key-points li, .brief-section ol li { margin-bottom: var(--space-1); }
-
-	.approval-gate {
-		background: rgba(240, 80, 80, 0.04);
-		border: 1px solid rgba(240, 80, 80, 0.2);
-		border-radius: var(--radius-md); padding: var(--space-4);
-		margin-bottom: var(--space-5);
-	}
-	.approval-header { margin-bottom: var(--space-3); }
-	.approval-badge {
-		display: inline-block;
-		background: #f05050; color: white;
-		font-size: 0.6875rem; font-weight: 600;
-		padding: 2px 8px; border-radius: 999px;
-		margin-right: var(--space-2);
-	}
-	.approval-reason { font-size: 0.8125rem; color: var(--neutral-500); }
-
-	.approval-status { margin-bottom: var(--space-3); }
-	.status-approved { color: #50b080; font-weight: 600; }
-	.status-rejected { color: #f05050; font-weight: 600; }
-	.status-pending { color: #f0a030; font-weight: 600; }
-
-	.approval-actions {
-		display: flex; gap: var(--space-2); justify-content: flex-end;
+	.brief-section.highlight .brief-label { color: #00cc96; }
+	.brief-section p { font-size: 0.8125rem; color: var(--text-muted, #94a3b8); margin: 0 0 0.25rem; line-height: 1.5; }
+	.risk-item { font-size: 0.8rem; color: #fbbf24; margin: 0 0 0.2rem; }
+	.next-step { font-size: 0.8rem; color: var(--text-muted, #94a3b8); margin: 0 0 0.2rem; }
+	.brief-meta {
+		display: flex; gap: 1.5rem; font-size: 0.75rem;
+		color: var(--text-muted, #64748b); margin-top: 1rem;
+		padding-top: 0.75rem; border-top: 1px solid rgba(255, 255, 255, 0.04);
 	}
 
-	.field { display: block; margin-bottom: var(--space-3); }
-	.field span { display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: var(--space-2); color: var(--neutral-700); }
-	.field textarea {
-		width: 100%; padding: var(--space-2) var(--space-3);
-		border: 1px solid var(--neutral-300); border-radius: var(--radius-md);
-		font-size: 0.9375rem; font-family: inherit; resize: vertical;
+	.approval-section {
+		padding: 1rem 1.25rem; background: rgba(245, 158, 11, 0.04);
+		border: 1px solid rgba(245, 158, 11, 0.15); border-radius: 10px;
+		margin-bottom: 1.5rem;
 	}
-	.field textarea:focus {
-		outline: var(--focus-ring); outline-offset: var(--focus-ring-offset);
-		border-color: var(--primary-500);
+	.approval-header { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.75rem; }
+	.approval-icon { font-size: 1.25rem; }
+	.approval-title { font-weight: 600; font-size: 0.875rem; color: #fbbf24; display: block; }
+	.approval-reason { font-size: 0.75rem; color: var(--text-muted, #94a3b8); }
+	.form-group { margin-bottom: 0.75rem; }
+	.form-group label {
+		display: block; font-size: 0.8125rem; font-weight: 600;
+		color: var(--text, #e2e8f0); margin-bottom: 0.4rem;
 	}
+	textarea {
+		width: 100%; padding: 0.65rem 0.85rem;
+		background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.1);
+		border-radius: 8px; color: var(--text, #e2e8f0); font-size: 0.875rem;
+		font-family: inherit; resize: vertical;
+	}
+	textarea:focus { outline: none; border-color: #00cc96; box-shadow: 0 0 0 2px rgba(0, 204, 150, 0.15); }
+	textarea::placeholder { color: rgba(255, 255, 255, 0.25); }
 
-	.actions {
-		display: flex; justify-content: space-between; align-items: center; gap: var(--space-3);
-		padding-top: var(--space-4); border-top: 1px solid var(--neutral-100);
+	.approval-actions { display: flex; gap: 0.5rem; }
+	.approve-btn, .reject-btn {
+		padding: 0.45rem 1rem; border-radius: 6px; font-size: 0.8rem;
+		font-weight: 600; cursor: pointer; border: 1px solid;
 	}
-	.action-group { display: flex; gap: var(--space-2); }
+	.approve-btn {
+		background: rgba(0, 204, 150, 0.08); border-color: rgba(0, 204, 150, 0.25);
+		color: #00cc96;
+	}
+	.approve-btn:hover { background: rgba(0, 204, 150, 0.15); }
+	.reject-btn {
+		background: rgba(239, 68, 68, 0.08); border-color: rgba(239, 68, 68, 0.2);
+		color: #f87171;
+	}
+	.reject-btn:hover { background: rgba(239, 68, 68, 0.15); }
 
-	.approval-hint {
-		font-size: 0.8125rem; color: var(--neutral-500); line-height: 1.5;
-		margin-bottom: var(--space-3);
+	.step-actions {
+		display: flex; justify-content: space-between; align-items: center;
+		margin-top: 2rem; padding-top: 1rem; border-top: 1px solid rgba(255, 255, 255, 0.06);
 	}
-
-	.confirm-overlay {
-		position: fixed; inset: 0;
-		background: rgba(0, 0, 0, 0.5);
-		display: flex; align-items: center; justify-content: center;
-		z-index: 100;
+	.btn-ghost { background: none; border: none; color: var(--text-muted, #94a3b8); font-size: 0.875rem; cursor: pointer; text-decoration: none; }
+	.btn-ghost:hover { color: var(--text, #e2e8f0); text-decoration: none; }
+	.btn-primary {
+		padding: 0.6rem 1.5rem; background: #00cc96; color: #0a0f1e;
+		border: none; border-radius: 8px; font-size: 0.875rem; font-weight: 600; cursor: pointer;
 	}
-	.confirm-dialog {
-		background: var(--color-bg-secondary, white);
-		border: 1px solid var(--neutral-200);
-		border-radius: var(--radius-lg);
-		padding: var(--space-6); max-width: 480px; width: 90%;
-	}
-	.confirm-dialog h3 { margin-bottom: var(--space-2); font-size: 1rem; }
-	.confirm-dialog p { color: var(--neutral-500); font-size: 0.875rem; line-height: 1.5; margin-bottom: var(--space-5); }
-	.confirm-actions { display: flex; gap: var(--space-3); justify-content: flex-end; }
-
-	.rejection-banner {
-		background: rgba(240, 80, 80, 0.06); border: 1px solid rgba(240, 80, 80, 0.2);
-		border-radius: var(--radius-md); padding: var(--space-3) var(--space-4);
-		margin-bottom: var(--space-4);
-	}
-	.rejection-banner strong { color: #f05050; font-size: 0.875rem; }
-	.rejection-banner p { font-size: 0.8125rem; color: var(--neutral-600); margin: var(--space-1) 0 0; }
-
-	.brief-required {
-		background: rgba(240, 160, 48, 0.06); border: 1px solid rgba(240, 160, 48, 0.2);
-		border-radius: var(--radius-md); padding: var(--space-3) var(--space-4);
-		margin-bottom: var(--space-4);
-	}
-	.brief-required p { font-size: 0.8125rem; color: var(--neutral-600); margin: 0; }
+	.btn-primary:hover { opacity: 0.9; }
+	.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
 </style>

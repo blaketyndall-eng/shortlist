@@ -110,11 +110,10 @@
 
 		// Try AI-powered brief generation
 		try {
-			const res = await fetch(`/api/ai/engine`, {
+			const res = await fetch(`/api/ai/problem-brief`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
-					engine: 'problem_brief',
 					projectId,
 					context: {
 						problemDesc, whoAffected, costOfNothing, successIn90,

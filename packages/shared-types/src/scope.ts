@@ -1,116 +1,94 @@
-// ─── SCOPE WORKFLOW ─────────────────────────────────────────
-
 export type ScopeStep = 'signal' | 'cause' | 'options' | 'prepare' | 'endorse';
-export type ScopeStatus = 'active' | 'completed' | 'abandoned';
 export type ScopeDecision = 'buy' | 'build' | 'fix' | 'partner' | 'do_nothing';
 
 export const SCOPE_STEPS: ScopeStep[] = ['signal', 'cause', 'options', 'prepare', 'endorse'];
-
 export const SCOPE_LABELS: Record<ScopeStep, string> = {
 	signal: 'Signal',
 	cause: 'Cause',
 	options: 'Options',
 	prepare: 'Prepare',
-	endorse: 'Endorse',
+	endorse: 'Endorse'
 };
 
-export const SCOPE_DESCRIPTIONS: Record<ScopeStep, string> = {
+export const SCOPE_SUBTITLES: Record<ScopeStep, string> = {
 	signal: 'What triggered this? Capture the problem signal.',
-	cause: 'Why is this happening? Dig into root causes.',
-	options: 'What are our options? Buy, build, fix, or do nothing.',
-	prepare: 'Are we ready? Budget, timeline, stakeholders, risks.',
-	endorse: 'Get the green light. Decision brief and approval.',
+	cause: 'Why is this happening? Diagnose the root cause.',
+	options: 'What are our options? Evaluate approaches.',
+	prepare: 'Are we ready? Assess readiness and plan.',
+	endorse: 'Get buy-in. Generate and approve the decision brief.'
 };
-
-export const DECISION_LABELS: Record<ScopeDecision, string> = {
-	buy: 'Buy Software',
-	build: 'Build In-House',
-	fix: 'Fix Existing Tool',
-	partner: 'Partner / Outsource',
-	do_nothing: 'Do Nothing',
-};
-
-export interface ScopeSignalData {
-	trigger: string;
-	urgency: number; // 1-5
-	impactedUsers: string[];
-	businessImpact: string;
-}
-
-export interface ScopeCauseData {
-	hypothesis: string;
-	aiCauses?: Array<{
-		hypothesis: string;
-		likelihood: string;
-		rationale: string;
-		questionsToValidate: string[];
-	}>;
-	pollId?: string;
-}
-
-export interface ScopeOptionsData {
-	recommendations?: Array<{
-		approach: ScopeDecision;
-		label: string;
-		description: string;
-		pros: string[];
-		cons: string[];
-		estimatedTimeline: string;
-		estimatedCost: string;
-		riskLevel: 'high' | 'medium' | 'low';
-		recommendedIf: string;
-	}>;
-	selectedApproach?: ScopeDecision;
-	pollId?: string;
-}
-
-export interface ScopePrepareData {
-	budgetEstimate: number;
-	timeline: string;
-	stakeholders: string;
-	riskAssessment: string;
-	readinessScore?: number;
-	gaps?: Array<{
-		area: string;
-		severity: 'high' | 'medium' | 'low';
-		description: string;
-		recommendation: string;
-	}>;
-	blockers?: string[];
-}
-
-export interface ScopeEndorseData {
-	brief?: {
-		title: string;
-		executiveSummary: string;
-		sections: Array<{ heading: string; body: string; keyPoints: string[] }>;
-		recommendation: string;
-		costOfInaction: string;
-		nextSteps: string[];
-	};
-	requiresApproval: boolean;
-	approvalStatus?: 'pending' | 'approved' | 'rejected';
-	approverNotes?: string;
-}
 
 export interface ScopeData {
-	signal?: ScopeSignalData;
-	cause?: ScopeCauseData;
-	options?: ScopeOptionsData;
-	prepare?: ScopePrepareData;
-	endorse?: ScopeEndorseData;
+	signal?: {
+		trigger: string;
+		urgency: number;
+		impactedUsers: string[];
+		businessImpact: string;
+	};
+	cause?: {
+		hypothesis: string;
+		aiCauses?: Array<{
+			id: string;
+			title: string;
+			description: string;
+			likelihood: string;
+			evidence: string;
+			category: string;
+		}>;
+	};
+	options?: {
+		recommendations?: Array<{
+			approach: ScopeDecision;
+			label: string;
+			score: number;
+			pros: string[];
+			cons: string[];
+			timeline: string;
+			costRange: string;
+			riskLevel: string;
+		}>;
+		selectedApproach?: ScopeDecision;
+		reasoning?: string;
+	};
+	prepare?: {
+		budgetEstimate: number;
+		timeline: string;
+		stakeholders: string;
+		riskAssessment: string;
+		readinessScore?: number;
+		gaps?: Array<{
+			area: string;
+			title: string;
+			detail: string;
+			severity: string;
+			action: string;
+		}>;
+	};
+	endorse?: {
+		brief?: {
+			title: string;
+			execSummary: string;
+			sections: Array<{ heading: string; content: string }>;
+			recommendation: string;
+			nextSteps: string[];
+			riskNote: string;
+		};
+		requiresApproval: boolean;
+		approvalStatus?: 'pending' | 'approved' | 'rejected';
+		approverNotes?: string;
+	};
 }
 
 export interface Scope {
 	id: string;
 	user_id: string;
 	name: string;
-	status: ScopeStatus;
+	status: 'active' | 'completed' | 'abandoned';
 	current_step: ScopeStep;
 	data: ScopeData;
-	decision: ScopeDecision | null;
-	project_id: string | null;
-	completed_at: string | null;
+	decision?: ScopeDecision;
+	project_id?: string;
+	completed_at?: string;
 	created_at: string;
 	updated_at: string;
 }

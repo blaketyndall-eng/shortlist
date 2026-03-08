@@ -2,325 +2,219 @@
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
-	import Button from '$components/ui/Button.svelte';
-	import Card from '$components/ui/Card.svelte';
-	import AlignmentPoll from '$lib/components/alignment/AlignmentPoll.svelte';
 
-	const scopeId = $derived($page.params.id);
+	const scopeId = $page.params.id;
+	let scope = $state<any>(null);
+	let saving = $state(false);
+	let analyzing = $state(false);
 
 	let hypothesis = $state('');
-	let aiCauses: Array<{
-		hypothesis: string;
-		likelihood: string;
-		rationale: string;
-		questionsToValidate: string[];
-	}> = $state([]);
-	let signalSummary = $state({ trigger: '', urgency: 0, impactedUsers: [] as string[], businessImpact: '' });
-	let analyzing = $state(false);
-	let saving = $state(false);
-	let error = $state('');
-	let showPoll = $state(false);
-	let pollId = $state('');
+	let aiCauses = $state<any[]>([]);
+	let aiError = $state('');
 
 	onMount(async () => {
-		try {
-			const res = await fetch(`/api/scopes/${scopeId}`);
-			if (res.ok) {
-				const data = await res.json();
-				const scopeData = data.scope?.data ?? {};
-				if (scopeData.signal) {
-					signalSummary = scopeData.signal;
-				}
-				if (scopeData.cause) {
-					hypothesis = scopeData.cause.hypothesis ?? '';
-					aiCauses = scopeData.cause.aiCauses ?? [];
-					pollId = scopeData.cause.pollId ?? '';
-					if (pollId) showPoll = true;
-				}
+		const res = await fetch(`/api/scopes/${scopeId}`);
+		if (res.ok) {
+			scope = await res.json();
+			const c = scope.data?.cause;
+			if (c) {
+				hypothesis = c.hypothesis ?? '';
+				aiCauses = c.aiCauses ?? [];
 			}
-		} catch { /* use defaults */ }
+		}
 	});
 
-	async function runAnalysis() {
+	async function analyzeRootCauses() {
 		analyzing = true;
-		error = '';
+		aiError = '';
 		try {
+			const signal = scope?.data?.signal ?? {};
 			const res = await fetch('/api/ai/engine', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
 					engine: 'scope_cause_analyze',
 					depth: 'quick',
+					scopeId,
 					context: {
-						trigger: signalSummary.trigger,
-						urgency: signalSummary.urgency,
-						impactedUsers: signalSummary.impactedUsers,
-						businessImpact: signalSummary.businessImpact,
+						trigger: signal.trigger,
+						urgency: signal.urgency,
+						businessImpact: signal.businessImpact,
+						impactedUsers: signal.impactedUsers,
 					},
 				}),
 			});
-
 			if (res.ok) {
 				const data = await res.json();
-				const result = data.result ?? data.data ?? {};
-				aiCauses = result.causes ?? [];
+				aiCauses = data.result?.causes ?? data.data?.causes ?? [];
 			} else {
-				error = 'Analysis failed — try again';
+				aiError = 'Analysis failed — try again.';
 			}
 		} catch {
-			error = 'Network error — check your connection and try again';
-		} finally {
-			analyzing = false;
+			aiError = 'Analysis failed — try again.';
 		}
+		analyzing = false;
 	}
 
-	async function handleSave() {
-		if (!hypothesis.trim() && aiCauses.length === 0) {
-			error = 'Enter a hypothesis or run root cause analysis first';
-			return;
-		}
-
+	async function saveAndContinue() {
 		saving = true;
-		error = '';
-
-		try {
-			const getRes = await fetch(`/api/scopes/${scopeId}`);
-			if (!getRes.ok) { error = 'Failed to load scope'; saving = false; return; }
-			const { scope } = await getRes.json();
-
-			const updatedData = {
-				...scope.data,
-				cause: {
-					hypothesis: hypothesis.trim(),
-					aiCauses,
-					pollId: pollId || undefined,
-				},
-			};
-
-			const res = await fetch(`/api/scopes/${scopeId}`, {
-				method: 'PATCH',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					data: updatedData,
-					current_step: 'options',
-				}),
-			});
-
-			if (!res.ok) {
-				error = 'Failed to save';
-				saving = false;
-				return;
-			}
-
-			goto(`/scope/${scopeId}/options`);
-		} catch {
-			error = 'Failed to save — check your connection and try again';
-			saving = false;
-		}
+		await fetch(`/api/scopes/${scopeId}`, {
+			method: 'PATCH',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				data: { ...scope?.data, cause: { hypothesis: hypothesis.trim(), aiCauses } },
+				current_step: 'options',
+			}),
+		});
+		goto(`/scope/${scopeId}/options`);
 	}
-
-	const likelihoodColor: Record<string, string> = {
-		high: '#f05050',
-		medium: '#f0a030',
-		low: '#50b080',
-	};
 </script>
 
 <svelte:head>
-	<title>Cause — SCOPE</title>
+	<title>Cause — SCOPE — Shortlist</title>
 </svelte:head>
 
-<Card>
-	<div class="step-content">
-		<h2>Why is this happening?</h2>
-		<p class="step-intro">Dig into root causes before jumping to solutions. Good diagnosis prevents wasted spend.</p>
+<div class="step-page">
+	<h2>Diagnose the Root Cause</h2>
+	<p class="step-desc">Why is this happening? Use AI to uncover potential root causes, then capture your hypothesis.</p>
 
-		{#if error}
-			<div class="error-banner" role="alert">{error}</div>
-		{/if}
-
-		<!-- Signal Summary -->
-		{#if signalSummary.trigger}
-			<div class="signal-recap">
-				<span class="recap-label">Signal</span>
-				<p>{signalSummary.trigger}</p>
-				{#if signalSummary.impactedUsers.length}
-					<span class="recap-meta">Affects: {signalSummary.impactedUsers.join(', ')}</span>
-				{/if}
-			</div>
-		{/if}
-
-		<!-- AI Root Cause Analysis -->
-		<div class="ai-section">
-			<div class="ai-header">
-				<h3>Root Cause Analysis</h3>
-				<Button
-					variant="secondary"
-					size="sm"
-					loading={analyzing}
-					onclick={runAnalysis}
-					disabled={!signalSummary.trigger}
-				>
-					{aiCauses.length ? 'Re-analyze' : 'Analyze Root Causes'}
-				</Button>
-			</div>
-
-			{#if aiCauses.length === 0 && !analyzing}
-				<div class="empty-hint">
-					<p>Click "Analyze Root Causes" to have AI identify potential reasons behind the signal you described. You can also skip this and enter your own hypothesis below.</p>
-				</div>
-			{/if}
-
-			{#if aiCauses.length > 0}
-				<div class="cause-cards">
-					{#each aiCauses as cause, i}
-						<div class="cause-card">
-							<div class="cause-header">
-								<span class="cause-number">#{i + 1}</span>
-								<span
-									class="cause-likelihood"
-									style:color={likelihoodColor[cause.likelihood?.toLowerCase()] ?? 'var(--neutral-400)'}
-								>
-									{cause.likelihood} likelihood
-								</span>
-							</div>
-							<p class="cause-hypothesis">{cause.hypothesis}</p>
-							<p class="cause-rationale">{cause.rationale}</p>
-							{#if cause.questionsToValidate?.length}
-								<div class="cause-questions">
-									<span>Questions to validate:</span>
-									<ul>
-										{#each cause.questionsToValidate as q}
-											<li>{q}</li>
-										{/each}
-									</ul>
-								</div>
-							{/if}
-						</div>
-					{/each}
-				</div>
-			{/if}
+	{#if scope?.data?.signal}
+		<div class="signal-summary">
+			<span class="summary-label">Signal</span>
+			<p>{scope.data.signal.trigger}</p>
 		</div>
+	{/if}
 
-		<!-- Owner Hypothesis -->
-		<label class="field">
-			<span>Your hypothesis</span>
-			<textarea
-				bind:value={hypothesis}
-				placeholder="Based on the analysis above, what do you believe is the primary root cause?"
-				rows="3"
-			></textarea>
-		</label>
-
-		<!-- Team Alignment Poll -->
-		<div class="poll-section">
-			{#if !showPoll}
-				<Button variant="ghost" size="sm" onclick={() => (showPoll = true)}>
-					+ Invite team to weigh in
-				</Button>
+	<div class="ai-section">
+		<button class="ai-btn" onclick={analyzeRootCauses} disabled={analyzing}>
+			{#if analyzing}
+				<span class="spinner"></span> Analyzing...
 			{:else}
-				<div class="poll-wrapper">
-					<h3>Team Alignment</h3>
-					<p class="poll-hint">Ask your team what they think the root cause is.</p>
-					<AlignmentPoll
-						projectId={scopeId}
-						stage="cause"
-						contextType="scope_cause"
-						contextRef={{ scopeId }}
-					/>
-				</div>
+				✦ Analyze Root Causes
 			{/if}
-		</div>
+		</button>
 
-		<div class="actions">
-			<Button variant="ghost" type="button" onclick={() => goto(`/scope/${scopeId}/signal`)}>
-				Back
-			</Button>
-			<Button variant="primary" loading={saving} onclick={handleSave}>
-				Save & Continue
-			</Button>
-		</div>
+		{#if aiError}
+			<div class="ai-error">{aiError}</div>
+		{/if}
+
+		{#if aiCauses.length > 0}
+			<div class="causes-list">
+				{#each aiCauses as cause, i (cause.id ?? `cause-${i}`)}
+					<div class="cause-card">
+						<div class="cause-header">
+							<span class="cause-title">{cause.title}</span>
+							<span class="cause-likelihood" class:high={cause.likelihood === 'high'} class:medium={cause.likelihood === 'medium'} class:low={cause.likelihood === 'low'}>
+								{cause.likelihood}
+							</span>
+						</div>
+						<p class="cause-desc">{cause.description}</p>
+						<div class="cause-evidence">
+							<span class="evidence-label">Evidence needed:</span> {cause.evidence}
+						</div>
+					</div>
+				{/each}
+			</div>
+		{/if}
 	</div>
-</Card>
+
+	<div class="form-group">
+		<label for="hypothesis">Your root cause hypothesis</label>
+		<textarea id="hypothesis" bind:value={hypothesis} rows="3" placeholder="Based on the analysis, what do you believe is the primary root cause?"></textarea>
+	</div>
+
+	<div class="step-actions">
+		<a href="/scope/{scopeId}/signal" class="btn-ghost">← Back</a>
+		<button class="btn-primary" onclick={saveAndContinue} disabled={!hypothesis.trim() || saving}>
+			{saving ? 'Saving...' : 'Continue to Options →'}
+		</button>
+	</div>
+</div>
 
 <style>
-	.step-content h2 { margin-bottom: var(--space-1); }
-	.step-intro { color: var(--neutral-500); font-size: 0.875rem; margin-bottom: var(--space-5); }
+	.step-page h2 { color: var(--text, #e2e8f0); margin-bottom: 0.25rem; }
+	.step-desc { color: var(--text-muted, #94a3b8); font-size: 0.875rem; margin-bottom: 1.5rem; }
 
-	.error-banner {
-		background: rgba(240, 80, 80, 0.1); color: #f05050;
-		padding: var(--space-3); border-radius: var(--radius-md);
-		margin-bottom: var(--space-4); font-size: 0.875rem;
+	.signal-summary {
+		padding: 0.85rem 1rem; margin-bottom: 1.5rem;
+		background: rgba(0, 204, 150, 0.04); border: 1px solid rgba(0, 204, 150, 0.12);
+		border-radius: 8px;
+	}
+	.summary-label {
+		font-size: 0.625rem; font-weight: 700; text-transform: uppercase;
+		letter-spacing: 0.1em; color: #00cc96; display: block; margin-bottom: 0.25rem;
+	}
+	.signal-summary p { font-size: 0.875rem; color: var(--text, #e2e8f0); margin: 0; }
+
+	.ai-section { margin-bottom: 1.5rem; }
+
+	.ai-btn {
+		display: flex; align-items: center; gap: 0.5rem;
+		padding: 0.6rem 1.25rem; background: rgba(0, 204, 150, 0.08);
+		border: 1px dashed rgba(0, 204, 150, 0.25); border-radius: 8px;
+		color: #00cc96; font-size: 0.8125rem; font-weight: 600; cursor: pointer;
+		width: 100%;
+	}
+	.ai-btn:hover { background: rgba(0, 204, 150, 0.15); }
+	.ai-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+	.spinner {
+		width: 14px; height: 14px; border: 2px solid rgba(0, 204, 150, 0.2);
+		border-top-color: #00cc96; border-radius: 50%;
+		animation: spin 0.8s linear infinite; display: inline-block;
+	}
+	@keyframes spin { to { transform: rotate(360deg); } }
+
+	.ai-error {
+		margin-top: 0.5rem; padding: 0.5rem; background: rgba(239, 68, 68, 0.08);
+		border-radius: 6px; color: #f87171; font-size: 0.8rem;
 	}
 
-	.signal-recap {
-		background: var(--neutral-50); border: 1px solid var(--neutral-200);
-		border-radius: var(--radius-md); padding: var(--space-3) var(--space-4);
-		margin-bottom: var(--space-5);
-	}
-	.recap-label {
-		font-size: 0.6875rem; font-weight: 600; text-transform: uppercase;
-		letter-spacing: 0.05em; color: var(--neutral-400);
-	}
-	.signal-recap p { margin: var(--space-1) 0; font-size: 0.9375rem; color: var(--neutral-700); }
-	.recap-meta { font-size: 0.8125rem; color: var(--neutral-400); }
+	.causes-list { margin-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem; }
 
-	.ai-section { margin-bottom: var(--space-5); }
-	.ai-header {
-		display: flex; align-items: center; justify-content: space-between;
-		margin-bottom: var(--space-3);
-	}
-	.ai-header h3 { font-size: 1rem; font-weight: 600; margin: 0; }
-
-	.cause-cards { display: flex; flex-direction: column; gap: var(--space-3); }
 	.cause-card {
-		background: var(--neutral-50); border: 1px solid var(--neutral-200);
-		border-radius: var(--radius-md); padding: var(--space-3) var(--space-4);
+		padding: 0.85rem 1rem; background: rgba(0, 0, 0, 0.15);
+		border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 8px;
 	}
-	.cause-header {
-		display: flex; align-items: center; justify-content: space-between;
-		margin-bottom: var(--space-2);
+	.cause-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem; }
+	.cause-title { font-weight: 600; font-size: 0.875rem; color: var(--text, #e2e8f0); }
+	.cause-likelihood {
+		font-size: 0.625rem; font-weight: 700; text-transform: uppercase;
+		letter-spacing: 0.06em; padding: 2px 8px; border-radius: 4px;
 	}
-	.cause-number { font-size: 0.75rem; font-weight: 700; color: var(--neutral-400); }
-	.cause-likelihood { font-size: 0.75rem; font-weight: 600; text-transform: capitalize; }
-	.cause-hypothesis { font-weight: 500; font-size: 0.9375rem; margin-bottom: var(--space-1); }
-	.cause-rationale { font-size: 0.8125rem; color: var(--neutral-500); margin-bottom: var(--space-2); }
-	.cause-questions span { font-size: 0.75rem; font-weight: 600; color: var(--neutral-400); }
-	.cause-questions ul {
-		margin: var(--space-1) 0 0 var(--space-4); padding: 0;
-		font-size: 0.8125rem; color: var(--neutral-500);
-	}
-	.cause-questions li { margin-bottom: var(--space-1); }
+	.cause-likelihood.high { background: rgba(239, 68, 68, 0.12); color: #f87171; }
+	.cause-likelihood.medium { background: rgba(245, 158, 11, 0.12); color: #fbbf24; }
+	.cause-likelihood.low { background: rgba(0, 204, 150, 0.12); color: #00cc96; }
 
-	.field { display: block; margin-bottom: var(--space-5); }
-	.field span { display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: var(--space-2); color: var(--neutral-700); }
-	.field textarea {
-		width: 100%; padding: var(--space-2) var(--space-3);
-		border: 1px solid var(--neutral-300); border-radius: var(--radius-md);
-		font-size: 0.9375rem; font-family: inherit; resize: vertical;
-	}
-	.field textarea:focus {
-		outline: var(--focus-ring); outline-offset: var(--focus-ring-offset);
-		border-color: var(--primary-500);
-	}
+	.cause-desc { font-size: 0.8125rem; color: var(--text-muted, #94a3b8); margin: 0 0 0.35rem; }
+	.cause-evidence { font-size: 0.75rem; color: var(--text-muted, #64748b); }
+	.evidence-label { font-weight: 600; color: var(--text-muted, #94a3b8); }
 
-	.poll-section { margin-bottom: var(--space-5); }
-	.poll-wrapper {
-		background: var(--neutral-50); border: 1px solid var(--neutral-200);
-		border-radius: var(--radius-md); padding: var(--space-4);
+	.form-group { margin-bottom: 1.25rem; }
+	.form-group label {
+		display: block; font-size: 0.8125rem; font-weight: 600;
+		color: var(--text, #e2e8f0); margin-bottom: 0.4rem;
 	}
-	.poll-wrapper h3 { font-size: 0.9375rem; font-weight: 600; margin: 0 0 var(--space-1); }
-	.poll-hint { font-size: 0.8125rem; color: var(--neutral-400); margin-bottom: var(--space-3); }
+	textarea {
+		width: 100%; padding: 0.65rem 0.85rem;
+		background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.1);
+		border-radius: 8px; color: var(--text, #e2e8f0); font-size: 0.875rem;
+		font-family: inherit; resize: vertical;
+	}
+	textarea:focus { outline: none; border-color: #00cc96; box-shadow: 0 0 0 2px rgba(0, 204, 150, 0.15); }
+	textarea::placeholder { color: rgba(255, 255, 255, 0.25); }
 
-	.empty-hint {
-		background: var(--neutral-50); border: 1px dashed var(--neutral-200);
-		border-radius: var(--radius-md); padding: var(--space-4);
-		text-align: center;
+	.step-actions {
+		display: flex; justify-content: space-between; align-items: center;
+		margin-top: 2rem; padding-top: 1rem;
+		border-top: 1px solid rgba(255, 255, 255, 0.06);
 	}
-	.empty-hint p { font-size: 0.875rem; color: var(--neutral-400); margin: 0; line-height: 1.5; }
-
-	.actions {
-		display: flex; justify-content: space-between; gap: var(--space-3);
-		padding-top: var(--space-4); border-top: 1px solid var(--neutral-100);
+	.btn-ghost { background: none; border: none; color: var(--text-muted, #94a3b8); font-size: 0.875rem; cursor: pointer; text-decoration: none; }
+	.btn-ghost:hover { color: var(--text, #e2e8f0); text-decoration: none; }
+	.btn-primary {
+		padding: 0.6rem 1.5rem; background: #00cc96; color: #0a0f1e;
+		border: none; border-radius: 8px; font-size: 0.875rem; font-weight: 600; cursor: pointer;
 	}
+	.btn-primary:hover { opacity: 0.9; }
+	.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
 </style>

@@ -1,21 +1,12 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import Button from '$components/ui/Button.svelte';
-	import Card from '$components/ui/Card.svelte';
 
 	let name = $state('');
-	let loading = $state(false);
-	let error = $state('');
+	let creating = $state(false);
 
-	async function handleCreate(e?: Event) {
-		e?.preventDefault();
-		if (!name.trim()) {
-			error = 'Give your SCOPE a name';
-			return;
-		}
-
-		loading = true;
-		error = '';
+	async function createScope() {
+		if (!name.trim() || creating) return;
+		creating = true;
 
 		try {
 			const res = await fetch('/api/scopes', {
@@ -23,20 +14,13 @@
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ name: name.trim() }),
 			});
-
-			if (!res.ok) {
-				const data = await res.json().catch(() => ({}));
-				error = data.message ?? 'Failed to create SCOPE session';
-				loading = false;
-				return;
+			if (res.ok) {
+				const scope = await res.json();
+				goto(`/scope/${scope.id}/signal`);
 			}
+		} catch { /* handled */ }
 
-			const data = await res.json();
-			goto(`/scope/${data.scope.id}/signal`);
-		} catch {
-			error = 'Something went wrong';
-			loading = false;
-		}
+		creating = false;
 	}
 </script>
 
@@ -45,151 +29,111 @@
 </svelte:head>
 
 <div class="new-scope">
-	<header class="page-header">
-		<h1>Start a new SCOPE</h1>
-		<p>Diagnose the problem before jumping to solutions. SCOPE helps your team decide whether to buy, build, fix, or do nothing.</p>
-	</header>
+	<div class="new-scope-card">
+		<div class="scope-icon">S</div>
+		<h1>Start a SCOPE</h1>
+		<p class="scope-desc">
+			SCOPE helps you diagnose whether buying software is the right move.
+			Walk through Signal → Cause → Options → Prepare → Endorse before committing to a vendor evaluation.
+		</p>
 
-	<Card>
-		{#if error}
-			<div class="error-banner" role="alert">{error}</div>
-		{/if}
-
-		<form onsubmit={(e) => { e.preventDefault(); handleCreate(e); }}>
-			<label class="field">
-				<span>What are you investigating? <em>*</em></span>
-				<input
-					type="text"
-					bind:value={name}
-					placeholder="e.g., CRM Replacement Decision, Marketing Automation Need"
-					required
-					maxlength="120"
-				/>
-				<span class="field-hint">Give it a name your team will recognize.</span>
-			</label>
-
-			<div class="scope-preview">
-				<h3>What happens next</h3>
-				<div class="steps-preview">
-					<div class="preview-step"><strong>S</strong>ignal — What triggered this?</div>
-					<div class="preview-step"><strong>C</strong>ause — Why is this happening?</div>
-					<div class="preview-step"><strong>O</strong>ptions — What are your options?</div>
-					<div class="preview-step"><strong>P</strong>repare — Are you ready?</div>
-					<div class="preview-step"><strong>E</strong>ndorse — Get the green light.</div>
-				</div>
-			</div>
-
-			<div class="actions">
-				<Button variant="ghost" type="button" onclick={() => goto('/project/new')}>
-					Back
-				</Button>
-				<Button variant="primary" type="submit" {loading}>
-					Start SCOPE
-				</Button>
-			</div>
+		<form onsubmit={(e) => { e.preventDefault(); createScope(); }}>
+			<label for="scope-name">What are you evaluating?</label>
+			<input
+				id="scope-name"
+				type="text"
+				bind:value={name}
+				placeholder="e.g., Endpoint Security Platform Evaluation"
+				autofocus
+			/>
+			<button type="submit" class="btn-primary" disabled={!name.trim() || creating}>
+				{creating ? 'Creating...' : 'Start SCOPE →'}
+			</button>
 		</form>
-	</Card>
+	</div>
 </div>
 
 <style>
 	.new-scope {
-		max-width: 640px;
-		margin: 0 auto;
-		padding: var(--space-6);
+		max-width: 560px;
+		margin: var(--space-8, 2rem) auto;
+		padding: 0 var(--space-4, 1rem);
 	}
 
-	.page-header {
-		margin-bottom: var(--space-6);
+	.new-scope-card {
+		background: rgba(255, 255, 255, 0.03);
+		border: 1px solid rgba(255, 255, 255, 0.06);
+		border-radius: 16px;
+		padding: 2.5rem;
+		text-align: center;
 	}
 
-	.page-header h1 { margin-bottom: var(--space-1); }
-	.page-header p { color: var(--neutral-500); margin-bottom: 0; }
+	.scope-icon {
+		width: 56px;
+		height: 56px;
+		border-radius: 50%;
+		background: rgba(0, 204, 150, 0.12);
+		color: #00cc96;
+		font-size: 1.5rem;
+		font-weight: 700;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		margin: 0 auto var(--space-4, 1rem);
+	}
 
-	.error-banner {
-		background: rgba(240, 80, 80, 0.1);
-		color: #f05050;
-		padding: var(--space-3);
-		border-radius: var(--radius-md);
-		margin-bottom: var(--space-4);
+	h1 {
+		font-size: 1.5rem;
+		color: var(--text, #e2e8f0);
+		margin-bottom: var(--space-2, 0.5rem);
+	}
+
+	.scope-desc {
+		color: var(--text-muted, #94a3b8);
 		font-size: 0.875rem;
+		line-height: 1.6;
+		margin-bottom: var(--space-6, 1.5rem);
 	}
 
-	.field {
+	form { text-align: left; }
+
+	label {
 		display: block;
-		margin-bottom: var(--space-5);
-	}
-
-	.field span {
-		display: block;
-		font-size: 0.875rem;
-		font-weight: 500;
-		margin-bottom: var(--space-2);
-		color: var(--neutral-700);
-	}
-
-	.field em { color: #dc2626; font-style: normal; }
-
-	.field input {
-		width: 100%;
-		padding: var(--space-2) var(--space-3);
-		border: 1px solid var(--neutral-300);
-		border-radius: var(--radius-md);
-		font-size: 0.9375rem;
-		font-family: inherit;
-	}
-
-	.field input:focus {
-		outline: var(--focus-ring);
-		outline-offset: var(--focus-ring-offset);
-		border-color: var(--primary-500);
-	}
-
-	.field-hint {
-		font-size: 0.75rem !important;
-		color: var(--neutral-400) !important;
-		font-weight: 400 !important;
-		margin-top: var(--space-1);
-	}
-
-	.scope-preview {
-		background: var(--neutral-50, #f8fafc);
-		border: 1px solid var(--neutral-200);
-		border-radius: var(--radius-md);
-		padding: var(--space-4);
-		margin-bottom: var(--space-5);
-	}
-
-	.scope-preview h3 {
 		font-size: 0.8125rem;
 		font-weight: 600;
-		color: var(--neutral-600);
-		margin-bottom: var(--space-3);
-		text-transform: uppercase;
-		letter-spacing: 0.04em;
+		color: var(--text, #e2e8f0);
+		margin-bottom: var(--space-2, 0.5rem);
 	}
 
-	.steps-preview {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-2);
+	input {
+		width: 100%;
+		padding: 0.75rem 1rem;
+		background: rgba(0, 0, 0, 0.2);
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		border-radius: 8px;
+		color: var(--text, #e2e8f0);
+		font-size: 0.9375rem;
+		margin-bottom: var(--space-4, 1rem);
 	}
+	input:focus {
+		outline: none;
+		border-color: #00cc96;
+		box-shadow: 0 0 0 2px rgba(0, 204, 150, 0.15);
+	}
+	input::placeholder { color: rgba(255, 255, 255, 0.25); }
 
-	.preview-step {
-		font-size: 0.875rem;
-		color: var(--neutral-600);
-		padding-left: var(--space-2);
-		border-left: 2px solid var(--neutral-200);
+	.btn-primary {
+		width: 100%;
+		padding: 0.75rem;
+		background: #00cc96;
+		color: #0a0f1e;
+		border: none;
+		border-radius: 8px;
+		font-size: 0.9375rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition: opacity 0.15s;
 	}
-
-	.preview-step strong {
-		color: var(--primary-600, #4f46e5);
-	}
-
-	.actions {
-		display: flex;
-		justify-content: flex-end;
-		gap: var(--space-3);
-		padding-top: var(--space-4);
-		border-top: 1px solid var(--neutral-100);
-	}
+	.btn-primary:hover { opacity: 0.9; }
+	.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
 </style>

@@ -1,53 +1,39 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { createServerSupabase } from '$services/supabase.server';
 
-/** GET /api/scopes/[id] — Fetch full SCOPE session */
-export const GET: RequestHandler = async ({ params, locals, cookies }) => {
+export const GET: RequestHandler = async ({ params, locals }) => {
 	if (!locals.session || !locals.user) error(401, 'Unauthorized');
 
-	const supabase = createServerSupabase(cookies);
-	const { data: scope, error: dbError } = await supabase
+	const { data, error: err } = await locals.supabase
 		.from('scopes')
 		.select('*')
 		.eq('id', params.id)
-		.eq('user_id', locals.user.id)
 		.single();
 
-	if (dbError || !scope) error(404, 'Scope not found');
-
-	return json({ scope });
+	if (err || !data) error(404, 'Scope not found');
+	return json(data);
 };
 
-/** PATCH /api/scopes/[id] — Update SCOPE session */
-export const PATCH: RequestHandler = async ({ params, request, locals, cookies }) => {
+export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 	if (!locals.session || !locals.user) error(401, 'Unauthorized');
 
 	const body = await request.json();
-	const supabase = createServerSupabase(cookies);
+	const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
 
-	// Build update object from allowed fields
-	const updates: Record<string, unknown> = {
-		updated_at: new Date().toISOString(),
-	};
-
-	if (body.name !== undefined) updates.name = body.name;
-	if (body.status !== undefined) updates.status = body.status;
-	if (body.current_step !== undefined) updates.current_step = body.current_step;
 	if (body.data !== undefined) updates.data = body.data;
+	if (body.current_step !== undefined) updates.current_step = body.current_step;
+	if (body.status !== undefined) updates.status = body.status;
 	if (body.decision !== undefined) updates.decision = body.decision;
+	if (body.project_id !== undefined) updates.project_id = body.project_id;
 	if (body.completed_at !== undefined) updates.completed_at = body.completed_at;
 
-	const { data: scope, error: dbError } = await supabase
+	const { data, error: err } = await locals.supabase
 		.from('scopes')
 		.update(updates)
 		.eq('id', params.id)
-		.eq('user_id', locals.user.id)
 		.select()
 		.single();
 
-	if (dbError) error(500, dbError.message);
-	if (!scope) error(404, 'Scope not found');
-
-	return json({ scope });
+	if (err) error(500, err.message);
+	return json(data);
 };

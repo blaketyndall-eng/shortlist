@@ -1,38 +1,39 @@
 <script lang="ts">
 	import Card from '$components/ui/Card.svelte';
 	import ActivityFeed from '$components/ActivityFeed.svelte';
-	import OnboardingChecklist from '$components/OnboardingChecklist.svelte';
-	import ProductTour from '$components/ProductTour.svelte';
 
 	let { data } = $props();
 
-	// Show product tour for users who haven't completed onboarding yet
-	let showTour = $state(!data.profile?.onboarding_completed);
-	let checklistDismissed = $state(false);
-
-	// Show checklist when not all onboarding tasks are done
-	const showChecklist = $derived(
-		!checklistDismissed &&
-		data.onboarding &&
-		(!data.onboarding.hasCompanyProfile || !data.onboarding.hasTeamInvites || !data.onboarding.hasProject)
-	);
-
-	const scopeStepLabels: Record<string, string> = {
-		signal: 'Signal',
-		cause: 'Cause',
-		options: 'Options',
-		prepare: 'Prepare',
-		endorse: 'Endorse',
-	};
-
 	const stepLabels: Record<string, string> = {
+		// SOLVE Define phase
+		triggers: 'Diagnose',
+		category: 'Category',
+		vendor_discovery: 'Discovery',
+		constraints: 'Constraints',
+		priorities: 'Priorities',
+		brief: 'Brief',
+		challenges: 'Validate',
+		// Evaluate phase
+		scope: 'Scope',
 		discovery: 'Discovery',
 		setup: 'Setup',
 		criteria: 'Criteria',
 		workflow: 'Workflow',
 		materials: 'Materials',
 		ratings: 'Ratings',
-		results: 'Results'
+		results: 'Results',
+		dashboard: 'Dashboard'
+	};
+
+	function getVendorCount(project: any): number {
+		const evalVendors = project.state?.vendors?.length ?? 0;
+		const solveVendors = project.solve_data?.discoveredVendors?.length ?? 0;
+		return evalVendors || solveVendors;
+	}
+
+	const scopeStepLabels: Record<string, string> = {
+		signal: 'Signal', cause: 'Cause', options: 'Options',
+		prepare: 'Prepare', endorse: 'Endorse'
 	};
 
 	function timeAgo(dateStr: string): string {
@@ -55,22 +56,10 @@
 	<header class="dashboard-header">
 		<div>
 			<h1>Welcome back{data.profile?.full_name ? `, ${data.profile.full_name}` : ''}</h1>
-			<p>Here's an overview of your purchase intelligence projects.</p>
+			<p>Here's an overview of your procurement projects.</p>
 		</div>
-		<a href="/project/new" class="btn-primary">+ New</a>
+		<a href="/project/new" class="btn-primary">+ New Project</a>
 	</header>
-
-	{#if showChecklist && data.profile?.id}
-		<section class="onboarding-section">
-			<OnboardingChecklist
-				hasCompanyProfile={data.onboarding.hasCompanyProfile}
-				hasTeamInvites={data.onboarding.hasTeamInvites}
-				hasProject={data.onboarding.hasProject}
-				profileId={data.profile.id}
-				ondismiss={() => checklistDismissed = true}
-			/>
-		</section>
-	{/if}
 
 	<section class="dashboard-grid">
 		<div class="stat-card">
@@ -91,17 +80,23 @@
 		</div>
 	</section>
 
-	{#if data.scopes && data.scopes.length > 0}
+	{#if data.scopes.length > 0}
 		<section class="active-scopes">
-			<h2>Active SCOPEs</h2>
+			<div class="scope-header">
+				<h2>Active SCOPEs</h2>
+				<a href="/scope/new" class="scope-new-link">+ New SCOPE</a>
+			</div>
 			<div class="scope-list">
 				{#each data.scopes as scope (scope.id)}
-					<a href="/scope/{scope.id}/{scope.current_step ?? 'signal'}" class="scope-row">
+					<a href="/scope/{scope.id}/{scope.current_step}" class="scope-row">
 						<div class="scope-info">
+							<span class="scope-badge">SCOPE</span>
 							<span class="scope-name">{scope.name}</span>
-							<span class="scope-meta">{timeAgo(scope.updated_at)}</span>
 						</div>
-						<span class="step-badge scope-badge">{scopeStepLabels[scope.current_step] ?? 'Signal'}</span>
+						<div class="scope-status">
+							<span class="scope-step-badge">{scopeStepLabels[scope.current_step] ?? scope.current_step}</span>
+							<span class="project-updated">{timeAgo(scope.updated_at)}</span>
+						</div>
 					</a>
 				{/each}
 			</div>
@@ -114,7 +109,10 @@
 		{#if data.projects.length > 0}
 			<div class="project-list">
 				{#each data.projects as project (project.id)}
-					<a href="/project/{project.id}/{project.current_step ?? 'setup'}" class="project-row">
+					{@const solveSteps = ['triggers', 'category', 'vendor_discovery', 'constraints', 'priorities', 'brief', 'challenges']}
+					{@const step = project.current_step ?? 'setup'}
+					{@const href = solveSteps.includes(step) ? `/project/${project.id}/solve/${step}` : `/project/${project.id}/${step}`}
+					<a href={href} class="project-row">
 						<div class="project-info">
 							<span class="project-name">{project.name}</span>
 							<span class="project-meta">
@@ -122,7 +120,7 @@
 									<span class="project-category">{project.category}</span>
 								{/if}
 								<span class="project-vendors">
-									{project.state?.vendors?.length ?? 0} vendors
+									{getVendorCount(project)} vendors
 								</span>
 							</span>
 						</div>
@@ -134,45 +132,9 @@
 				{/each}
 			</div>
 		{:else}
-			<div class="getting-started">
-				<div class="gs-header">
-					<h3>Get started with Shortlist</h3>
-					<p>Follow these steps to run your first vendor evaluation.</p>
-				</div>
-				<div class="gs-steps">
-					<a href="/project/new" class="gs-step">
-						<span class="gs-number">1</span>
-						<div class="gs-info">
-							<span class="gs-title">Create a project</span>
-							<span class="gs-desc">Define what you're evaluating (e.g., "CRM Platform Selection")</span>
-						</div>
-						<span class="gs-arrow">→</span>
-					</a>
-					<div class="gs-step gs-disabled">
-						<span class="gs-number">2</span>
-						<div class="gs-info">
-							<span class="gs-title">Add vendors to compare</span>
-							<span class="gs-desc">Search our library or add vendors manually</span>
-						</div>
-					</div>
-					<div class="gs-step gs-disabled">
-						<span class="gs-number">3</span>
-						<div class="gs-info">
-							<span class="gs-title">Score and evaluate</span>
-							<span class="gs-desc">Rate vendors against your criteria with AI assistance</span>
-						</div>
-					</div>
-					<div class="gs-step gs-disabled">
-						<span class="gs-number">4</span>
-						<div class="gs-info">
-							<span class="gs-title">Get your recommendation</span>
-							<span class="gs-desc">See weighted rankings and export a decision report</span>
-						</div>
-					</div>
-				</div>
-				<div class="gs-explore">
-					<a href="/discover" class="explore-link">Or explore our vendor library first →</a>
-				</div>
+			<div class="empty-state">
+				<p>No projects yet. Create your first procurement project to get started.</p>
+				<a href="/project/new" class="btn-primary">New Project</a>
 			</div>
 		{/if}
 	</section>
@@ -184,10 +146,6 @@
 		</Card>
 	</section>
 </div>
-
-{#if showTour && data.profile?.id}
-	<ProductTour bind:open={showTour} profileId={data.profile.id} />
-{/if}
 
 <style>
 	.dashboard {
@@ -350,46 +308,6 @@
 		margin-bottom: var(--space-4);
 	}
 
-	.onboarding-section {
-		margin-bottom: var(--space-6);
-	}
-
-	.activity-section {
-		margin-top: var(--space-6);
-	}
-
-	.activity-section h2 {
-		margin-bottom: var(--space-3);
-	}
-
-	.getting-started { padding: var(--space-4) 0; }
-	.gs-header { text-align: center; margin-bottom: var(--space-5); }
-	.gs-header h3 { font-size: 1.125rem; margin-bottom: var(--space-1); }
-	.gs-header p { color: var(--neutral-400); font-size: 0.875rem; }
-	.gs-steps { display: flex; flex-direction: column; gap: var(--space-2); }
-	.gs-step {
-		display: flex; align-items: center; gap: var(--space-3);
-		padding: var(--space-3) var(--space-4);
-		border: 1px solid var(--neutral-200); border-radius: var(--radius-md);
-		text-decoration: none; color: inherit; transition: all var(--transition-fast);
-	}
-	a.gs-step:hover { border-color: var(--primary-500); background: rgba(74, 150, 248, 0.05); text-decoration: none; }
-	.gs-disabled { opacity: 0.5; }
-	.gs-number {
-		width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
-		display: flex; align-items: center; justify-content: center;
-		font-size: 0.8125rem; font-weight: 700;
-		background: var(--primary-50); color: var(--primary-700);
-	}
-	a.gs-step .gs-number { background: var(--primary-600); color: white; }
-	.gs-info { flex: 1; }
-	.gs-title { display: block; font-weight: 500; font-size: 0.9375rem; }
-	.gs-desc { display: block; font-size: 0.8125rem; color: var(--neutral-400); margin-top: 2px; }
-	.gs-arrow { color: var(--primary-600); font-size: 1.25rem; flex-shrink: 0; }
-	.gs-explore { text-align: center; margin-top: var(--space-4); }
-	.explore-link { color: var(--primary-600); text-decoration: none; font-size: 0.875rem; }
-	.explore-link:hover { text-decoration: underline; }
-
 	.active-scopes {
 		background: var(--color-bg-secondary);
 		border: 1px solid var(--neutral-200);
@@ -398,8 +316,26 @@
 		margin-bottom: var(--space-4);
 	}
 
-	.active-scopes h2 {
+	.scope-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
 		margin-bottom: var(--space-4);
+	}
+
+	.scope-header h2 {
+		margin-bottom: 0;
+	}
+
+	.scope-new-link {
+		font-size: 0.8125rem;
+		color: var(--primary-600);
+		text-decoration: none;
+		font-weight: 500;
+	}
+
+	.scope-new-link:hover {
+		text-decoration: underline;
 	}
 
 	.scope-list {
@@ -430,8 +366,19 @@
 
 	.scope-info {
 		display: flex;
-		flex-direction: column;
-		gap: 2px;
+		align-items: center;
+		gap: var(--space-2);
+	}
+
+	.scope-badge {
+		font-size: 0.6rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		padding: 1px 6px;
+		border-radius: 4px;
+		background: var(--primary-50, rgba(0, 204, 150, 0.08));
+		color: var(--primary-700, #00cc96);
 	}
 
 	.scope-name {
@@ -439,13 +386,28 @@
 		color: var(--neutral-800);
 	}
 
-	.scope-meta {
-		font-size: 0.75rem;
-		color: var(--neutral-400);
+	.scope-status {
+		display: flex;
+		align-items: center;
+		gap: var(--space-3);
+		flex-shrink: 0;
 	}
 
-	.scope-badge {
-		background: rgba(245, 158, 11, 0.1);
-		color: rgb(180, 115, 10);
+	.scope-step-badge {
+		display: inline-block;
+		padding: 2px var(--space-2);
+		background: rgba(245, 158, 11, 0.08);
+		color: #d97706;
+		border-radius: 9999px;
+		font-size: 0.75rem;
+		font-weight: 500;
+	}
+
+	.activity-section {
+		margin-top: var(--space-6);
+	}
+
+	.activity-section h2 {
+		margin-bottom: var(--space-3);
 	}
 </style>

@@ -7,7 +7,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const { data: projects } = await locals.supabase
 		.from('projects')
 		.select(`
-			id, name, type, status, category, current_step, state, created_at, updated_at,
+			id, name, type, status, category, current_step, phase, state, solve_data, created_at, updated_at,
 			project_members!inner(role)
 		`)
 		.eq('project_members.user_id', userId)
@@ -45,13 +45,17 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	const totalCredits = usage?.reduce((sum, row) => sum + (row.credits_used ?? 0), 0) ?? 0;
 
-	// Count unique vendors across active projects
+	// Count unique vendors across active projects (check both state.vendors and solve_data)
 	let vendorCount = 0;
 	if (projects) {
 		const vendorSet = new Set<string>();
 		for (const p of projects) {
-			const vendors = p.state?.vendors ?? [];
-			vendors.forEach((v: any) => vendorSet.add(v.name));
+			// Evaluate phase vendors
+			const evalVendors = p.state?.vendors ?? [];
+			evalVendors.forEach((v: any) => vendorSet.add(v.name ?? v));
+			// SOLVE phase vendors (discoveredVendors)
+			const solveVendors = (p as any).solve_data?.discoveredVendors ?? [];
+			solveVendors.forEach((v: any) => vendorSet.add(v.name ?? v));
 		}
 		vendorCount = vendorSet.size;
 	}

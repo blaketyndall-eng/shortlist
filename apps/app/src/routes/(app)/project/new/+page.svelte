@@ -4,42 +4,14 @@
 	import Button from '$components/ui/Button.svelte';
 	import Card from '$components/ui/Card.svelte';
 
-	let showForm = $state(false);
+	let mode = $state<'choose' | 'solve'>('choose');
 	let name = $state('');
 	let description = $state('');
 	let category = $state('');
 	let loading = $state(false);
 	let error = $state('');
-	let smartDefaults = $state<{
-		hasPastData: boolean;
-		pastProjectCount: number;
-		criteria: Array<{ name: string; frequency: number }>;
-		frequentVendors: Array<{ name: string; count: number }>;
-		summary: string;
-	} | null>(null);
-	let loadingDefaults = $state(false);
 
 	const supabase = createSupabaseBrowserClient();
-
-	// Fetch smart defaults when category changes
-	$effect(() => {
-		if (category) {
-			loadingDefaults = true;
-			fetch('/api/smart-defaults', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ category }),
-			})
-				.then(res => res.ok ? res.json() : null)
-				.then(data => {
-					smartDefaults = data?.hasPastData ? data : null;
-					loadingDefaults = false;
-				})
-				.catch(() => { loadingDefaults = false; });
-		} else {
-			smartDefaults = null;
-		}
-	});
 
 	const categories = [
 		{ value: 'software', label: 'Software / SaaS' },
@@ -105,26 +77,38 @@
 </svelte:head>
 
 <div class="new-project">
-	<header class="page-header">
-		<h1>Start something new</h1>
-		<p>Choose how you'd like to begin your purchase decision journey.</p>
-	</header>
+	{#if mode === 'choose'}
+		<header class="page-header">
+			<h1>How would you like to start?</h1>
+			<p>Choose the right starting point for your procurement journey.</p>
+		</header>
 
-	{#if !showForm}
-		<div class="choice-cards">
+		<div class="choice-grid">
 			<a href="/scope/new" class="choice-card recommended">
-				<span class="choice-badge">Recommended</span>
+				<div class="choice-badge">Recommended</div>
+				<span class="choice-icon">🔍</span>
 				<h3>Start with SCOPE</h3>
-				<p>Uncertain if you should buy? Diagnose the problem first. SCOPE walks you through Signal → Cause → Options → Prepare → Endorse before committing to a vendor evaluation.</p>
-				<span class="choice-action">Begin diagnostic →</span>
+				<p>Not sure if you should buy? Run a diagnostic first. SCOPE helps you evaluate whether buying software is the right path — or if building, fixing, or partnering makes more sense.</p>
+				<span class="choice-steps">Signal → Cause → Options → Prepare → Endorse</span>
 			</a>
-			<button class="choice-card" onclick={() => (showForm = true)}>
+
+			<button class="choice-card" onclick={() => { mode = 'solve'; }}>
+				<span class="choice-icon">⚡</span>
 				<h3>Jump to SOLVE</h3>
-				<p>Already decided to buy? Go straight to defining requirements and evaluating vendors with the full SOLVE workflow.</p>
-				<span class="choice-action">Create project →</span>
+				<p>Already decided to buy? Skip the diagnostic and go straight to defining requirements, discovering vendors, and running evaluations.</p>
+				<span class="choice-steps">Define → Evaluate → Decide</span>
 			</button>
 		</div>
+
+		<div class="choice-footer">
+			<a href="/dashboard" class="back-link">← Back to Dashboard</a>
+		</div>
 	{:else}
+	<header class="page-header">
+		<button class="back-to-choice" onclick={() => { mode = 'choose'; }}>← Back to options</button>
+		<h1>Create a new project</h1>
+		<p>Start evaluating vendors for your procurement decision.</p>
+	</header>
 
 	<Card>
 		{#if error}
@@ -168,40 +152,6 @@
 					{/each}
 				</div>
 			</fieldset>
-
-			{#if smartDefaults}
-				<div class="smart-defaults">
-					<div class="sd-header">
-						<span class="sd-badge">Intelligence Loop</span>
-						<span class="sd-summary">{smartDefaults.summary}</span>
-					</div>
-					{#if smartDefaults.criteria.length > 0}
-						<div class="sd-section">
-							<span class="sd-label">Common criteria from past evaluations</span>
-							<div class="sd-chips">
-								{#each smartDefaults.criteria.slice(0, 5) as c}
-									<span class="sd-chip">{c.name} <em>({c.frequency}x)</em></span>
-								{/each}
-							</div>
-						</div>
-					{/if}
-					{#if smartDefaults.frequentVendors.length > 0}
-						<div class="sd-section">
-							<span class="sd-label">Frequently evaluated vendors</span>
-							<div class="sd-chips">
-								{#each smartDefaults.frequentVendors.slice(0, 5) as v}
-									<span class="sd-chip">{v.name} <em>({v.count}x)</em></span>
-								{/each}
-							</div>
-						</div>
-					{/if}
-					<p class="sd-note">These patterns will be pre-loaded into your SOLVE workflow to help you start faster.</p>
-				</div>
-			{:else if loadingDefaults}
-				<div class="smart-defaults loading">
-					<p>Checking past evaluations...</p>
-				</div>
-			{/if}
 
 			<div class="actions">
 				<Button variant="ghost" type="button" onclick={() => goto('/dashboard')}>
@@ -323,7 +273,7 @@
 		border-top: 1px solid var(--neutral-100);
 	}
 
-	.choice-cards {
+	.choice-grid {
 		display: grid;
 		grid-template-columns: 1fr 1fr;
 		gap: var(--space-4);
@@ -332,87 +282,100 @@
 
 	.choice-card {
 		position: relative;
-		display: flex;
-		flex-direction: column;
+		text-align: left;
 		padding: var(--space-6);
 		background: var(--color-bg-secondary);
-		border: 2px solid var(--neutral-200);
+		border: 1px solid var(--neutral-200);
 		border-radius: var(--radius-lg);
+		cursor: pointer;
+		transition: all 0.15s;
 		text-decoration: none;
 		color: inherit;
-		cursor: pointer;
-		transition: all var(--transition-fast);
-		text-align: left;
-		font-family: inherit;
+		display: block;
 	}
 
 	.choice-card:hover {
 		border-color: var(--primary-400);
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+		box-shadow: 0 0 20px rgba(0, 204, 150, 0.08);
 		text-decoration: none;
 	}
 
 	.choice-card.recommended {
 		border-color: var(--primary-500);
+		background: var(--primary-50, rgba(0, 204, 150, 0.03));
 	}
 
 	.choice-badge {
 		position: absolute;
-		top: var(--space-3);
-		right: var(--space-3);
-		background: var(--primary-500);
-		color: white;
-		font-size: 0.6875rem;
-		font-weight: 600;
+		top: -8px;
+		right: 16px;
+		font-size: 0.65rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
 		padding: 2px 8px;
-		border-radius: 999px;
+		background: var(--primary-600, #00cc96);
+		color: white;
+		border-radius: 4px;
+	}
+
+	.choice-icon {
+		font-size: 1.75rem;
+		display: block;
+		margin-bottom: var(--space-2);
 	}
 
 	.choice-card h3 {
 		font-size: 1.125rem;
 		font-weight: 700;
 		margin-bottom: var(--space-2);
+		color: var(--neutral-800);
 	}
 
 	.choice-card p {
-		font-size: 0.875rem;
+		font-size: 0.8125rem;
 		color: var(--neutral-500);
 		line-height: 1.5;
-		flex: 1;
 		margin-bottom: var(--space-3);
 	}
 
-	.choice-action {
-		font-size: 0.875rem;
+	.choice-steps {
+		font-size: 0.7rem;
 		font-weight: 600;
-		color: var(--primary-600);
+		color: var(--primary-600, #00cc96);
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
 	}
 
-	/* Smart defaults */
-	.smart-defaults {
-		background: rgba(99, 102, 241, 0.04); border: 1px solid rgba(99, 102, 241, 0.15);
-		border-radius: var(--radius-md); padding: var(--space-4); margin-bottom: var(--space-5);
+	.choice-footer {
+		text-align: center;
 	}
-	.smart-defaults.loading { text-align: center; }
-	.smart-defaults.loading p { font-size: 0.8125rem; color: var(--neutral-400); margin: 0; }
-	.sd-header { margin-bottom: var(--space-3); }
-	.sd-badge {
-		display: inline-block; background: var(--primary-500); color: white;
-		font-size: 0.625rem; font-weight: 700; padding: 2px 8px;
-		border-radius: 999px; margin-right: var(--space-2);
+
+	.back-link {
+		color: var(--neutral-500);
+		font-size: 0.875rem;
+		text-decoration: none;
 	}
-	.sd-summary { font-size: 0.8125rem; color: var(--neutral-600); }
-	.sd-section { margin-bottom: var(--space-2); }
-	.sd-label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--neutral-500); margin-bottom: var(--space-1); }
-	.sd-chips { display: flex; flex-wrap: wrap; gap: var(--space-1); }
-	.sd-chip {
-		font-size: 0.75rem; padding: 2px 8px;
-		background: rgba(99, 102, 241, 0.08); border-radius: 999px; color: var(--neutral-700);
+
+	.back-link:hover {
+		color: var(--neutral-700);
 	}
-	.sd-chip em { font-style: normal; color: var(--neutral-400); }
-	.sd-note { font-size: 0.75rem; color: var(--neutral-400); margin: var(--space-2) 0 0; font-style: italic; }
+
+	.back-to-choice {
+		background: none;
+		border: none;
+		color: var(--neutral-500);
+		font-size: 0.8125rem;
+		cursor: pointer;
+		padding: 0;
+		margin-bottom: var(--space-2);
+	}
+
+	.back-to-choice:hover {
+		color: var(--neutral-700);
+	}
 
 	@media (max-width: 640px) {
-		.choice-cards { grid-template-columns: 1fr; }
+		.choice-grid { grid-template-columns: 1fr; }
 	}
 </style>

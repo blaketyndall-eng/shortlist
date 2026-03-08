@@ -2,198 +2,140 @@
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
-	import Button from '$components/ui/Button.svelte';
-	import Card from '$components/ui/Card.svelte';
 
-	const scopeId = $derived($page.params.id);
+	const scopeId = $page.params.id;
+	let scope = $state<any>(null);
+	let saving = $state(false);
 
 	let trigger = $state('');
 	let urgency = $state(3);
 	let impactedUsersText = $state('');
 	let businessImpact = $state('');
-	let saving = $state(false);
-	let error = $state('');
-
-	const urgencyLabels = ['', 'Low', 'Medium', 'High', 'Critical', 'Emergency'];
 
 	onMount(async () => {
-		try {
-			const res = await fetch(`/api/scopes/${scopeId}`);
-			if (res.ok) {
-				const data = await res.json();
-				const signal = data.scope?.data?.signal;
-				if (signal) {
-					trigger = signal.trigger ?? '';
-					urgency = signal.urgency ?? 3;
-					impactedUsersText = (signal.impactedUsers ?? []).join(', ');
-					businessImpact = signal.businessImpact ?? '';
-				}
+		const res = await fetch(`/api/scopes/${scopeId}`);
+		if (res.ok) {
+			scope = await res.json();
+			const s = scope.data?.signal;
+			if (s) {
+				trigger = s.trigger ?? '';
+				urgency = s.urgency ?? 3;
+				impactedUsersText = (s.impactedUsers ?? []).join(', ');
+				businessImpact = s.businessImpact ?? '';
 			}
-		} catch { /* use defaults */ }
+		}
 	});
 
-	async function handleSave() {
-		if (!trigger.trim()) {
-			error = 'Describe what triggered this investigation';
-			return;
-		}
-
+	async function saveAndContinue() {
 		saving = true;
-		error = '';
+		const signalData = {
+			trigger: trigger.trim(),
+			urgency,
+			impactedUsers: impactedUsersText.split(',').map((s: string) => s.trim()).filter(Boolean),
+			businessImpact: businessImpact.trim(),
+		};
 
-		try {
-			// Load current scope data
-			const getRes = await fetch(`/api/scopes/${scopeId}`);
-			if (!getRes.ok) { error = 'Failed to load scope'; saving = false; return; }
-			const { scope } = await getRes.json();
+		await fetch(`/api/scopes/${scopeId}`, {
+			method: 'PATCH',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				data: { ...scope?.data, signal: signalData },
+				current_step: 'cause',
+			}),
+		});
 
-			const newSignal = {
-				trigger: trigger.trim(),
-				urgency,
-				impactedUsers: impactedUsersText.split(',').map((s: string) => s.trim()).filter(Boolean),
-				businessImpact: businessImpact.trim(),
-			};
-
-			// Invalidate downstream if signal data changed materially (Pillar 4)
-			const oldSignal = scope.data?.signal;
-			const signalChanged = oldSignal && (
-				oldSignal.trigger !== newSignal.trigger ||
-				oldSignal.urgency !== newSignal.urgency ||
-				oldSignal.businessImpact !== newSignal.businessImpact
-			);
-
-			const updatedData = {
-				...scope.data,
-				signal: newSignal,
-				...(signalChanged ? {
-					cause: { ...(scope.data?.cause ?? {}), _stale: true },
-					options: { ...(scope.data?.options ?? {}), _stale: true },
-					prepare: { ...(scope.data?.prepare ?? {}), _stale: true },
-					endorse: { ...(scope.data?.endorse ?? {}), _stale: true },
-				} : {}),
-			};
-
-			const res = await fetch(`/api/scopes/${scopeId}`, {
-				method: 'PATCH',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					data: updatedData,
-					current_step: 'cause',
-				}),
-			});
-
-			if (!res.ok) {
-				error = 'Failed to save';
-				saving = false;
-				return;
-			}
-
-			goto(`/scope/${scopeId}/cause`);
-		} catch {
-			error = 'Something went wrong';
-			saving = false;
-		}
+		goto(`/scope/${scopeId}/cause`);
 	}
 </script>
 
 <svelte:head>
-	<title>Signal — SCOPE</title>
+	<title>Signal — SCOPE — Shortlist</title>
 </svelte:head>
 
-<Card>
-	<div class="step-content">
-		<h2>What triggered this?</h2>
-		<p class="step-intro">Describe the event, pain point, or request that started this investigation. Be specific — good diagnosis starts with a clear signal.</p>
+<div class="step-page">
+	<h2>Capture the Signal</h2>
+	<p class="step-desc">What triggered this? Describe the problem, pain point, or opportunity that started this conversation.</p>
 
-		{#if error}
-			<div class="error-banner" role="alert">{error}</div>
-		{/if}
+	<div class="form-group">
+		<label for="trigger">What's the problem or trigger?</label>
+		<textarea id="trigger" bind:value={trigger} rows="4" placeholder="Describe the business problem, pain point, or opportunity..."></textarea>
+	</div>
 
-		<label class="field">
-			<span>Trigger description <em>*</em></span>
-			<textarea
-				bind:value={trigger}
-				placeholder="e.g., Sales team spent 3 hours/week manually updating spreadsheets after losing a deal due to outdated pipeline data..."
-				rows="4"
-			></textarea>
-		</label>
-
-		<label class="field">
-			<span>Urgency</span>
-			<div class="urgency-slider">
-				<input type="range" min="1" max="5" step="1" bind:value={urgency} />
-				<div class="urgency-labels">
-					{#each [1, 2, 3, 4, 5] as level}
-						<span class:active={urgency === level}>{urgencyLabels[level]}</span>
-					{/each}
-				</div>
-			</div>
-		</label>
-
-		<label class="field">
-			<span>Who's affected?</span>
-			<input
-				type="text"
-				bind:value={impactedUsersText}
-				placeholder="e.g., Sales team, Account Managers, RevOps"
-			/>
-			<span class="field-hint">Comma-separated roles, teams, or departments.</span>
-		</label>
-
-		<label class="field">
-			<span>Business impact</span>
-			<textarea
-				bind:value={businessImpact}
-				placeholder="e.g., Estimated $200K in lost deals per quarter due to poor pipeline visibility. Team morale declining."
-				rows="3"
-			></textarea>
-		</label>
-
-		<div class="actions">
-			<Button variant="ghost" type="button" onclick={() => goto('/dashboard')}>
-				Cancel
-			</Button>
-			<Button variant="primary" loading={saving} onclick={handleSave}>
-				Save & Continue
-			</Button>
+	<div class="form-group">
+		<label for="urgency">Urgency Level: {urgency}/5</label>
+		<input type="range" id="urgency" min="1" max="5" bind:value={urgency} />
+		<div class="urgency-labels">
+			<span>Low</span>
+			<span>Critical</span>
 		</div>
 	</div>
-</Card>
+
+	<div class="form-group">
+		<label for="impacted">Who's impacted? (comma-separated)</label>
+		<input type="text" id="impacted" bind:value={impactedUsersText} placeholder="e.g., Engineering, Security, IT Ops" />
+	</div>
+
+	<div class="form-group">
+		<label for="impact">Business impact if we do nothing</label>
+		<textarea id="impact" bind:value={businessImpact} rows="3" placeholder="What happens if this problem continues unaddressed?"></textarea>
+	</div>
+
+	<div class="step-actions">
+		<a href="/dashboard" class="btn-ghost">← Dashboard</a>
+		<button class="btn-primary" onclick={saveAndContinue} disabled={!trigger.trim() || saving}>
+			{saving ? 'Saving...' : 'Continue to Cause →'}
+		</button>
+	</div>
+</div>
 
 <style>
-	.step-content h2 { margin-bottom: var(--space-1); }
-	.step-intro { color: var(--neutral-500); font-size: 0.875rem; margin-bottom: var(--space-5); }
+	.step-page h2 { color: var(--text, #e2e8f0); margin-bottom: 0.25rem; }
+	.step-desc { color: var(--text-muted, #94a3b8); font-size: 0.875rem; margin-bottom: 1.5rem; }
 
-	.error-banner {
-		background: rgba(240, 80, 80, 0.1); color: #f05050;
-		padding: var(--space-3); border-radius: var(--radius-md);
-		margin-bottom: var(--space-4); font-size: 0.875rem;
+	.form-group { margin-bottom: 1.25rem; }
+	.form-group label {
+		display: block; font-size: 0.8125rem; font-weight: 600;
+		color: var(--text, #e2e8f0); margin-bottom: 0.4rem;
 	}
 
-	.field { display: block; margin-bottom: var(--space-5); }
-	.field span { display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: var(--space-2); color: var(--neutral-700); }
-	.field em { color: #dc2626; font-style: normal; }
-	.field input, .field textarea {
-		width: 100%; padding: var(--space-2) var(--space-3);
-		border: 1px solid var(--neutral-300); border-radius: var(--radius-md);
-		font-size: 0.9375rem; font-family: inherit; resize: vertical;
+	textarea, input[type="text"] {
+		width: 100%; padding: 0.65rem 0.85rem;
+		background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.1);
+		border-radius: 8px; color: var(--text, #e2e8f0); font-size: 0.875rem;
+		font-family: inherit; resize: vertical;
 	}
-	.field input:focus, .field textarea:focus {
-		outline: var(--focus-ring); outline-offset: var(--focus-ring-offset);
-		border-color: var(--primary-500);
+	textarea:focus, input[type="text"]:focus {
+		outline: none; border-color: #00cc96;
+		box-shadow: 0 0 0 2px rgba(0, 204, 150, 0.15);
 	}
-	.field-hint { font-size: 0.75rem !important; color: var(--neutral-400) !important; font-weight: 400 !important; margin-top: var(--space-1); }
+	textarea::placeholder, input::placeholder { color: rgba(255, 255, 255, 0.25); }
 
-	.urgency-slider { padding: var(--space-2) 0; }
-	.urgency-slider input[type="range"] { width: 100%; }
+	input[type="range"] {
+		width: 100%; accent-color: #00cc96;
+	}
+
 	.urgency-labels {
 		display: flex; justify-content: space-between;
-		font-size: 0.6875rem; color: var(--neutral-400); margin-top: var(--space-1);
+		font-size: 0.6875rem; color: var(--text-muted, #64748b); margin-top: 0.25rem;
 	}
-	.urgency-labels span.active { color: var(--primary-600); font-weight: 600; }
 
-	.actions {
-		display: flex; justify-content: flex-end; gap: var(--space-3);
-		padding-top: var(--space-4); border-top: 1px solid var(--neutral-100);
+	.step-actions {
+		display: flex; justify-content: space-between; align-items: center;
+		margin-top: 2rem; padding-top: 1rem;
+		border-top: 1px solid rgba(255, 255, 255, 0.06);
 	}
+
+	.btn-ghost {
+		background: none; border: none; color: var(--text-muted, #94a3b8);
+		font-size: 0.875rem; cursor: pointer; text-decoration: none;
+	}
+	.btn-ghost:hover { color: var(--text, #e2e8f0); text-decoration: none; }
+
+	.btn-primary {
+		padding: 0.6rem 1.5rem; background: #00cc96; color: #0a0f1e;
+		border: none; border-radius: 8px; font-size: 0.875rem;
+		font-weight: 600; cursor: pointer;
+	}
+	.btn-primary:hover { opacity: 0.9; }
+	.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
 </style>

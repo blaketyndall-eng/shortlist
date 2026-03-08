@@ -107,10 +107,12 @@
 			)
 			.on('presence', { event: 'sync' }, () => {
 				const state = channel.presenceState();
-				collaborators = Object.values(state)
-					.flat()
-					.map((p: any) => p.user_name)
-					.filter(Boolean);
+				collaborators = [...new Set(
+					Object.values(state)
+						.flat()
+						.map((p: any) => p.user_name)
+						.filter(Boolean)
+				)];
 			})
 			.subscribe(async (status) => {
 				if (status === 'SUBSCRIBED') {
@@ -143,7 +145,7 @@
 
 		{#if collaborators.length > 0}
 			<div class="collaborators">
-				{#each collaborators.slice(0, 4) as name (name)}
+				{#each collaborators.slice(0, 4) as name, i (i)}
 					<span class="collab-avatar" title={name}>{name.charAt(0).toUpperCase()}</span>
 				{/each}
 				{#if collaborators.length > 4}
